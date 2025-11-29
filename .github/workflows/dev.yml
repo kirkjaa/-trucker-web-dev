@@ -1,0 +1,225 @@
+name: CI/CD - dev
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Create .env file from secrets
+        run: |
+          mkdir -p env
+          cat <<EOF > env/.env.development
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+          NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+          NEXT_PUBLIC_FIREBASE_VAPID_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_VAPID_KEY }}
+          EOF
+
+      - name: Add Firebase Secrets to Firebase Service
+        run: |
+          sed -i "s|NEXT_PUBLIC_FIREBASE_API_KEY_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_API_KEY}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+          sed -i "s|NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+          sed -i "s|NEXT_PUBLIC_FIREBASE_PROJECT_ID_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_PROJECT_ID}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+          sed -i "s|NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+          sed -i "s|NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+          sed -i "s|NEXT_PUBLIC_FIREBASE_APP_ID_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_APP_ID}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+          sed -i "s|NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID_PLACEHOLDER|${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}|g" app/utils/firebase/firebase.ts public/firebase-messaging-sw.js
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+          
+      - name: Build Docker Image
+        run: |
+          docker build --build-arg profile=development -t trucker-web-dev:${{ github.run_number }} -f ./docker/Dockerfile .
+
+      - name: Install AWS CLI v2
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update
+
+      - name: Install Lightsailctl
+        run: |
+          sudo curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl"
+          sudo chmod +x /usr/local/bin/lightsailctl
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Push Docker Image to AWS Lightsail
+        run: |
+          aws lightsail push-container-image \
+            --region ${{ secrets.AWS_REGION }} \
+            --service-name trucker-web-dev \
+            --label trucker-web-dev \
+            --image trucker-web-dev:${{ github.run_number }}
+
+      - name: Get Latest Image from Lightsail
+        id: latest_image
+        run: |
+          latest_image=$(aws lightsail get-container-images \
+            --region ${{ secrets.AWS_REGION }} \
+            --service-name trucker-web-dev \
+            --query 'containerImages[].[image, createdAt]' \
+            --output json | jq -r 'sort_by(.[1]) | last | .[0]')
+          echo "Latest image is $latest_image"
+          echo "::set-output name=image::$latest_image"
+
+      - name: Deploy to AWS Lightsail
+        run: |
+          aws lightsail create-container-service-deployment \
+            --region ${{ secrets.AWS_REGION }} \
+            --service-name trucker-web-dev \
+            --containers "{
+              \"trucker-web-dev\": {
+              \"image\": \"${{ steps.latest_image.outputs.image }}\",
+                \"environment\": {
+                  \"NEXTAUTH_SECRET\": \"${{ secrets.NEXTAUTH_SECRET }}\",
+                  \"NEXTAUTH_URL\": \"${{ secrets.NEXTAUTH_URL }}\",
+                  \"NEXT_PUBLIC_API_BASE_URL\": \"${{ secrets.NEXT_PUBLIC_API_BASE_URL }}\",
+                  \"JWT_SECRET\": \"${{ secrets.JWT_SECRET }}\",
+                  \"REFRESH_TOKEN_SECRET\": \"${{ secrets.REFRESH_TOKEN_SECRET }}\",
+                  \"GOOGLE_MAPS_API_KEY\": \"${{ secrets.GOOGLE_MAPS_API_KEY }}\",
+                  \"NEXT_PUBLIC_FIREBASE_API_KEY\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}\",
+                  \"NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}\",
+                  \"NEXT_PUBLIC_FIREBASE_PROJECT_ID\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}\",
+                  \"NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}\",
+                  \"NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}\",
+                  \"NEXT_PUBLIC_FIREBASE_APP_ID\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}\",
+                  \"NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}\",
+                  \"NEXT_PUBLIC_FIREBASE_VAPID_KEY\": \"${{ secrets.NEXT_PUBLIC_FIREBASE_VAPID_KEY }}\"
+                },               
+                \"ports\": {
+                  \"3000\": \"HTTP\",
+                  \"443\": \"HTTPS\"
+                }
+              }
+            }" \
+            --public-endpoint "{
+              \"containerName\": \"trucker-web-dev\",
+              \"containerPort\": 3000,
+              \"healthCheck\": {
+                \"path\": \"/health-check\",
+                \"intervalSeconds\": 10
+              }
+            }"
+
+      - name: Wait for Lightsail Deployment to be RUNNING
+        run: |
+          echo "⏳ Waiting for Lightsail container to be RUNNING..."
+          for i in {1..30}; do
+            STATUS=$(aws lightsail get-container-services \
+              --service-name trucker-web-dev \
+              --query "containerServices[0].state" \
+              --output text)
+            echo "Current state: $STATUS"
+            if [ "$STATUS" = "RUNNING" ]; then
+              echo "✅ Container is RUNNING."
+              exit 0
+            fi
+            echo "⌛ Still $STATUS... waiting 10s"
+            sleep 10
+          done
+          echo "❗ Timeout waiting for Lightsail to be RUNNING"
+          exit 1
+
+      - name: Wait for Service Health Check to Pass
+        env:
+          HEALTH_URL: ${{ secrets.NEXTAUTH_URL }}
+        run: |
+          echo "⏳ Waiting for service to pass health check..."
+          for i in {1..20}; do
+            STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL/health-check")
+            if [ "$STATUS_CODE" = "200" ]; then
+              echo "✅ Service is healthy."
+              exit 0
+            fi
+            echo "❌ Not ready yet (HTTP $STATUS_CODE). Retrying in 5 seconds..."
+            sleep 5
+          done
+          echo "❗️Timeout waiting for health check."
+          exit 1
+
+      - name: Send Slack Notification
+        if: always()
+        run: |
+          status="${{ job.status }}"
+          status_text=""
+          emoji=""
+
+          if [ "$status" = "success" ]; then
+            status_text="*Success!*"
+            emoji="✅"
+          elif [ "$status" = "failure" ]; then
+            status_text="*Failed!*"
+            emoji="❌"
+          else
+            status_text="*${status}*"
+            emoji="⚠️"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+          --data "$(cat <<EOF
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "${emoji} Deployment Completed",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "🚀 *Project:* \`${{ secrets.APP_NAME }}\`\n🌐 *Environment:* \`${{ secrets.ENV_NAME }}\`\n📦 *Status:* ${status_text}"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "🕐 $(TZ='Asia/Bangkok' date '+%Y-%m-%d %H:%M:%S')"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "👨‍💻 by *Bot Werapat Saejong*"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+          )" ${{ secrets.SLACK_WEBHOOK_URL }}

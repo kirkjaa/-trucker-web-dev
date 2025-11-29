@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="file"]::-webkit-file-upload-button {
+    display: none;
+  }
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+  input[type="password"]::-webkit-textfield-decoration-container {
+    display: none;
+  }
+  input[type="password"]::-webkit-credentials-auto-fill-button,
+  input[type="password"]::-webkit-contacts-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+  }
+
+  :root {
+    /* Primary Oxley Green */
+    --primary-oxley-green-main: 140, 23%, 53%, 1; /* hsla(140, 23%, 53%, 1) */
+    --primary-oxley-green-01: 140, 43%, 72%, 1; /* hsla(140, 43%, 72%, 1) */
+    --primary-oxley-green-02: 140, 100%, 87%, 1; /* hsla(140, 100%, 87%, 1) */
+    --primary-oxley-green-03: 139, 100%, 94%, 1; /* hsla(139, 100%, 94%, 1) */
+    --primary-oxley-green-04: 139, 100%, 94%, 1; /* hsla(139, 100%, 94%, 1) */
+
+    /* Primary Blue */
+    --primary-blue-main: 195, 77%, 31%, 1; /* hsla(195, 77%, 31%, 1) */
+    --primary-blue-01: 194, 84%, 64%, 1; /* hsla(194, 84%, 64%, 1) */
+    --primary-blue-02: 194, 100%, 89%, 1; /* hsla(194, 100%, 89%, 1) */
+    --primary-blue-03: 194, 100%, 94%, 1; /* hsla(194, 100%, 94%, 1) */
+    --primary-blue-04: 194, 100%, 14%, 1; /* hsla(194, 100%, 14%, 1) */
+
+    /* Secondary Carribbean Green */
+    --secondary-caribbean-green-main:
+      162, 100%, 38%, 1; /* hsla(162, 100%, 38%, 1) */
+    --secondary-caribbean-green-main-hover:
+      162, 100%, 38%, 0.1; /* hsla(162, 100%, 38%, 0.1) */
+    --secondary-caribbean-green-01:
+      162, 100%, 63%, 1; /* hsla(162, 100%, 63%, 1) */
+    --secondary-caribbean-green-02:
+      162, 100%, 79%, 1; /* hsla(162, 100%, 79%, 1) */
+    --secondary-caribbean-green-03:
+      162, 100%, 94%, 1; /* hsla(162, 100%, 94%, 1) */
+    --secondary-caribbean-green-04:
+      163, 100%, 22%, 1; /* hsla(163, 100%, 22%, 1) */
+
+    /* Secondary Teal Green */
+    --secondary-teal-green-main: 173, 86%, 28%, 1; /* hsla(173, 86%, 28%, 1) */
+    --secondary-teal-green-main-shadow:
+      173, 86%, 28%, 0.3; /* hsla(173, 86%, 28%, 0.3) */
+    --secondary-teal-green-01: 173, 68%, 54%, 1; /* hsla(173, 68%, 54%, 1) */
+    --secondary-teal-green-02: 173, 92%, 75%, 1; /* hsla(173, 92%, 75%, 1) */
+    --secondary-teal-green-03: 172, 100%, 91%, 1; /* hsla(172, 100%, 91%, 1) */
+    --secondary-teal-green-04: 173, 100%, 18%, 1; /* hsla(173, 100%, 18%, 1) */
+    --secondary-teal-green-hover: 140, 34%, 82%, 1; /* hsla(140, 34%, 82%, 1) */
+
+    /* Secondary Indigo */
+    --secondary-indigo-main: 212, 64%, 23%, 1; /* hsla(212, 64%, 23%, 1) */
+    --secondary-indigo-01: 212, 49%, 56%, 1; /* hsla(212, 49%, 56%, 1) */
+    --secondary-indigo-01-shadow:
+      212, 49%, 56%, 0.4; /* hsla(212, 49%, 56%, 0.4) */
+    --secondary-indigo-02: 212, 100%, 84%, 1; /* hsla(212, 100%, 84%, 1) */
+    --secondary-indigo-03: 212, 100%, 93%, 1; /* hsla(212, 100%, 93%, 1) */
+    --secondary-indigo-04: 212, 51%, 16%, 1; /* hsla(212, 51%, 16%, 1) */
+    --secondary-indigo-hover: 212, 51%, 92%, 1; /* hsla(212, 51%, 92%, 1) */
+
+    /* Secondary Dark Gray */
+    --secondary-dark-gray-main: 214, 3%, 40%, 1; /* hsla(214, 3%, 40%, 1) */
+    --secondary-dark-gray-01: 0, 0%, 77%, 1; /* hsla(0, 0%, 77%, 1) */
+    --secondary-dark-gray-02: 0, 0%, 86%, 1; /* hsla(0, 0%, 86%, 1) */
+    --secondary-dark-gray-03: 0, 0%, 94%, 1; /* hsla(0, 0%, 94%, 1) */
+    --secondary-dark-gray-04: 220, 5%, 23%, 1; /* hsla(220, 5%, 23%, 1) */
+
+    /* Gradient */
+    --gradient-01-start: 140, 23%, 53%, 1; /* hsla(140, 23%, 53%, 1) */
+    --gradient-01-end: 140, 22%, 81%, 1; /* hsla(140, 22%, 81%, 1) */
+    --gradient-02-start: 162, 100%, 38%; /* hsla(162, 100%, 38%) */
+    --gradient-02-end: 195, 82%, 53%, 1; /* hsla(195, 82%, 53%, 1) */
+    --gradient-03-start: 212, 64%, 23%, 1; /* hsla(212, 64%, 23%, 1) */
+    --gradient-03-end: 162, 100%, 38%, 1; /* hsla(162, 100%, 38%, 1) */
+    --gradient-04-start: 212, 63%, 38%, 1; /* hsla(212, 63%, 38%, 1) */
+    --gradient-04-end: 212, 63%, 27%, 1; /* hsla(212, 63%, 27%, 1) */
+
+    /* Neutral */
+    --neutral-00: 0, 0%, 100%, 1; /* hsla(0, 0%, 100%, 1) */
+    --neutral-01: 0, 0%, 97%, 1; /* hsla(0, 0%, 97%, 1) */
+    --neutral-02: 0, 0%, 95%, 1; /* hsla(0, 0%, 95%, 1) */
+    --neutral-03: 0, 0%, 91%, 1; /* hsla(0, 0%, 91%, 1) */
+    --neutral-04: 0, 0%, 78%, 1; /* hsla(0, 0%, 78%, 1) */
+    --neutral-05: 0, 0%, 66%, 1; /* hsla(0, 0%, 66%, 1) */
+    --neutral-06: 0, 0%, 50%, 1; /* hsla(0, 0%, 50%, 1) */
+    --neutral-07: 0, 0%, 42%, 1; /* hsla(0, 0%, 42%, 1) */
+    --neutral-08: 0, 0%, 27%, 1; /* hsla(0, 0%, 27%, 1) */
+    --neutral-09: 0, 0%, 16%, 1; /* hsla(0, 0%, 16%, 1) */
+
+    /* Communication Color */
+    --success-01: 144, 78%, 30%, 1; /* hsla(144, 78%, 30%, 1) */
+    --success-02: 151, 79%, 37%, 1; /* hsla(151, 79%, 37%, 1) */
+    --success-03: 144, 74%, 97%, 1; /* hsla(144, 74%, 97%, 1) */
+    --process-01: 42, 100%, 29%, 1; /* hsla(42, 100%, 29%, 1) */
+    --process-02: 42, 100%, 50%, 1; /* hsla(42, 100%, 50%, 1) */
+    --process-03: 42, 100%, 90%, 1; /* hsla(42, 100%, 90%, 1) */
+    --urgent-fail-01: 1, 97%, 30%, 1; /* hsla(1, 97%, 30%, 1) */
+    --urgent-fail-02: 1, 79%, 52%, 1; /* hsla(1, 79%, 52%, 1) */
+    --urgent-fail-02-shadow: 1, 79%, 52%, 0.33; /* hsla(1, 79%, 52%, 0.33) */
+    --urgent-fail-03: 1, 97%, 98%, 1; /* hsla(1, 97%, 98%, 1) */
+    --accept-01: 213, 97%, 30%, 1; /* hsla(213, 97%, 30%, 1) */
+    --accept-02: 213, 97%, 53%, 1; /* hsla(213, 97%, 53%, 1) */
+    --accept-03: 212, 100%, 97%; /* hsla(212, 100%, 97%) */
+
+    /* Toast */
+    --info-border: 214, 91%, 74%, 1; /* hsla(214, 91%, 74%, 1) */
+    --info-background: 213, 100%, 94%, 1; /* hsla(213, 100%, 94%, 1) */
+    --success-border: 145, 42%, 66%, 1; /* hsla(145, 42%, 66%, 1) */
+    --success-background: 144, 45%, 94%, 1; /* hsla(144, 45%, 94%, 1) */
+    --warning-border: 40, 100%, 50%, 1; /* hsla(40, 100%, 50%, 1) */
+    --warning-background: 41, 84%, 89%, 1; /* hsla(41, 84%, 89%, 1) */
+    --error-border: 3, 77%, 76%, 1; /* hsla(3, 77%, 76%, 1) */
+    --error-background: 3, 93%, 94%, 1; /* hsla(3, 93%, 94%, 1) */
+
+    /* Calendar */
+    --date-selected: 170, 38%, 94%, 1; /* hsla(170, 38%, 94%, 1) */
+    --today: 170, 38%, 94%, 0.5; /* hsla(170, 38%, 94%, 0.5) */
+    --day-text: 217, 33%, 17%, 1; /* hsla(217, 33%, 17%, 1) */
+
+    /* BoxShadow */
+    --box-shadow-01: 195, 77%, 31%, 0.1; /* hsla(195, 77%, 31%, 0.16) */
+    --box-shadow-02: 0, 0%, 0%, 0.02; /* hsla(0, 0%, 0%, 0.02) */
+    --box-shadow-03: 0, 0%, 0%, 0.05; /* hsla(0, 0%, 0%, 0.05) */
+    --box-shadow-04: 214, 48%, 21%, 0.19; /* hsla(214, 48%, 21%, 0.19) */
+
+    /* Text */
+    --main: 232, 23%, 33%, 1; /* hsla(232, 23%, 33%, 1) */
+    --main02: 215, 16%, 47%, 1; /* hsla(215, 16%, 47%, 1) */
+
+    /* Modal */
+    --modal: 237, 18%, 97%, 1; /* hsla(237, 18%, 97%, 1) */
+    --table: 240, 17%, 94%, 1; /* hsla(240, 17%, 94%, 1) */
+
+    /* Sidebar */
+    --sidebar-text-head: 216, 15%, 45%, 1; /* hsla(216, 15%, 45%, 1) */
+    --sidebar-user-card: 195, 77%, 31%, 0.5; /* hsla(195, 77%, 31%, 0.5) */
+    --sidebar-background: 0, 0%, 100%, 1; /* hsla(0, 0%, 100%, 1) */
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background-hover: 0, 0%, 97%, 1; /* hsla(0, 0%, 97%, 1) */
+  }
+}
+
+@layer base {
+  h1 {
+    @apply text-[80px] font-bold leading-[96px];
+  }
+  h2 {
+    @apply text-[64px] font-bold leading-[77px];
+  }
+  h3 {
+    @apply text-[48px] font-bold leading-[58px];
+  }
+  h4 {
+    @apply text-[40px] font-bold leading-[48px];
+  }
+  h5 {
+    @apply text-[32px] font-bold leading-[39px];
+  }
+  p.title1 {
+    @apply text-2xl font-bold leading-9;
+  }
+  p.title2 {
+    @apply text-xl font-medium leading-[30px];
+  }
+  p.title3 {
+    @apply text-lg font-semibold leading-[18px];
+  }
+  p.body1 {
+    @apply text-lg font-normal leading-[27px];
+  }
+  p.body2 {
+    @apply text-base font-normal leading-6;
+  }
+  p.body3 {
+    @apply text-sm font-normal leading-5;
+  }
+  p.body4 {
+    @apply text-xs font-normal leading-[18px];
+  }
+  p.button {
+    @apply text-base font-semibold leading-normal;
+  }
+}
