@@ -5,6 +5,7 @@ import helmet from "helmet";
 import { config } from "./config";
 import authRoutes from "./routes/auth";
 import organizationRoutes from "./routes/organization";
+import driverRoutes from "./routes/driver";
 import adminFactoryRoutes from "./routes/admin/factory";
 import adminUserFactoryRoutes from "./routes/admin/userFactory";
 import adminCompanyRoutes from "./routes/admin/company";
@@ -32,6 +33,7 @@ async function bootstrap() {
   app.use("/v1/auth", authRoutes);
   app.use("/v1/users", userRoutes);
   app.use("/v1/organization", organizationRoutes);
+  app.use("/v1/driver", driverRoutes);
   app.use("/v1/admin/factory", adminFactoryRoutes);
   app.use("/v1/admin/user-factory", adminUserFactoryRoutes);
   app.use("/v1/admin/company", adminCompanyRoutes);

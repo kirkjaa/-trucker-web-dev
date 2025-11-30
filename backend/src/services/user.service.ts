@@ -352,8 +352,13 @@ export async function getUserDetail(id: string) {
   };
 }
 
-export async function createUserRecord(payload: UserPayload) {
+export async function createUserRecord(
+  payload: UserPayload,
+  options?: { role?: string; status?: string }
+) {
   const passwordHash = await bcrypt.hash("Demo@123", 10);
+  const role = options?.role ?? "ORGANIZATION";
+  const status = options?.status ?? "ACTIVE";
 
   const inserted = await queryOne<{ id: string }>(
     `
@@ -370,7 +375,7 @@ export async function createUserRecord(payload: UserPayload) {
         organization_id,
         status,
         image_url
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'ORGANIZATION',$9,'ACTIVE',$10)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       RETURNING id
     `,
     [
@@ -382,7 +387,9 @@ export async function createUserRecord(payload: UserPayload) {
       payload.lastName,
       payload.dialCode ?? "+66",
       payload.phone,
+      role,
       payload.organizationId,
+      status,
       payload.imagePath ?? null,
     ]
   );

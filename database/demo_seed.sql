@@ -1095,5 +1095,110 @@ ON CONFLICT (id) DO UPDATE
 SET content = EXCLUDED.content,
     is_read = EXCLUDED.is_read;
 
+-- Additional system users for admin demo
+INSERT INTO users (
+    id, display_code, username, email, password_hash,
+    first_name, last_name, dial_code, phone,
+    role, position_id, organization_id,
+    status, deleted, created_at, updated_at
+)
+VALUES
+    (
+        'f1111111-1111-1111-1111-111111111111',
+        'DEMO-FACT-STAFF',
+        'factory.staff@demo.com',
+        'factory.staff@demo.com',
+        crypt('Demo@123', gen_salt('bf', 10)),
+        'Factory',
+        'Staff',
+        '+66',
+        '0800000105',
+        'ORGANIZATION',
+        (SELECT id FROM user_positions WHERE code = 'FACTORY_MANAGER'),
+        '11111111-1111-1111-1111-111111111111',
+        'ACTIVE',
+        false,
+        NOW(),
+        NOW()
+    ),
+    (
+        'c1111111-2222-2222-2222-222222222222',
+        'DEMO-COMP-STAFF',
+        'company.staff@demo.com',
+        'company.staff@demo.com',
+        crypt('Demo@123', gen_salt('bf', 10)),
+        'Company',
+        'Staff',
+        '+66',
+        '0800000106',
+        'ORGANIZATION',
+        (SELECT id FROM user_positions WHERE code = 'COMPANY_MANAGER'),
+        '22222222-2222-2222-2222-222222222222',
+        'ACTIVE',
+        false,
+        NOW(),
+        NOW()
+    )
+ON CONFLICT (username) DO NOTHING;
+
+-- Demo internal driver
+INSERT INTO users (
+    id,
+    display_code,
+    username,
+    email,
+    password_hash,
+    first_name,
+    last_name,
+    dial_code,
+    phone,
+    role,
+    organization_id,
+    status,
+    image_url,
+    created_at,
+    updated_at
+)
+VALUES (
+    '99999999-aaaa-bbbb-cccc-111111111111',
+    'DEMO-DRIVER-INT',
+    'driver.internal@demo.com',
+    'driver.internal@demo.com',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    'Internal',
+    'Driver',
+    '+66',
+    '0800000110',
+    'DRIVER',
+    '22222222-2222-2222-2222-222222222222',
+    'ACTIVE',
+    NULL,
+    NOW(),
+    NOW()
+)
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO drivers (
+    id,
+    display_code,
+    user_id,
+    type,
+    company_id,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (
+    '77777777-bbbb-cccc-dddd-222222222222',
+    'DRV-DEMO-INT',
+    '99999999-aaaa-bbbb-cccc-111111111111',
+    'internal',
+    '22222222-2222-2222-2222-222222222222',
+    'APPROVED',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (display_code) DO NOTHING;
+
 COMMIT;
 
