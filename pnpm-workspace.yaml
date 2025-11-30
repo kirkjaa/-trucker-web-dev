@@ -1,3 +1,6 @@
+packages:
+  - app
+  - backend
 onlyBuiltDependencies:
   - '@firebase/util'
   - core-js
