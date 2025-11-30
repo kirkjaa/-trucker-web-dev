@@ -7,6 +7,8 @@ import authRoutes from "./routes/auth";
 import organizationRoutes from "./routes/organization";
 import adminFactoryRoutes from "./routes/admin/factory";
 import adminUserFactoryRoutes from "./routes/admin/userFactory";
+import adminCompanyRoutes from "./routes/admin/company";
+import adminUserCompanyRoutes from "./routes/admin/userCompany";
 import userRoutes from "./routes/users";
 import { getUploadsDir } from "./utils/upload";
 
@@ -32,6 +34,8 @@ async function bootstrap() {
   app.use("/v1/organization", organizationRoutes);
   app.use("/v1/admin/factory", adminFactoryRoutes);
   app.use("/v1/admin/user-factory", adminUserFactoryRoutes);
+  app.use("/v1/admin/company", adminCompanyRoutes);
+  app.use("/v1/admin/user-company", adminUserCompanyRoutes);
 
   app.use((req, res) => {
     res.status(404).json({
