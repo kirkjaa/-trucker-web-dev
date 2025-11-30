@@ -39,6 +39,7 @@ type UserRow = {
   org_email: string | null;
   org_image_url: string | null;
   org_logo_image_url: string | null;
+  total_count?: string;
 };
 
 export async function findUserByIdentifier(identifier: string) {
@@ -321,7 +322,7 @@ export async function listUsers(params: UserListParams) {
   values.push(limit, offset);
 
   const rows = await query<UserRow>(sql, values);
-  const total = rows.length ? Number(rows[0].total_count) : 0;
+  const total = rows.length ? Number(rows[0].total_count ?? 0) : 0;
 
   const users = await Promise.all(rows.map((row) => buildUserResponse(row)));
 

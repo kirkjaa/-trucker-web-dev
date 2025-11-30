@@ -92,13 +92,14 @@ router.get("/byId", authMiddleware, async (req, res) => {
 
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    if (!req.user) {
+    const requestUser = (req as any).user;
+    if (!requestUser) {
       return res
         .status(401)
         .json({ statusCode: 401, message: "Unauthorized" });
     }
 
-    const row = await findUserById(req.user.id);
+    const row = await findUserById(requestUser.id);
     if (!row) {
       return res
         .status(404)
