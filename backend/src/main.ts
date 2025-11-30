@@ -4,7 +4,11 @@ import helmet from "helmet";
 
 import { config } from "./config";
 import authRoutes from "./routes/auth";
+import organizationRoutes from "./routes/organization";
+import adminFactoryRoutes from "./routes/admin/factory";
+import adminUserFactoryRoutes from "./routes/admin/userFactory";
 import userRoutes from "./routes/users";
+import { getUploadsDir } from "./utils/upload";
 
 async function bootstrap() {
   const app = express();
@@ -17,6 +21,7 @@ async function bootstrap() {
     })
   );
   app.use(express.json());
+  app.use("/uploads", express.static(getUploadsDir()));
 
   app.get("/health", (_, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -24,6 +29,9 @@ async function bootstrap() {
 
   app.use("/v1/auth", authRoutes);
   app.use("/v1/users", userRoutes);
+  app.use("/v1/organization", organizationRoutes);
+  app.use("/v1/admin/factory", adminFactoryRoutes);
+  app.use("/v1/admin/user-factory", adminUserFactoryRoutes);
 
   app.use((req, res) => {
     res.status(404).json({
