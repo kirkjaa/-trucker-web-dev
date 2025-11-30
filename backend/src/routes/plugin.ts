@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../middleware/auth";
+import { AuthenticatedRequest, authMiddleware } from "../middleware/auth";
 import {
   createPlugin,
   deletePlugins,
@@ -79,7 +79,10 @@ router.get("/byId", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/", authMiddleware, async (req, res) => {
+router.post(
+  "/",
+  authMiddleware,
+  async (req: AuthenticatedRequest, res) => {
   try {
     const payload = req.body as PluginPayload;
     const creatorId = req.user!.id;
@@ -101,9 +104,10 @@ router.post("/", authMiddleware, async (req, res) => {
       },
     });
   }
-});
+  }
+);
 
-router.put("/", authMiddleware, async (req, res) => {
+router.put("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const id = Number(req.query.id);
     if (!id) {
@@ -133,7 +137,7 @@ router.put("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/", authMiddleware, async (req, res) => {
+router.delete("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const rawIds = req.query.id;
     if (!rawIds) {

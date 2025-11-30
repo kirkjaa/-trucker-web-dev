@@ -2,12 +2,18 @@ import { NextFunction, Request, Response } from "express";
 
 import { verifyAccessToken } from "../utils/tokens";
 
+type UploadedFiles =
+  | Record<string, Express.Multer.File[]>
+  | Express.Multer.File[];
+
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     role: string;
     organizationType?: string | null;
   };
+  file?: Express.Multer.File;
+  files?: UploadedFiles;
 }
 
 export function authMiddleware(

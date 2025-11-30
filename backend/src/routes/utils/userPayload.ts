@@ -1,11 +1,10 @@
-import { Request } from "express";
-
+import { AuthenticatedRequest } from "../../middleware/auth";
 import { UserPayload } from "../../services/user.service";
 import { buildFileUrl } from "../../utils/upload";
 
 type MulterFiles = Record<string, Express.Multer.File[]>;
 
-function getFilesDictionary(req: Request): MulterFiles {
+function getFilesDictionary(req: AuthenticatedRequest): MulterFiles {
   if (!req.files || Array.isArray(req.files)) {
     return {};
   }
@@ -19,7 +18,7 @@ function getUploadedFilePath(dict: MulterFiles, fieldName: string) {
 }
 
 export function extractUserPayload(
-  req: Request,
+  req: AuthenticatedRequest,
   options?: { requireOrganization?: boolean; requireFields?: boolean }
 ): UserPayload {
   const {

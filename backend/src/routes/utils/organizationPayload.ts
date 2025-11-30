@@ -1,9 +1,8 @@
-import { Request } from "express";
-
+import { AuthenticatedRequest } from "../../middleware/auth";
 import { OrganizationPayload } from "../../services/organization.service";
 import { buildFileUrl } from "../../utils/upload";
 
-function getFilesDictionary(req: Request) {
+function getFilesDictionary(req: AuthenticatedRequest) {
   if (!req.files) {
     return {};
   }
@@ -40,7 +39,7 @@ function parseNumber(value: any) {
 }
 
 export function extractOrganizationPayload(
-  req: Request,
+  req: AuthenticatedRequest,
   defaultTypeId?: number
 ): OrganizationPayload {
   const files = getFilesDictionary(req);
@@ -108,7 +107,7 @@ export function extractOrganizationPayload(
   };
 }
 
-export function extractDocumentDeleteIds(req: Request) {
+export function extractDocumentDeleteIds(req: AuthenticatedRequest) {
   const ids = req.body.document_delete_ids;
   if (!ids) return [];
   return Array.isArray(ids) ? ids : [ids];

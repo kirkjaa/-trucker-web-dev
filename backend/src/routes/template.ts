@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../middleware/auth";
+import { AuthenticatedRequest, authMiddleware } from "../middleware/auth";
 import {
   createTemplate,
   deleteTemplates,
@@ -77,7 +77,10 @@ router.get("/byId", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/", authMiddleware, async (req, res) => {
+router.post(
+  "/",
+  authMiddleware,
+  async (req: AuthenticatedRequest, res) => {
   try {
     const payload = req.body as TemplatePayload;
     const creatorId = req.user!.id;
@@ -99,7 +102,8 @@ router.post("/", authMiddleware, async (req, res) => {
       },
     });
   }
-});
+  }
+);
 
 router.get("/byOrganization", authMiddleware, async (req, res) => {
   try {
@@ -149,7 +153,7 @@ router.get("/byOrganization", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/", authMiddleware, async (req, res) => {
+router.put("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const id = Number(req.query.id);
     if (!id) {
