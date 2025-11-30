@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth";
 import organizationRoutes from "./routes/organization";
 import driverRoutes from "./routes/driver";
 import routeRoutes from "./routes/route";
+import chatRoutes from "./routes/chat";
 import adminFactoryRoutes from "./routes/admin/factory";
 import adminUserFactoryRoutes from "./routes/admin/userFactory";
 import adminCompanyRoutes from "./routes/admin/company";
@@ -35,6 +36,7 @@ async function bootstrap() {
   app.use("/v1/users", userRoutes);
   app.use("/v1/organization", organizationRoutes);
   app.use("/v1/route", routeRoutes);
+  app.use("/v1/chat", chatRoutes);
   app.use("/v1/driver", driverRoutes);
   app.use("/v1/admin/factory", adminFactoryRoutes);
   app.use("/v1/admin/user-factory", adminUserFactoryRoutes);
