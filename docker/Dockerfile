@@ -57,6 +57,14 @@ ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID} \
     NODE_ENV=production
 
+# Run lint before building to ensure code quality
+RUN \
+  if [ -f yarn.lock ]; then yarn run lint; \
+  elif [ -f package-lock.json ]; then npm run lint; \
+  elif [ -f pnpm-lock.yaml ]; then pnpm run lint; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
 # Build the application
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \

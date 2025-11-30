@@ -15,6 +15,7 @@ import { useFactoriesStore } from "@/app/store/factoriesStore";
 import { useOrganizationStore } from "@/app/store/organization/organizationStore";
 import { usePackageStore } from "@/app/store/package/packageStore";
 import { usePackagesStore } from "@/app/store/packagesStore";
+import { usePluginStore } from "@/app/store/pluginStore";
 import { useRouteStore } from "@/app/store/route/routeStore";
 import { useSystemUsersCompanyStore } from "@/app/store/systemUsersCompanyStore";
 import { useSystemUsersFactoryStore } from "@/app/store/systemUsersFactoryStore";
@@ -22,7 +23,6 @@ import { useTemplateStore } from "@/app/store/template/templateStore";
 import { useTruckStore } from "@/app/store/truckStore";
 import { useUploadTemplateCsvStore } from "@/app/store/uploadTemplateCsvStore";
 import { useUserStore } from "@/app/store/user/userStore";
-import { usePluginStore } from "@/app/store/pluginStore";
 import { DriversStatus, EAdminPathName, ESearchKey } from "@/app/types/enum";
 import { EFreightType, ERouteStatus } from "@/app/types/route/routeEnum";
 
