@@ -33,7 +33,9 @@ export const pluginApi = {
     return response;
   },
 
-  createPlugin: async (payload: IPluginPayload): Promise<IBaseResponse> => {
+  createPlugin: async (
+    payload: IPluginPayload
+  ): Promise<IBaseResponseData<{ id: number }>> => {
     const response = await apiPost("/v1/plugin", payload);
     return response;
   },
@@ -41,7 +43,7 @@ export const pluginApi = {
   updatePlugin: async (
     id: number,
     payload: IPluginPayload
-  ): Promise<IBaseResponse> => {
+  ): Promise<IBaseResponseData<{ id: number }>> => {
     const response = await apiPut(`/v1/plugin?id=${id}`, payload);
     return response;
   },
