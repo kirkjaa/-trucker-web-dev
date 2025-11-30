@@ -22,6 +22,7 @@ import { useTemplateStore } from "@/app/store/template/templateStore";
 import { useTruckStore } from "@/app/store/truckStore";
 import { useUploadTemplateCsvStore } from "@/app/store/uploadTemplateCsvStore";
 import { useUserStore } from "@/app/store/user/userStore";
+import { usePluginStore } from "@/app/store/pluginStore";
 import { DriversStatus, EAdminPathName, ESearchKey } from "@/app/types/enum";
 import { EFreightType, ERouteStatus } from "@/app/types/route/routeEnum";
 
@@ -146,6 +147,10 @@ export default function useSearchBarAdmin() {
   const { getAllTemplates, getTemplateParams } = useTemplateStore((state) => ({
     getAllTemplates: state.getAllTemplates,
     getTemplateParams: state.getTemplateParams,
+  }));
+  const { getAllPlugins, getPluginParams } = usePluginStore((state) => ({
+    getAllPlugins: state.getAllPlugins,
+    getPluginParams: state.getPluginParams,
   }));
 
   //Local State
@@ -285,6 +290,13 @@ export default function useSearchBarAdmin() {
             search,
           });
           break;
+        case EAdminPathName.PLUGIN:
+          getAllPlugins({
+            page: 1,
+            limit: getPluginParams().limit,
+            search,
+          });
+          break;
       }
     }, 300),
     [search]
@@ -374,6 +386,11 @@ export default function useSearchBarAdmin() {
         setVisibleBtnFilter(false);
         //   optionSearchKey = getOptionSearchUploadTemplateCsv();
         break;
+      case EAdminPathName.PLUGIN:
+        setDataCount(getPluginParams().total ?? 0);
+        setBtnPlusText("เพิ่มปลั๊กอิน");
+        setVisibleBtnFilter(false);
+        break;
       case EAdminPathName.PACKAGES:
         setDataCount(getPackageParams().total ?? 0);
         setBtnPlusText("เพิ่มแพ็กเกจ");
@@ -413,6 +430,7 @@ export default function useSearchBarAdmin() {
     getRouteParams().total,
     getPackageParams().total,
     getTemplateParams().total,
+    getPluginParams().total,
   ]);
 
   //Function
@@ -448,6 +466,9 @@ export default function useSearchBarAdmin() {
 
       case pathName === EAdminPathName.UPLOADTEMPLATECSV:
         optionSearchKey = getOptionSearchUploadTemplateCsv();
+        break;
+      case pathName === EAdminPathName.PLUGIN:
+        optionSearchKey = [];
         break;
       case pathName === EAdminPathName.PACKAGES:
         optionSearchKey = getOptionSearchPackage();

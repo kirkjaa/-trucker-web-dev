@@ -726,6 +726,197 @@ SET price     = EXCLUDED.price,
     unit_price = EXCLUDED.unit_price,
     updated_at = NOW();
 
+-- Template field definitions
+INSERT INTO template_field_definitions (id, type, field_name, description, is_active)
+VALUES
+    (1, 'ROUTE', 'ต้นทาง', 'สถานที่รับสินค้า', true),
+    (2, 'ROUTE', 'ปลายทาง', 'สถานที่ส่งสินค้า', true),
+    (3, 'ROUTE', 'ระยะทาง (กม.)', 'ระยะทางโดยประมาณ', true),
+    (4, 'ROUTE', 'ประเภทสินค้า', 'ประเภทสินค้าที่ต้องขนส่ง', true),
+    (5, 'ROUTE', 'น้ำหนักโดยประมาณ (กก.)', 'น้ำหนักรวมโดยประมาณ', true),
+    (6, 'RFQ', 'ชื่อเส้นทาง', 'ชื่อเรียกเส้นทางขนส่ง', true),
+    (7, 'RFQ', 'ราคาต่อเที่ยว', 'ราคาที่เสนอ', true),
+    (8, 'RFQ', 'หมายเหตุ', 'ข้อมูลเพิ่มเติม', true)
+ON CONFLICT (id) DO UPDATE
+SET field_name = EXCLUDED.field_name,
+    description = EXCLUDED.description,
+    type        = EXCLUDED.type,
+    is_active   = EXCLUDED.is_active,
+    updated_at  = NOW();
+
+-- Sample templates for factories and companies
+INSERT INTO templates (
+    id,
+    organization_id,
+    template_type,
+    created_by
+)
+VALUES
+    (
+        1,
+        '11111111-1111-1111-1111-111111111111',
+        'ROUTE',
+        'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+    ),
+    (
+        2,
+        '22222222-2222-2222-2222-222222222222',
+        'RFQ',
+        'cccccccc-cccc-cccc-cccc-cccccccccccc'
+    )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO template_field_mappings (
+    id,
+    template_id,
+    field_id,
+    match_field
+)
+VALUES
+    (1, 1, 1, 'Origin Location'),
+    (2, 1, 2, 'Destination Location'),
+    (3, 1, 3, 'Distance (KM)'),
+    (4, 1, 4, 'Cargo Type'),
+    (5, 1, 5, 'Estimated Weight (KG)'),
+    (6, 2, 6, 'Route Name'),
+    (7, 2, 7, 'Price Per Trip'),
+    (8, 2, 8, 'Notes')
+ON CONFLICT (id) DO UPDATE
+SET match_field = EXCLUDED.match_field;
+
+-- Demo plugins for admin module
+INSERT INTO plugins (
+    id,
+    plugin_code,
+    name,
+    company_name,
+    company_location,
+    plugin_type,
+    description,
+    contact_first_name,
+    contact_last_name,
+    contact_phone,
+    contact_email,
+    account_username,
+    account_password,
+    limited_order_quota,
+    limited_price,
+    monthly_duration_days,
+    monthly_price,
+    yearly_duration_days,
+    yearly_price,
+    available_credit,
+    status,
+    created_by
+)
+VALUES
+    (
+        1,
+        'PLG-001',
+        'Smart Transport Hub',
+        'LogiSmart Co., Ltd.',
+        'Bangkok, Thailand',
+        'Transportation',
+        'โซลูชันบริหารจัดการการขนส่งสำหรับผู้ประกอบการโลจิสติกส์',
+        'Sirikun',
+        'Chaiyaporn',
+        '081-234-5678',
+        'sales@logismart.co.th',
+        'logismart-admin',
+        'P@ssw0rd!',
+        200,
+        2500,
+        30,
+        12000,
+        365,
+        120000,
+        45000,
+        'active',
+        'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+    ),
+    (
+        2,
+        'PLG-002',
+        'Warehouse Plus',
+        'Prime Warehouse Solutions',
+        'Chonburi, Thailand',
+        'Warehouse',
+        'ระบบบริหารจัดการคลังสินค้าและสต็อกแบบครบวงจร',
+        'Anucha',
+        'Thavorn',
+        '082-111-9898',
+        'hello@warehouseplus.co.th',
+        'warehouse-admin',
+        'Secure#2024',
+        150,
+        1800,
+        30,
+        8900,
+        365,
+        95000,
+        32000,
+        'active',
+        'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+    )
+ON CONFLICT (id) DO UPDATE
+SET plugin_code = EXCLUDED.plugin_code,
+    name        = EXCLUDED.name,
+    status      = EXCLUDED.status,
+    updated_at  = NOW();
+
+INSERT INTO plugin_features (
+    id,
+    plugin_id,
+    feature_name,
+    description,
+    limited_price,
+    monthly_price,
+    yearly_price
+)
+VALUES
+    (
+        1,
+        1,
+        'Route Optimization',
+        'แนะนำเส้นทางขนส่งพร้อมต้นทุนที่เหมาะสม',
+        1200,
+        4500,
+        42000
+    ),
+    (
+        2,
+        1,
+        'Driver Tracking',
+        'ติดตามตำแหน่งคนขับแบบเรียลไทม์',
+        900,
+        3400,
+        36000
+    ),
+    (
+        3,
+        2,
+        'Inventory Snapshot',
+        'ดูคงคลังคงเหลือรายวัน',
+        700,
+        3000,
+        28000
+    ),
+    (
+        4,
+        2,
+        'Smart Alert',
+        'แจ้งเตือนสินค้าเข้า-ออกอัตโนมัติ',
+        650,
+        2600,
+        25000
+    )
+ON CONFLICT (id) DO UPDATE
+SET feature_name = EXCLUDED.feature_name,
+    description  = EXCLUDED.description,
+    limited_price = EXCLUDED.limited_price,
+    monthly_price = EXCLUDED.monthly_price,
+    yearly_price  = EXCLUDED.yearly_price;
+
 INSERT INTO rfqs (
     id,
     display_code,

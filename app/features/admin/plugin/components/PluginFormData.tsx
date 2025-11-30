@@ -5,7 +5,19 @@ import clsx from "clsx";
 
 import UploadImage from "@/app/components/ui/featureComponents/UploadImage";
 import { Input } from "@/app/components/ui/input";
-export default function PluginFormData() {
+import { PluginFormState } from "../hooks/usePluginForm";
+
+type PluginFormDataProps = {
+  formData: PluginFormState;
+  onInputChange: (field: keyof PluginFormState, value: string) => void;
+  disabled?: boolean;
+};
+
+export default function PluginFormData({
+  formData,
+  onInputChange,
+  disabled = false,
+}: PluginFormDataProps) {
   return (
     <div className=" rounded-xl ">
       <div
@@ -32,6 +44,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="ชื่อบริษัท"
+              value={formData.companyName}
+              onChange={(e) => onInputChange("companyName", e.target.value)}
+              disabled={disabled}
             />
           </div>
           <div className="flex flex-col gap-1 w-1/2">
@@ -44,6 +59,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="ตำแหน่งที่ตั้งบริษัท"
+              value={formData.companyLocation}
+              onChange={(e) => onInputChange("companyLocation", e.target.value)}
+              disabled={disabled}
             />
           </div>
         </div>
@@ -57,6 +75,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="ประเภทปลั๊กอิน"
+              value={formData.pluginType}
+              onChange={(e) => onInputChange("pluginType", e.target.value)}
+              disabled={disabled}
             />
           </div>
           <div className="flex flex-col gap-1 w-1/2">
@@ -68,6 +89,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="รายละเอียดบริษัท"
+              value={formData.description}
+              onChange={(e) => onInputChange("description", e.target.value)}
+              disabled={disabled}
             />
           </div>
         </div>
@@ -84,6 +108,11 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="ชื่อ"
+              value={formData.contactFirstName}
+              onChange={(e) =>
+                onInputChange("contactFirstName", e.target.value)
+              }
+              disabled={disabled}
             />
           </div>
           <div className="flex flex-col gap-1 w-1/2">
@@ -95,6 +124,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="นามสกุล"
+              value={formData.contactLastName}
+              onChange={(e) => onInputChange("contactLastName", e.target.value)}
+              disabled={disabled}
             />
           </div>
         </div>
@@ -108,6 +140,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="เบอร์โทรศัพท์"
+              value={formData.contactPhone}
+              onChange={(e) => onInputChange("contactPhone", e.target.value)}
+              disabled={disabled}
             />
           </div>
           <div className="flex flex-col gap-1 w-1/2">
@@ -119,6 +154,9 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="อีเมล"
+              value={formData.contactEmail}
+              onChange={(e) => onInputChange("contactEmail", e.target.value)}
+              disabled={disabled}
             />
           </div>
         </div>
@@ -135,6 +173,11 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="ชื่อผู้ใช้งาน"
+              value={formData.accountUsername}
+              onChange={(e) =>
+                onInputChange("accountUsername", e.target.value)
+              }
+              disabled={disabled}
             />
           </div>
         </div>
@@ -148,6 +191,12 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="รหัสผ่าน"
+              type="password"
+              value={formData.accountPassword}
+              onChange={(e) =>
+                onInputChange("accountPassword", e.target.value)
+              }
+              disabled={disabled}
             />
           </div>
           <div className="flex flex-col gap-1 w-1/2">
@@ -159,6 +208,12 @@ export default function PluginFormData() {
                 // "border-red-500": errors.username,
               })}
               placeholder="ยืนยันรหัสผ่าน"
+              type="password"
+              value={formData.accountPassword}
+              onChange={(e) =>
+                onInputChange("accountPassword", e.target.value)
+              }
+              disabled={disabled}
             />
           </div>
         </div>
@@ -179,6 +234,12 @@ export default function PluginFormData() {
                     // "border-red-500": errors.username,
                   })}
                   placeholder="0"
+                  type="number"
+                  value={formData.limitedOrderQuota}
+                  onChange={(e) =>
+                    onInputChange("limitedOrderQuota", e.target.value)
+                  }
+                  disabled={disabled}
                 />
               </div>
               <div className="flex flex-col gap-1 w-1/2">
@@ -190,6 +251,12 @@ export default function PluginFormData() {
                     // "border-red-500": errors.username,
                   })}
                   placeholder="0.00"
+                  type="number"
+                  value={formData.limitedPrice}
+                  onChange={(e) =>
+                    onInputChange("limitedPrice", e.target.value)
+                  }
+                  disabled={disabled}
                 />
               </div>
             </div>
@@ -208,6 +275,12 @@ export default function PluginFormData() {
                     // "border-red-500": errors.username,
                   })}
                   placeholder="0"
+                  type="number"
+                  value={formData.monthlyDurationDays}
+                  onChange={(e) =>
+                    onInputChange("monthlyDurationDays", e.target.value)
+                  }
+                  disabled={disabled}
                 />
               </div>
               <div className="flex flex-col gap-1 w-1/2">
@@ -219,6 +292,12 @@ export default function PluginFormData() {
                     // "border-red-500": errors.username,
                   })}
                   placeholder="0.00"
+                  type="number"
+                  value={formData.monthlyPrice}
+                  onChange={(e) =>
+                    onInputChange("monthlyPrice", e.target.value)
+                  }
+                  disabled={disabled}
                 />
               </div>
             </div>
@@ -237,6 +316,12 @@ export default function PluginFormData() {
                     // "border-red-500": errors.username,
                   })}
                   placeholder="0"
+                  type="number"
+                  value={formData.yearlyDurationDays}
+                  onChange={(e) =>
+                    onInputChange("yearlyDurationDays", e.target.value)
+                  }
+                  disabled={disabled}
                 />
               </div>
               <div className="flex flex-col gap-1 w-1/2">
@@ -248,6 +333,12 @@ export default function PluginFormData() {
                     // "border-red-500": errors.username,
                   })}
                   placeholder="0.00"
+                  type="number"
+                  value={formData.yearlyPrice}
+                  onChange={(e) =>
+                    onInputChange("yearlyPrice", e.target.value)
+                  }
+                  disabled={disabled}
                 />
               </div>
             </div>

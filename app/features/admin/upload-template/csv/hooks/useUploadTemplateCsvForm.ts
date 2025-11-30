@@ -207,8 +207,24 @@ export default function useUploadTemplateCsvForm() {
       });
       return;
     }
+    if (!organizationId) {
+      toast({
+        variant: "error",
+        icon: "ToastError",
+        description: "กรุณาเลือกโรงงานหรือบริษัท",
+      });
+      return;
+    }
+    if (!selectedTemplateType) {
+      toast({
+        variant: "error",
+        icon: "ToastError",
+        description: "กรุณาเลือกประเภทเทมเพลต",
+      });
+      return;
+    }
     const payload: ITemplateRequest = {
-      organization_id: Number(organizationId),
+      organization_id: organizationId,
       template_type: selectedTemplateType,
       fields: mappedColumns,
     };

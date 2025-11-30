@@ -21,6 +21,13 @@ export default function PluginForm() {
     handleClickAddFunction,
     openAddFunctionModal,
     setOpenAddFunctionModal,
+    formData,
+    handleInputChange,
+    headerList,
+    featureList,
+    handleSaveFeature,
+    handleRemoveFeature,
+    isSubmitting,
   } = usePluginForm();
   return (
     <React.Fragment>
@@ -55,18 +62,35 @@ export default function PluginForm() {
                 >
                   เพิ่มฟังก์ชันการใช้งาน
                 </Button>
-                <Button variant={"main"} onClick={handleClickNextStep}>
+                <Button
+                  variant={"main"}
+                  onClick={handleClickNextStep}
+                  disabled={isSubmitting}
+                >
                   บันทึก
                 </Button>
               </React.Fragment>
             )}
           </div>
         </div>
-        {step === 1 ? <PluginFormData /> : <PluginFormTable />}
+        {step === 1 ? (
+          <PluginFormData
+            formData={formData}
+            onInputChange={handleInputChange}
+            disabled={isSubmitting}
+          />
+        ) : (
+          <PluginFormTable
+            headerList={headerList}
+            data={featureList}
+            onRemove={handleRemoveFeature}
+          />
+        )}
       </div>
       <AddFunctionPluginModal
         open={openAddFunctionModal}
         setOpen={setOpenAddFunctionModal}
+        onSave={handleSaveFeature}
       />
     </React.Fragment>
   );

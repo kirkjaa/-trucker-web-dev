@@ -26,7 +26,7 @@ export interface ITemplate {
 }
 
 export interface ITemplateRequest {
-  organization_id: number;
+  organization_id: string;
   template_type: string;
   fields: {
     field_id: number;

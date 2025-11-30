@@ -690,6 +690,84 @@ CREATE TABLE chat_messages (
 );
 
 -- ============================================================================
+-- TEMPLATE DEFINITIONS
+-- ============================================================================
+
+CREATE TABLE template_field_definitions (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(100) NOT NULL,
+    field_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_template_field UNIQUE (type, field_name)
+);
+
+CREATE TABLE templates (
+    id SERIAL PRIMARY KEY,
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    template_type VARCHAR(100) NOT NULL,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE template_field_mappings (
+    id SERIAL PRIMARY KEY,
+    template_id INTEGER REFERENCES templates(id) ON DELETE CASCADE,
+    field_id INTEGER REFERENCES template_field_definitions(id) ON DELETE RESTRICT,
+    match_field VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_template_field_map UNIQUE (template_id, match_field)
+);
+
+-- ============================================================================
+-- PLUGINS
+-- ============================================================================
+
+CREATE TYPE plugin_status AS ENUM ('draft', 'active', 'inactive');
+
+CREATE TABLE plugins (
+    id SERIAL PRIMARY KEY,
+    plugin_code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    company_name VARCHAR(255) NOT NULL,
+    company_location TEXT,
+    plugin_type VARCHAR(150),
+    description TEXT,
+    contact_first_name VARCHAR(150),
+    contact_last_name VARCHAR(150),
+    contact_phone VARCHAR(50),
+    contact_email VARCHAR(255),
+    account_username VARCHAR(150),
+    account_password VARCHAR(255),
+    limited_order_quota INTEGER,
+    limited_price DECIMAL(12, 2),
+    monthly_duration_days INTEGER,
+    monthly_price DECIMAL(12, 2),
+    yearly_duration_days INTEGER,
+    yearly_price DECIMAL(12, 2),
+    available_credit DECIMAL(14, 2) DEFAULT 0,
+    status plugin_status DEFAULT 'draft',
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE plugin_features (
+    id SERIAL PRIMARY KEY,
+    plugin_id INTEGER REFERENCES plugins(id) ON DELETE CASCADE,
+    feature_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    limited_price DECIMAL(12, 2),
+    monthly_price DECIMAL(12, 2),
+    yearly_price DECIMAL(12, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
 -- INDEXES
 -- ============================================================================
 
@@ -747,6 +825,13 @@ CREATE INDEX idx_chat_messages_room ON chat_messages(room_id);
 CREATE INDEX idx_chat_messages_sender ON chat_messages(sender_id);
 CREATE INDEX idx_chat_messages_created ON chat_messages(created_at);
 
+-- Templates / Plugins
+CREATE INDEX idx_templates_org ON templates(organization_id);
+CREATE INDEX idx_templates_type ON templates(template_type);
+CREATE INDEX idx_template_field_mappings_template ON template_field_mappings(template_id);
+CREATE INDEX idx_plugins_status ON plugins(status);
+CREATE INDEX idx_plugins_company ON plugins(company_name);
+
 -- ============================================================================
 -- FUNCTIONS & TRIGGERS
 -- ============================================================================
@@ -783,6 +868,22 @@ CREATE TRIGGER update_bids_updated_at BEFORE UPDATE ON bids
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_quotations_updated_at BEFORE UPDATE ON quotations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_template_field_definitions_updated_at
+    BEFORE UPDATE ON template_field_definitions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_templates_updated_at
+    BEFORE UPDATE ON templates
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_template_field_mappings_updated_at
+    BEFORE UPDATE ON template_field_mappings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_plugins_updated_at
+    BEFORE UPDATE ON plugins
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to generate display codes
