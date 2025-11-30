@@ -1,5 +1,9 @@
 import { query, queryOne } from "../db";
-import { createUserRecord, updateUserRecord } from "./user.service";
+import {
+  UserPayload,
+  createUserRecord,
+  updateUserRecord,
+} from "./user.service";
 
 const DRIVER_SORT_MAP: Record<string, string> = {
   display_code: "d.display_code",
@@ -30,6 +34,7 @@ interface DriverRow {
   id_card_image_url: string | null;
   vehicle_registration_image_url: string | null;
   vehicle_license_image_url: string | null;
+  rejected_reason: string | null;
   trucker_id: string | null;
   user_id: string;
   user_display_code: string;
@@ -53,15 +58,17 @@ interface DriverRow {
   total_count?: string;
 }
 
-export interface DriverPayload {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  phone: string;
-  organizationId: string;
-  dialCode?: string;
-  imagePath?: string | null;
+export interface DriverDocuments {
+  idCardPath?: string | null;
+  truckRegistrationPath?: string | null;
+  drivingLicensePath?: string | null;
+}
+
+export interface DriverUpdateOptions {
+  payload?: UserPayload;
+  documents?: DriverDocuments;
+  driverStatus?: string;
+  rejectedReason?: string | null;
 }
 
 function generateDriverDisplayCode() {
@@ -82,6 +89,7 @@ function mapDriverRow(row: DriverRow) {
     image_id_card_url: row.id_card_image_url,
     image_truck_registration_url: row.vehicle_registration_image_url,
     image_driving_license_card_url: row.vehicle_license_image_url,
+    rejected_reason: row.rejected_reason,
     user: {
       id: row.user_id,
       display_code: row.user_display_code,
@@ -112,6 +120,35 @@ function mapDriverRow(row: DriverRow) {
         }
       : null,
   };
+}
+
+function hasUserPayloadChanges(payload?: UserPayload) {
+  if (!payload) {
+    return false;
+  }
+
+  return [
+    payload.firstName,
+    payload.lastName,
+    payload.username,
+    payload.email,
+    payload.phone,
+    payload.dialCode,
+    payload.organizationId,
+    payload.imagePath,
+  ].some((value) => value !== undefined);
+}
+
+function hasDocumentUpdates(documents?: DriverDocuments) {
+  if (!documents) {
+    return false;
+  }
+
+  return [
+    documents.idCardPath,
+    documents.truckRegistrationPath,
+    documents.drivingLicensePath,
+  ].some((value) => value !== undefined);
 }
 
 function buildDriverWhereClauses(
@@ -168,6 +205,7 @@ async function queryDrivers(
       d.id_card_image_url,
       d.vehicle_registration_image_url,
       d.vehicle_license_image_url,
+      d.rejected_reason,
       d.trucker_id,
       u.id AS user_id,
       u.display_code AS user_display_code,
@@ -224,6 +262,17 @@ export async function listInternalDrivers(params: DriverListParams) {
   };
 }
 
+export async function listFreelanceDrivers(params: DriverListParams) {
+  const result = await queryDrivers("freelance", params);
+  return {
+    ...result,
+    message: {
+      en: "Fetched freelance drivers successfully",
+      th: "ดึงข้อมูลพนักงานขับรถอิสระสำเร็จ",
+    },
+  };
+}
+
 export async function getDriverDetail(id: string) {
   const row = await queryOne<DriverRow>(
     `
@@ -235,6 +284,7 @@ export async function getDriverDetail(id: string) {
         d.id_card_image_url,
         d.vehicle_registration_image_url,
         d.vehicle_license_image_url,
+        d.rejected_reason,
         d.trucker_id,
         u.id AS user_id,
         u.display_code AS user_display_code,
@@ -277,7 +327,7 @@ export async function getDriverDetail(id: string) {
   return mapDriverRow(row);
 }
 
-export async function createInternalDriver(payload: DriverPayload) {
+export async function createInternalDriver(payload: UserPayload) {
   await query("BEGIN");
   try {
     const userId = await createUserRecord(payload, { role: "DRIVER" });
@@ -307,7 +357,7 @@ export async function createInternalDriver(payload: DriverPayload) {
   }
 }
 
-export async function updateInternalDriver(id: string, payload: DriverPayload) {
+export async function updateInternalDriver(id: string, payload?: UserPayload) {
   const driver = await queryOne<{ id: string; user_id: string }>(
     `SELECT id, user_id FROM drivers WHERE id = $1 AND deleted = false AND type = 'internal'`,
     [id]
@@ -319,15 +369,141 @@ export async function updateInternalDriver(id: string, payload: DriverPayload) {
 
   await query("BEGIN");
   try {
-    await updateUserRecord(driver.user_id, payload);
+    if (hasUserPayloadChanges(payload)) {
+      await updateUserRecord(driver.user_id, payload ?? {});
+    }
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let index = 1;
+
+    if (payload?.organizationId !== undefined) {
+      updates.push(`company_id = $${index++}`);
+      values.push(payload.organizationId);
+    }
+
+    values.push(id);
+
     await query(
       `
         UPDATE drivers
-        SET company_id = $1,
-            updated_at = NOW()
-        WHERE id = $2
+        SET ${updates.length ? `${updates.join(", ")},` : ""} updated_at = NOW()
+        WHERE id = $${index}
       `,
-      [payload.organizationId, id]
+      values
+    );
+
+    await query("COMMIT");
+    return id;
+  } catch (error) {
+    await query("ROLLBACK");
+    throw error;
+  }
+}
+
+export async function createFreelanceDriver(
+  payload: UserPayload,
+  documents: DriverDocuments
+) {
+  await query("BEGIN");
+  try {
+    const userId = await createUserRecord(payload, {
+      role: "DRIVER",
+      status: "PENDING",
+    });
+
+    if (!userId) {
+      throw new Error("Failed to create driver user");
+    }
+
+    const inserted = await queryOne<{ id: string }>(
+      `
+        INSERT INTO drivers (
+          display_code,
+          user_id,
+          type,
+          company_id,
+          id_card_image_url,
+          vehicle_registration_image_url,
+          vehicle_license_image_url,
+          status
+        ) VALUES ($1,$2,'freelance',NULL,$3,$4,$5,'PENDING')
+        RETURNING id
+      `,
+      [
+        generateDriverDisplayCode(),
+        userId,
+        documents.idCardPath ?? null,
+        documents.truckRegistrationPath ?? null,
+        documents.drivingLicensePath ?? null,
+      ]
+    );
+
+    await query("COMMIT");
+    return inserted?.id ?? null;
+  } catch (error) {
+    await query("ROLLBACK");
+    throw error;
+  }
+}
+
+export async function updateFreelanceDriver(
+  id: string,
+  options: DriverUpdateOptions
+) {
+  const driver = await queryOne<{ id: string; user_id: string }>(
+    `SELECT id, user_id FROM drivers WHERE id = $1 AND deleted = false AND type = 'freelance'`,
+    [id]
+  );
+
+  if (!driver) {
+    return null;
+  }
+
+  await query("BEGIN");
+  try {
+    if (hasUserPayloadChanges(options.payload)) {
+      await updateUserRecord(driver.user_id, options.payload ?? {});
+    }
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let index = 1;
+
+    if (options.documents?.idCardPath !== undefined) {
+      updates.push(`id_card_image_url = $${index++}`);
+      values.push(options.documents.idCardPath);
+    }
+
+    if (options.documents?.truckRegistrationPath !== undefined) {
+      updates.push(`vehicle_registration_image_url = $${index++}`);
+      values.push(options.documents.truckRegistrationPath);
+    }
+
+    if (options.documents?.drivingLicensePath !== undefined) {
+      updates.push(`vehicle_license_image_url = $${index++}`);
+      values.push(options.documents.drivingLicensePath);
+    }
+
+    if (options.driverStatus) {
+      updates.push(`status = $${index++}`);
+      values.push(options.driverStatus);
+    }
+
+    if (options.rejectedReason !== undefined) {
+      updates.push(`rejected_reason = $${index++}`);
+      values.push(options.rejectedReason);
+    }
+
+    values.push(id);
+
+    await query(
+      `
+        UPDATE drivers
+        SET ${updates.length ? `${updates.join(", ")},` : ""} updated_at = NOW()
+        WHERE id = $${index}
+      `,
+      values
     );
 
     await query("COMMIT");

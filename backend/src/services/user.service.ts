@@ -249,12 +249,12 @@ export interface UserListParams {
 }
 
 export interface UserPayload {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  phone: string;
-  organizationId: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  organizationId?: string | null;
   dialCode?: string;
   imagePath?: string | null;
 }
@@ -352,10 +352,36 @@ export async function getUserDetail(id: string) {
   };
 }
 
+type RequiredUserFields = Required<
+  Pick<UserPayload, "firstName" | "lastName" | "username" | "email" | "phone">
+>;
+
+function assertCreateUserFields(
+  payload: UserPayload
+): asserts payload is UserPayload & RequiredUserFields {
+  if (!payload.firstName || !payload.lastName) {
+    throw new Error("First name and last name are required");
+  }
+
+  if (!payload.username) {
+    throw new Error("Username is required");
+  }
+
+  if (!payload.email) {
+    throw new Error("Email is required");
+  }
+
+  if (!payload.phone) {
+    throw new Error("Phone number is required");
+  }
+}
+
 export async function createUserRecord(
   payload: UserPayload,
   options?: { role?: string; status?: string }
 ) {
+  assertCreateUserFields(payload);
+
   const passwordHash = await bcrypt.hash("Demo@123", 10);
   const role = options?.role ?? "ORGANIZATION";
   const status = options?.status ?? "ACTIVE";
@@ -388,7 +414,7 @@ export async function createUserRecord(
       payload.dialCode ?? "+66",
       payload.phone,
       role,
-      payload.organizationId,
+      payload.organizationId ?? null,
       status,
       payload.imagePath ?? null,
     ]
@@ -407,32 +433,63 @@ export async function updateUserRecord(id: string, payload: UserPayload) {
     return null;
   }
 
+  const updates: string[] = [];
+  const values: any[] = [];
+  let index = 1;
+
+  if (payload.firstName !== undefined) {
+    updates.push(`first_name = $${index++}`);
+    values.push(payload.firstName);
+  }
+
+  if (payload.lastName !== undefined) {
+    updates.push(`last_name = $${index++}`);
+    values.push(payload.lastName);
+  }
+
+  if (payload.username !== undefined) {
+    updates.push(`username = $${index++}`);
+    values.push(payload.username);
+  }
+
+  if (payload.email !== undefined) {
+    updates.push(`email = $${index++}`);
+    values.push(payload.email);
+  }
+
+  if (payload.phone !== undefined) {
+    updates.push(`phone = $${index++}`);
+    values.push(payload.phone);
+  }
+
+  if (payload.dialCode !== undefined) {
+    updates.push(`dial_code = $${index++}`);
+    values.push(payload.dialCode);
+  }
+
+  if (payload.organizationId !== undefined) {
+    updates.push(`organization_id = $${index++}`);
+    values.push(payload.organizationId ?? null);
+  }
+
+  if (payload.imagePath !== undefined) {
+    updates.push(`image_url = $${index++}`);
+    values.push(payload.imagePath ?? null);
+  }
+
+  if (!updates.length) {
+    return id;
+  }
+
+  values.push(id);
+
   await query(
     `
       UPDATE users
-      SET
-        first_name = $1,
-        last_name = $2,
-        username = $3,
-        email = $4,
-        phone = $5,
-        dial_code = $6,
-        organization_id = $7,
-        image_url = COALESCE($8, image_url),
-        updated_at = NOW()
-      WHERE id = $9
+      SET ${updates.join(", ")}, updated_at = NOW()
+      WHERE id = $${index}
     `,
-    [
-      payload.firstName,
-      payload.lastName,
-      payload.username,
-      payload.email,
-      payload.phone,
-      payload.dialCode ?? "+66",
-      payload.organizationId,
-      payload.imagePath ?? null,
-      id,
-    ]
+    values
   );
 
   return id;

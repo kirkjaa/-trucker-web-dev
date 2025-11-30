@@ -3,7 +3,25 @@ import { Request } from "express";
 import { UserPayload } from "../../services/user.service";
 import { buildFileUrl } from "../../utils/upload";
 
-export function extractUserPayload(req: Request): UserPayload {
+type MulterFiles = Record<string, Express.Multer.File[]>;
+
+function getFilesDictionary(req: Request): MulterFiles {
+  if (!req.files || Array.isArray(req.files)) {
+    return {};
+  }
+
+  return req.files as MulterFiles;
+}
+
+function getUploadedFilePath(dict: MulterFiles, fieldName: string) {
+  const file = dict[fieldName]?.[0];
+  return file ? buildFileUrl(file.filename) : undefined;
+}
+
+export function extractUserPayload(
+  req: Request,
+  options?: { requireOrganization?: boolean; requireFields?: boolean }
+): UserPayload {
   const {
     first_name,
     last_name,
@@ -14,37 +32,66 @@ export function extractUserPayload(req: Request): UserPayload {
     dial_code,
   } = req.body;
 
-  if (!first_name || !last_name) {
-    throw new Error("First name and last name are required");
+  const requireOrganization = options?.requireOrganization !== false;
+  const requireFields = options?.requireFields !== false;
+
+  const files = getFilesDictionary(req);
+  const imagePath =
+    req.file?.filename
+      ? buildFileUrl(req.file.filename)
+      : getUploadedFilePath(files, "image");
+
+  const payload: UserPayload = {};
+
+  if (first_name) {
+    payload.firstName = first_name;
+  } else if (requireFields) {
+    throw new Error("First name is required");
   }
 
-  if (!username) {
+  if (last_name) {
+    payload.lastName = last_name;
+  } else if (requireFields) {
+    throw new Error("Last name is required");
+  }
+
+  if (username) {
+    payload.username = username;
+  } else if (requireFields) {
     throw new Error("Username is required");
   }
 
-  if (!email) {
+  if (email) {
+    payload.email = email;
+  } else if (requireFields) {
     throw new Error("Email is required");
   }
 
-  if (!phone) {
+  if (phone) {
+    payload.phone = phone;
+  } else if (requireFields) {
     throw new Error("Phone number is required");
   }
 
-  if (!organization_id) {
-    throw new Error("Organization is required");
+  if (requireOrganization) {
+    if (!organization_id) {
+      throw new Error("Organization is required");
+    }
+    payload.organizationId = organization_id;
+  } else if (organization_id !== undefined) {
+    payload.organizationId = organization_id || null;
   }
 
-  const imagePath = req.file ? buildFileUrl(req.file.filename) : undefined;
+  if (dial_code !== undefined) {
+    payload.dialCode = dial_code;
+  }
 
-  return {
-    firstName: first_name,
-    lastName: last_name,
-    username,
-    email,
-    phone,
-    organizationId: organization_id,
-    dialCode: dial_code,
-    imagePath: imagePath ?? null,
-  };
+  if (imagePath !== undefined) {
+    payload.imagePath = imagePath ?? null;
+  }
+
+  return payload;
 }
+
+export { getFilesDictionary, getUploadedFilePath };
 

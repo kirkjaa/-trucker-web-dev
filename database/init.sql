@@ -273,6 +273,7 @@ CREATE TABLE drivers (
     id_card_image_url TEXT,
     vehicle_registration_image_url TEXT,
     vehicle_license_image_url TEXT,
+    rejected_reason TEXT,
     status driver_status DEFAULT 'PENDING',
     trucker_id VARCHAR(100),
     deleted BOOLEAN DEFAULT false,

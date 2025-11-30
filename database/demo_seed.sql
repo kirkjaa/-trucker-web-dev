@@ -216,6 +216,10 @@ INSERT INTO drivers (
     user_id,
     type,
     company_id,
+    id_card_image_url,
+    vehicle_registration_image_url,
+    vehicle_license_image_url,
+    rejected_reason,
     status,
     deleted,
     created_at,
@@ -227,6 +231,10 @@ SELECT
     target_user.id,
     'freelance',
     '22222222-2222-2222-2222-222222222222',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
     'APPROVED',
     false,
     NOW(),
@@ -1184,6 +1192,10 @@ INSERT INTO drivers (
     user_id,
     type,
     company_id,
+    id_card_image_url,
+    vehicle_registration_image_url,
+    vehicle_license_image_url,
+    rejected_reason,
     status,
     created_at,
     updated_at
@@ -1194,7 +1206,78 @@ VALUES (
     '99999999-aaaa-bbbb-cccc-111111111111',
     'internal',
     '22222222-2222-2222-2222-222222222222',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
     'APPROVED',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (display_code) DO NOTHING;
+
+-- Demo freelance driver
+INSERT INTO users (
+    id,
+    display_code,
+    username,
+    email,
+    password_hash,
+    first_name,
+    last_name,
+    dial_code,
+    phone,
+    role,
+    organization_id,
+    status,
+    image_url,
+    created_at,
+    updated_at
+)
+VALUES (
+    '88888888-aaaa-bbbb-cccc-333333333333',
+    'DEMO-DRIVER-FREE',
+    'driver.freelance@demo.com',
+    'driver.freelance@demo.com',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    'Freelance',
+    'Driver',
+    '+66',
+    '0800000111',
+    'DRIVER',
+    NULL,
+    'PENDING',
+    NULL,
+    NOW(),
+    NOW()
+)
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO drivers (
+    id,
+    display_code,
+    user_id,
+    type,
+    company_id,
+    id_card_image_url,
+    vehicle_registration_image_url,
+    vehicle_license_image_url,
+    rejected_reason,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (
+    '66666666-bbbb-cccc-dddd-444444444444',
+    'DRV-DEMO-FREE',
+    '88888888-aaaa-bbbb-cccc-333333333333',
+    'freelance',
+    NULL,
+    'https://example.com/docs/idcard-demo.png',
+    'https://example.com/docs/truck-registration-demo.png',
+    'https://example.com/docs/driving-license-demo.png',
+    NULL,
+    'PENDING',
     NOW(),
     NOW()
 )
