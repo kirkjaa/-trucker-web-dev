@@ -621,6 +621,111 @@ SET price     = EXCLUDED.price,
     unit_price = EXCLUDED.unit_price,
     updated_at = NOW();
 
+-- International pending route
+INSERT INTO master_routes (
+    id,
+    display_code,
+    origin_province,
+    origin_district,
+    origin_latitude,
+    origin_longitude,
+    destination_province,
+    destination_district,
+    destination_latitude,
+    destination_longitude,
+    return_point_province,
+    return_point_district,
+    return_point_latitude,
+    return_point_longitude,
+    distance_value,
+    created_at,
+    updated_at
+)
+VALUES (
+    '8e9f7a6b-5c4d-3e2f-1a0b-998877665544',
+    'MR-DEMO-003',
+    'Bangkok',
+    'Lat Krabang',
+    13.724717,
+    100.808000,
+    'Singapore',
+    'Jurong',
+    1.321000,
+    103.697000,
+    'Laem Chabang',
+    'Sri Racha',
+    13.082000,
+    100.883000,
+    1430,
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET destination_province = EXCLUDED.destination_province,
+    return_point_province = EXCLUDED.return_point_province,
+    distance_value        = EXCLUDED.distance_value,
+    updated_at            = NOW();
+
+INSERT INTO factory_routes (
+    id,
+    factory_id,
+    master_route_id,
+    route_factory_code,
+    shipping_type,
+    type,
+    distance_value,
+    distance_unit,
+    status,
+    offer_price,
+    unit,
+    display_code,
+    created_at,
+    updated_at
+)
+VALUES (
+    'ddeeff00-1111-2222-3333-444455556666',
+    '11111111-1111-1111-1111-111111111111',
+    '8e9f7a6b-5c4d-3e2f-1a0b-998877665544',
+    'FR-DEMO-003',
+    'seaFreight',
+    'abroad',
+    1430,
+    'km',
+    'pending',
+    45000,
+    'trip',
+    'FACT-ROUTE-003',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET status      = EXCLUDED.status,
+    offer_price = EXCLUDED.offer_price,
+    updated_at  = NOW();
+
+INSERT INTO route_price_entries (
+    id,
+    factory_route_id,
+    truck_size,
+    price,
+    unit_price,
+    created_at,
+    updated_at
+)
+VALUES (
+    'aa11bb22-cc33-dd44-ee55-66778899aabb',
+    'ddeeff00-1111-2222-3333-444455556666',
+    'CONTAINER_TRUCK',
+    45000,
+    'THB/trip',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET price     = EXCLUDED.price,
+    unit_price = EXCLUDED.unit_price,
+    updated_at = NOW();
+
 INSERT INTO rfqs (
     id,
     display_code,
