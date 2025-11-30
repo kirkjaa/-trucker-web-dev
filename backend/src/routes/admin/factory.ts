@@ -144,9 +144,9 @@ router.delete("/", authMiddleware, async (req, res) => {
   try {
     const idsParam = req.query.id;
     const ids = Array.isArray(idsParam)
-      ? idsParam
+      ? idsParam.map((value) => String(value))
       : idsParam
-        ? [idsParam as string]
+        ? [String(idsParam)]
         : [];
 
     if (!ids.length) {

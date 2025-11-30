@@ -265,6 +265,10 @@ export async function createOrganization(payload: OrganizationPayload) {
 
     const organizationId = inserted?.id;
 
+    if (!organizationId) {
+      throw new Error("Failed to create organization");
+    }
+
     await upsertAddress({
       organizationId,
       addressLine1: payload.addressLine1,
