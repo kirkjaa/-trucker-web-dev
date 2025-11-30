@@ -525,6 +525,102 @@ SET price     = EXCLUDED.price,
     unit_price = EXCLUDED.unit_price,
     updated_at = NOW();
 
+INSERT INTO master_routes (
+    id,
+    display_code,
+    origin_province,
+    origin_district,
+    origin_latitude,
+    origin_longitude,
+    destination_province,
+    destination_district,
+    destination_latitude,
+    destination_longitude,
+    distance_value,
+    created_at,
+    updated_at
+)
+VALUES (
+    '7d6a6f34-8b6c-4e7f-bec3-1b5d0e02abcd',
+    'MR-DEMO-002',
+    'Chonburi',
+    'Si Racha',
+    13.173699,
+    100.930010,
+    'Rayong',
+    'Mueang Rayong',
+    12.683333,
+    101.266667,
+    120,
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET origin_province      = EXCLUDED.origin_province,
+    destination_province = EXCLUDED.destination_province,
+    distance_value       = EXCLUDED.distance_value,
+    updated_at           = NOW();
+
+INSERT INTO factory_routes (
+    id,
+    factory_id,
+    master_route_id,
+    route_factory_code,
+    shipping_type,
+    type,
+    distance_value,
+    distance_unit,
+    status,
+    offer_price,
+    unit,
+    display_code,
+    created_at,
+    updated_at
+)
+VALUES (
+    'c2d5e6f7-1234-4abc-9def-223344556677',
+    '11111111-1111-1111-1111-111111111111',
+    '7d6a6f34-8b6c-4e7f-bec3-1b5d0e02abcd',
+    'FR-DEMO-002',
+    'landFreight',
+    'oneWay',
+    120,
+    'km',
+    'pending',
+    6500,
+    'trip',
+    'FACT-ROUTE-002',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET status      = EXCLUDED.status,
+    offer_price = EXCLUDED.offer_price,
+    updated_at  = NOW();
+
+INSERT INTO route_price_entries (
+    id,
+    factory_route_id,
+    truck_size,
+    price,
+    unit_price,
+    created_at,
+    updated_at
+)
+VALUES (
+    '5f4e3d2c-1b0a-4c5d-8e7f-998877665544',
+    'c2d5e6f7-1234-4abc-9def-223344556677',
+    '10_WHEEL',
+    15000,
+    'THB/trip',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET price     = EXCLUDED.price,
+    unit_price = EXCLUDED.unit_price,
+    updated_at = NOW();
+
 INSERT INTO rfqs (
     id,
     display_code,

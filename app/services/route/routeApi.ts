@@ -62,11 +62,11 @@ export const routeApi = {
 
   // API Post
   createRoute: async (
-    organizationId: number,
+    organizationId: string,
     data: RouteForm
   ): Promise<IBaseResponse> => {
     const response = await apiPost(
-      `/v1/route?organization_id=${organizationId}`,
+      `/v1/route?organization_id=${encodeURIComponent(organizationId)}`,
       data
     );
 

@@ -121,7 +121,7 @@ export default function CreateRouteModal({
 
               <Select
                 onValueChange={(val) => {
-                  onFactoryIdChange(Number(val));
+                  onFactoryIdChange(val);
                 }}
               >
                 <SelectTrigger className="py-2 px-5 bg-white border-neutral-03">
@@ -174,7 +174,9 @@ export default function CreateRouteModal({
           </React.Fragment>
         ) : formType === "form" ? (
           <CreateRouteForm
-            selectedFactoryId={selectedFactory?.id || 0}
+            selectedFactoryId={
+              selectedFactory?.id ? selectedFactory.id.toString() : ""
+            }
             byShippingType={byShippingType}
             onClickCancel={onClickCancel}
             byType={byType}

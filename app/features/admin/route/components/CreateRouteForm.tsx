@@ -29,7 +29,7 @@ type CreateRouteFormProps = {
   byShippingType: ERouteShippingType;
   byType: ERouteType;
   onClickCancel: () => void;
-  selectedFactoryId: number;
+  selectedFactoryId: string;
   dataForm?: IRouteData;
 };
 
@@ -209,7 +209,7 @@ export default function CreateRouteForm({
             <p className="text-sm font-semibold text-neutral-08">ชื่อโรงงาน</p>
 
             <Select
-              value={selectedFactoryId.toString()}
+              value={selectedFactoryId}
               /* onValueChange={(val) => { */
               /*   setSelectedFactory(val); */
               /* }} */

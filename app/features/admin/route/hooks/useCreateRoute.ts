@@ -64,7 +64,15 @@ export default function useCreateRoute() {
     return haversine(lat1, lon1, lat2, lon2);
   };
 
-  const onSubmit = async (organizationId: number) => {
+  const onSubmit = async (organizationId: string) => {
+    if (!organizationId) {
+      toast({
+        icon: "ToastError",
+        variant: "error",
+        description: "กรุณาเลือกโรงงานก่อนสร้างเส้นทาง",
+      });
+      return;
+    }
     const lastedData = getValues();
     /* const data = { */
     /*   ...lastedData, */

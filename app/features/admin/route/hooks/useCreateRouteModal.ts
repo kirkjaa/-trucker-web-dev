@@ -67,12 +67,22 @@ export default function useCreateRouteModal() {
     fileInputRef.current?.click();
   };
 
-  const onFactoryIdChange = async (id: number) => {
-    setSelectedFactory(optionFactory?.find((item) => item.id === id));
+  const onFactoryIdChange = async (id: string) => {
+    const factory = optionFactory?.find(
+      (item) => String(item.id) === String(id)
+    );
+    setSelectedFactory(factory);
+
+    const numericId = Number(id);
+    if (Number.isNaN(numericId)) {
+      setWarningImport(true);
+      setDisabledImportBtn(true);
+      return;
+    }
 
     const validateTemplate = await templateApi.getTemplateByOrganization(
       "ROUTE",
-      id
+      numericId
     );
     if (validateTemplate !== null) {
       setWarningImport(false);
