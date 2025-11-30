@@ -715,7 +715,7 @@ INSERT INTO route_price_entries (
 VALUES (
     'aa11bb22-cc33-dd44-ee55-66778899aabb',
     'ddeeff00-1111-2222-3333-444455556666',
-    'CONTAINER_TRUCK',
+    '10_WHEEL',
     45000,
     'THB/trip',
     NOW(),
