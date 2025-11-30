@@ -139,18 +139,6 @@ function hasUserPayloadChanges(payload?: UserPayload) {
   ].some((value) => value !== undefined);
 }
 
-function hasDocumentUpdates(documents?: DriverDocuments) {
-  if (!documents) {
-    return false;
-  }
-
-  return [
-    documents.idCardPath,
-    documents.truckRegistrationPath,
-    documents.drivingLicensePath,
-  ].some((value) => value !== undefined);
-}
-
 function buildDriverWhereClauses(
   type: DriverTypeFilter,
   params: DriverListParams

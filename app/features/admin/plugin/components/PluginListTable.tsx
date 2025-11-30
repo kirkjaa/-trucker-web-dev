@@ -21,7 +21,6 @@ export default function PluginListTable() {
     loading,
     plugins,
     sortKey,
-    sortOrder,
   } = usePluginListTable();
 
   useEffect(() => {

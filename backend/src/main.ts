@@ -56,12 +56,22 @@ async function bootstrap() {
     });
   });
 
-  app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    console.error("Unhandled error:", err);
-    res
-      .status(500)
-      .json({ statusCode: 500, message: "Internal server error" });
-  });
+  app.use(
+    (
+      err: any,
+      _req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
+      console.error("Unhandled error:", err);
+      if (res.headersSent) {
+        return next(err);
+      }
+      res
+        .status(500)
+        .json({ statusCode: 500, message: "Internal server error" });
+    }
+  );
 
   app.listen(config.port, () => {
     console.log(
