@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
 import { getServerSession } from "next-auth";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 import { authOptions } from "./api/auth/[...nextauth]/auth";
 import SessionProvider from "./components/SessionProvider";
@@ -26,9 +28,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getServerSession(authOptions);
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${notoSanThai.className}`}>
         <ThemeProvider
           attribute="class"
@@ -36,9 +40,11 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider session={session}>{children}</SessionProvider>
-          <Toaster />
-          <Loading />
+          <NextIntlClientProvider messages={messages}>
+            <SessionProvider session={session}>{children}</SessionProvider>
+            <Toaster />
+            <Loading />
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>

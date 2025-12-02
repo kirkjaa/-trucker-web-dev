@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import path from "path";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // Get __dirname for ESM modules
 const __filename = fileURLToPath(import.meta.url);
@@ -31,12 +34,13 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:5002',
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5300',
-    JWT_SECRET: process.env.JWT_SECRET || '',
-    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || '',
-    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '',
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || "",
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || "http://localhost:5002",
+    NEXT_PUBLIC_API_BASE_URL:
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5300",
+    JWT_SECRET: process.env.JWT_SECRET || "",
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "",
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",
     NEXT_PUBLIC_FIREBASE_API_KEY_PLACEHOLDER_DEV:
       process.env.NEXT_PUBLIC_FIREBASE_API_KEY_PLACEHOLDER_DEV,
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN_PLACEHOLDER_DEV:
@@ -61,4 +65,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

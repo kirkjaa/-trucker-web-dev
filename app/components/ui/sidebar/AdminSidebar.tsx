@@ -26,6 +26,7 @@ import sidebarLogo from "@/public/images/logo-sidebar.png";
 import placeHolderPerson from "@/public/placeHolderPerson.png";
 
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface IconMapping {
   [key: string]: keyof typeof iconNames;
@@ -310,6 +311,7 @@ export default function AdminSidebar() {
           </div>
 
           <ThemeToggle collapsed={state === "collapsed"} />
+          <LanguageSwitcher collapsed={state === "collapsed"} />
 
           <p className="body3 text-sidebar-text-head">เมนูหลัก</p>
         </div>
