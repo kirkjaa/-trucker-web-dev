@@ -138,6 +138,39 @@ ON CONFLICT (username) DO NOTHING;
 
 WITH position_ids AS (
     SELECT
+        (SELECT id FROM user_positions WHERE code = 'FACTORY_MANAGER') AS factory_manager_id
+)
+INSERT INTO users (
+    id, display_code, username, email, password_hash,
+    first_name, last_name, dial_code, phone, id_card,
+    image_url, role, position_id, organization_id,
+    status, trucker_id, deleted, created_at, updated_at
+)
+SELECT
+    'f1f1f1f1-aaaa-bbbb-cccc-111122223333',
+    'DEMO-FACTORY-STAFF',
+    'factory.staff@demo.com',
+    'factory.staff@demo.com',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    'Factory',
+    'Staff',
+    '+66',
+    '0800000010',
+    NULL,
+    NULL,
+    'ORGANIZATION',
+    factory_manager_id,
+    '11111111-1111-1111-1111-111111111111',
+    'ACTIVE',
+    NULL,
+    false,
+    NOW(),
+    NOW()
+FROM position_ids
+ON CONFLICT (username) DO NOTHING;
+
+WITH position_ids AS (
+    SELECT
         (SELECT id FROM user_positions WHERE code = 'ADMIN') AS admin_id,
         (SELECT id FROM user_positions WHERE code = 'FACTORY_MANAGER') AS factory_manager_id,
         (SELECT id FROM user_positions WHERE code = 'COMPANY_MANAGER') AS company_manager_id,
@@ -159,6 +192,39 @@ SELECT
     'Company',
     '+66',
     '0800000003',
+    NULL,
+    NULL,
+    'ORGANIZATION',
+    company_manager_id,
+    '22222222-2222-2222-2222-222222222222',
+    'ACTIVE',
+    NULL,
+    false,
+    NOW(),
+    NOW()
+FROM position_ids
+ON CONFLICT (username) DO NOTHING;
+
+WITH position_ids AS (
+    SELECT
+        (SELECT id FROM user_positions WHERE code = 'COMPANY_MANAGER') AS company_manager_id
+)
+INSERT INTO users (
+    id, display_code, username, email, password_hash,
+    first_name, last_name, dial_code, phone, id_card,
+    image_url, role, position_id, organization_id,
+    status, trucker_id, deleted, created_at, updated_at
+)
+SELECT
+    'e2e2e2e2-aaaa-bbbb-cccc-444455556666',
+    'DEMO-COMPANY-STAFF',
+    'company.staff@demo.com',
+    'company.staff@demo.com',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    'Company',
+    'Staff',
+    '+66',
+    '0800000011',
     NULL,
     NULL,
     'ORGANIZATION',
