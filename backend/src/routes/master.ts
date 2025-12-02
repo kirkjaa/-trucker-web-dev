@@ -12,9 +12,7 @@ const router = Router();
 router.get("/template-fields", authMiddleware, async (req, res) => {
   try {
     const { type } = req.query;
-    const fields = await listTemplateFields(
-      type ? String(type) : undefined
-    );
+    const fields = await listTemplateFields(type ? String(type) : undefined);
     res.json({
       statusCode: 200,
       message: {
@@ -82,4 +80,3 @@ router.get("/business-types", authMiddleware, async (_req, res) => {
 });
 
 export default router;
-

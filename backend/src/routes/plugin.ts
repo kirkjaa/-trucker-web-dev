@@ -79,10 +79,7 @@ router.get("/byId", authMiddleware, async (req, res) => {
   }
 });
 
-router.post(
-  "/",
-  authMiddleware,
-  async (req: AuthenticatedRequest, res) => {
+router.post("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const payload = req.body as PluginPayload;
     const creatorId = req.user!.id;
@@ -104,8 +101,7 @@ router.post(
       },
     });
   }
-  }
-);
+});
 
 router.put("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
@@ -178,4 +174,3 @@ router.delete("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
 });
 
 export default router;
-

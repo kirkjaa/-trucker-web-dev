@@ -1,10 +1,7 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../../middleware/auth";
-import {
-  createUserRecord,
-  listUsers,
-} from "../../services/user.service";
+import { createUserRecord, listUsers } from "../../services/user.service";
 import { upload } from "../../utils/upload";
 import { extractUserPayload } from "../utils/userPayload";
 
@@ -67,4 +64,3 @@ router.post("/", authMiddleware, uploadSingle, async (req, res) => {
 });
 
 export default router;
-

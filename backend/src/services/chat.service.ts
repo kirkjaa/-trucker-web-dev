@@ -226,10 +226,9 @@ export async function createChatMessage({
     [roomId, senderId, normalizedType, messageText || null, fileUrl ?? null]
   );
 
-  await query(
-    `UPDATE chat_rooms SET last_message_at = NOW() WHERE id = $1`,
-    [roomId]
-  );
+  await query(`UPDATE chat_rooms SET last_message_at = NOW() WHERE id = $1`, [
+    roomId,
+  ]);
 
   return inserted?.id ?? null;
 }
@@ -276,7 +275,15 @@ async function ensureRoomAccess(roomId: string, userId: string) {
 }
 
 function normalizeMessageType(type?: string) {
-  const allowed = new Set(["txt", "img", "file", "audio", "loc", "cmd", "custome"]);
+  const allowed = new Set([
+    "txt",
+    "img",
+    "file",
+    "audio",
+    "loc",
+    "cmd",
+    "custome",
+  ]);
   if (!type) {
     return "txt";
   }
@@ -310,11 +317,3 @@ function mapMessageRow(row: ChatMessageRow): ChatMessageDto {
 }
 
 export const chatMessages = SUCCESS_MESSAGES;
-
-
-
-
-
-
-
-

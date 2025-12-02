@@ -292,7 +292,10 @@ export async function createOrganization(payload: OrganizationPayload) {
   }
 }
 
-export async function updateOrganization(id: string, payload: OrganizationPayload) {
+export async function updateOrganization(
+  id: string,
+  payload: OrganizationPayload
+) {
   const existing = await queryOne<{ id: string }>(
     `SELECT id FROM organizations WHERE id = $1 AND deleted = false`,
     [id]
@@ -675,4 +678,3 @@ async function insertDocuments(organizationId: string, paths: string[]) {
 }
 
 export const organizationMessages = DEFAULT_MESSAGE;
-

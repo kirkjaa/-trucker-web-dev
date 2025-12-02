@@ -30,4 +30,3 @@ export function buildFileUrl(filename: string) {
 export function getUploadsDir() {
   return uploadsDir;
 }
-

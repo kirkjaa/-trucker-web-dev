@@ -35,10 +35,9 @@ export function extractUserPayload(
   const requireFields = options?.requireFields !== false;
 
   const files = getFilesDictionary(req);
-  const imagePath =
-    req.file?.filename
-      ? buildFileUrl(req.file.filename)
-      : getUploadedFilePath(files, "image");
+  const imagePath = req.file?.filename
+    ? buildFileUrl(req.file.filename)
+    : getUploadedFilePath(files, "image");
 
   const payload: UserPayload = {};
 
@@ -93,4 +92,3 @@ export function extractUserPayload(
 }
 
 export { getFilesDictionary, getUploadedFilePath };
-

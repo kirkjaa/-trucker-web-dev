@@ -112,4 +112,3 @@ export function extractDocumentDeleteIds(req: AuthenticatedRequest) {
   if (!ids) return [];
   return Array.isArray(ids) ? ids : [ids];
 }
-

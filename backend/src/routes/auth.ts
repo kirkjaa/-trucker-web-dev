@@ -7,7 +7,11 @@ import {
   findUserById,
   findUserByIdentifier,
 } from "../services/user.service";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/tokens";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../utils/tokens";
 
 const router = Router();
 
@@ -119,7 +123,9 @@ router.get("/me", async (req, res) => {
     const payload = verifyRefreshToken(token);
     const user = await findUserById(payload.id);
     if (!user) {
-      return res.status(404).json({ statusCode: 404, message: "User not found" });
+      return res
+        .status(404)
+        .json({ statusCode: 404, message: "User not found" });
     }
 
     const data = await buildUserResponse(user);
@@ -133,4 +139,3 @@ router.get("/me", async (req, res) => {
 });
 
 export default router;
-

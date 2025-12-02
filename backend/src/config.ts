@@ -45,4 +45,3 @@ export const config = {
   accessTokenTtl: env.JWT_ACCESS_TOKEN_EXPIRES_IN,
   refreshTokenTtl: env.JWT_REFRESH_TOKEN_EXPIRES_IN,
 };
-

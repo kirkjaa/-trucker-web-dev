@@ -167,4 +167,3 @@ export async function listBusinessTypes() {
     code: row.code,
   }));
 }
-

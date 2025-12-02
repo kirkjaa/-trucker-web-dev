@@ -77,10 +77,7 @@ router.get("/byId", authMiddleware, async (req, res) => {
   }
 });
 
-router.post(
-  "/",
-  authMiddleware,
-  async (req: AuthenticatedRequest, res) => {
+router.post("/", authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const payload = req.body as TemplatePayload;
     const creatorId = req.user!.id;
@@ -102,8 +99,7 @@ router.post(
       },
     });
   }
-  }
-);
+});
 
 router.get("/byOrganization", authMiddleware, async (req, res) => {
   try {
@@ -224,4 +220,3 @@ router.delete("/", authMiddleware, async (req, res) => {
 });
 
 export default router;
-

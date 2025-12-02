@@ -202,7 +202,8 @@ function mapRouteRow(row: RouteRow) {
 
 function buildOrderClause(sort?: string, order?: string) {
   const direction = order?.toUpperCase() === "ASC" ? "ASC" : "DESC";
-  const column = ROUTE_SORT_MAP[sort ?? "created_at"] ?? ROUTE_SORT_MAP.created_at;
+  const column =
+    ROUTE_SORT_MAP[sort ?? "created_at"] ?? ROUTE_SORT_MAP.created_at;
   return `${column} ${direction}`;
 }
 
@@ -528,4 +529,3 @@ function generateMasterRouteCode() {
 function generateFactoryRouteCode() {
   return `FR-${Date.now().toString(36).toUpperCase()}`;
 }
-

@@ -103,7 +103,9 @@ export async function listPlugins(params: PluginListParams) {
     );
   }
 
-  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(" AND ")}`
+    : "";
 
   const rows = await query<PluginRow>(
     `
@@ -248,10 +250,7 @@ function generatePluginCode(name: string) {
   return `PLG-${prefix}${randomDigits}`;
 }
 
-export async function createPlugin(
-  creatorId: string,
-  payload: PluginPayload
-) {
+export async function createPlugin(creatorId: string, payload: PluginPayload) {
   if (!payload.name) {
     throw new Error("Plugin name is required");
   }
@@ -460,11 +459,3 @@ export async function deletePlugins(ids: number[]) {
 
   return deleted.length;
 }
-
-
-
-
-
-
-
-

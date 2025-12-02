@@ -147,171 +147,176 @@ router.patch("/internal", authMiddleware, driverUploads, async (req, res) => {
 });
 
 router.delete("/internal", authMiddleware, async (req, res) => {
-router.get("/freelance", authMiddleware, async (req, res) => {
-  try {
-    const { page, limit, status, search, sort, order } = req.query;
-    const result = await listFreelanceDrivers({
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-      status: status ? String(status) : undefined,
-      search: search ? String(search) : undefined,
-      sort: sort ? String(sort) : undefined,
-      order: order ? String(order) : undefined,
-    });
+  router.get("/freelance", authMiddleware, async (req, res) => {
+    try {
+      const { page, limit, status, search, sort, order } = req.query;
+      const result = await listFreelanceDrivers({
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+        status: status ? String(status) : undefined,
+        search: search ? String(search) : undefined,
+        sort: sort ? String(sort) : undefined,
+        order: order ? String(order) : undefined,
+      });
 
-    res.json({
-      statusCode: 200,
-      message: result.message,
-      data: result.data,
-      meta: result.meta,
-    });
-  } catch (error) {
-    console.error("List freelance drivers error:", error);
-    res.status(500).json({
-      statusCode: 500,
-      message: {
-        en: "Failed to load drivers",
-        th: "ไม่สามารถดึงข้อมูลพนักงานขับรถได้",
-      },
-    });
-  }
-});
+      res.json({
+        statusCode: 200,
+        message: result.message,
+        data: result.data,
+        meta: result.meta,
+      });
+    } catch (error) {
+      console.error("List freelance drivers error:", error);
+      res.status(500).json({
+        statusCode: 500,
+        message: {
+          en: "Failed to load drivers",
+          th: "ไม่สามารถดึงข้อมูลพนักงานขับรถได้",
+        },
+      });
+    }
+  });
 
-router.post("/freelance", authMiddleware, driverUploads, async (req, res) => {
-  try {
-    const payload = extractUserPayload(req, {
-      requireOrganization: false,
-    });
-    const documents = extractDriverDocuments(req);
-    const driverId = await createFreelanceDriver(payload, documents);
+  router.post("/freelance", authMiddleware, driverUploads, async (req, res) => {
+    try {
+      const payload = extractUserPayload(req, {
+        requireOrganization: false,
+      });
+      const documents = extractDriverDocuments(req);
+      const driverId = await createFreelanceDriver(payload, documents);
 
-    res.status(201).json({
-      statusCode: 201,
-      message: {
-        en: "Freelance driver created successfully",
-        th: "สร้างพนักงานขับรถอิสระสำเร็จ",
-      },
-      data: { id: driverId },
-    });
-  } catch (error) {
-    console.error("Create freelance driver error:", error);
-    res.status(400).json({
-      statusCode: 400,
-      message: {
-        en: (error as Error).message || "Failed to create driver",
-        th: "สร้างพนักงานขับรถไม่สำเร็จ",
-      },
-    });
-  }
-});
-
-router.patch("/freelance", authMiddleware, driverUploads, async (req, res) => {
-  try {
-    const id = req.query.id as string;
-    if (!id) {
-      return res.status(400).json({
+      res.status(201).json({
+        statusCode: 201,
+        message: {
+          en: "Freelance driver created successfully",
+          th: "สร้างพนักงานขับรถอิสระสำเร็จ",
+        },
+        data: { id: driverId },
+      });
+    } catch (error) {
+      console.error("Create freelance driver error:", error);
+      res.status(400).json({
         statusCode: 400,
         message: {
-          en: "Driver id is required",
-          th: "กรุณาระบุรหัสพนักงานขับรถ",
+          en: (error as Error).message || "Failed to create driver",
+          th: "สร้างพนักงานขับรถไม่สำเร็จ",
         },
       });
     }
+  });
 
-    const payload = extractUserPayload(req, {
-      requireOrganization: false,
-      requireFields: false,
-    });
-    const documents = extractDriverDocuments(req);
-    const driverStatus = req.body.driver_status
-      ? String(req.body.driver_status)
-      : undefined;
-    const rejectedReason =
-      req.body.rejected_reason !== undefined
-        ? String(req.body.rejected_reason)
-        : undefined;
+  router.patch(
+    "/freelance",
+    authMiddleware,
+    driverUploads,
+    async (req, res) => {
+      try {
+        const id = req.query.id as string;
+        if (!id) {
+          return res.status(400).json({
+            statusCode: 400,
+            message: {
+              en: "Driver id is required",
+              th: "กรุณาระบุรหัสพนักงานขับรถ",
+            },
+          });
+        }
 
-    const updatedId = await updateFreelanceDriver(id, {
-      payload,
-      documents,
-      driverStatus,
-      rejectedReason,
-    });
+        const payload = extractUserPayload(req, {
+          requireOrganization: false,
+          requireFields: false,
+        });
+        const documents = extractDriverDocuments(req);
+        const driverStatus = req.body.driver_status
+          ? String(req.body.driver_status)
+          : undefined;
+        const rejectedReason =
+          req.body.rejected_reason !== undefined
+            ? String(req.body.rejected_reason)
+            : undefined;
 
-    if (!updatedId) {
-      return res.status(404).json({
-        statusCode: 404,
+        const updatedId = await updateFreelanceDriver(id, {
+          payload,
+          documents,
+          driverStatus,
+          rejectedReason,
+        });
+
+        if (!updatedId) {
+          return res.status(404).json({
+            statusCode: 404,
+            message: {
+              en: "Driver not found",
+              th: "ไม่พบพนักงานขับรถ",
+            },
+          });
+        }
+
+        const detail = await getDriverDetail(updatedId);
+
+        res.json({
+          statusCode: 200,
+          message: {
+            en: "Driver updated successfully",
+            th: "แก้ไขข้อมูลพนักงานขับรถสำเร็จ",
+          },
+          data: detail ?? null,
+        });
+      } catch (error) {
+        console.error("Update freelance driver error:", error);
+        res.status(400).json({
+          statusCode: 400,
+          message: {
+            en: (error as Error).message || "Failed to update driver",
+            th: "แก้ไขข้อมูลพนักงานขับรถไม่สำเร็จ",
+          },
+        });
+      }
+    }
+  );
+
+  router.delete("/freelance", authMiddleware, async (req, res) => {
+    try {
+      const id = req.query.id as string;
+      if (!id) {
+        return res.status(400).json({
+          statusCode: 400,
+          message: {
+            en: "Driver id is required",
+            th: "กรุณาระบุรหัสพนักงานขับรถ",
+          },
+        });
+      }
+
+      const success = await deleteDriver(id);
+      if (!success) {
+        return res.status(404).json({
+          statusCode: 404,
+          message: {
+            en: "Driver not found",
+            th: "ไม่พบพนักงานขับรถ",
+          },
+        });
+      }
+
+      res.json({
+        statusCode: 200,
         message: {
-          en: "Driver not found",
-          th: "ไม่พบพนักงานขับรถ",
+          en: "Driver deleted successfully",
+          th: "ลบพนักงานขับรถสำเร็จ",
         },
       });
-    }
-
-    const detail = await getDriverDetail(updatedId);
-
-    res.json({
-      statusCode: 200,
-      message: {
-        en: "Driver updated successfully",
-        th: "แก้ไขข้อมูลพนักงานขับรถสำเร็จ",
-      },
-      data: detail ?? null,
-    });
-  } catch (error) {
-    console.error("Update freelance driver error:", error);
-    res.status(400).json({
-      statusCode: 400,
-      message: {
-        en: (error as Error).message || "Failed to update driver",
-        th: "แก้ไขข้อมูลพนักงานขับรถไม่สำเร็จ",
-      },
-    });
-  }
-});
-
-router.delete("/freelance", authMiddleware, async (req, res) => {
-  try {
-    const id = req.query.id as string;
-    if (!id) {
-      return res.status(400).json({
-        statusCode: 400,
+    } catch (error) {
+      console.error("Delete freelance driver error:", error);
+      res.status(500).json({
+        statusCode: 500,
         message: {
-          en: "Driver id is required",
-          th: "กรุณาระบุรหัสพนักงานขับรถ",
+          en: "Failed to delete driver",
+          th: "ลบพนักงานขับรถไม่สำเร็จ",
         },
       });
     }
-
-    const success = await deleteDriver(id);
-    if (!success) {
-      return res.status(404).json({
-        statusCode: 404,
-        message: {
-          en: "Driver not found",
-          th: "ไม่พบพนักงานขับรถ",
-        },
-      });
-    }
-
-    res.json({
-      statusCode: 200,
-      message: {
-        en: "Driver deleted successfully",
-        th: "ลบพนักงานขับรถสำเร็จ",
-      },
-    });
-  } catch (error) {
-    console.error("Delete freelance driver error:", error);
-    res.status(500).json({
-      statusCode: 500,
-      message: {
-        en: "Failed to delete driver",
-        th: "ลบพนักงานขับรถไม่สำเร็จ",
-      },
-    });
-  }
-});
+  });
   try {
     const id = req.query.id as string;
     if (!id) {
@@ -399,4 +404,3 @@ router.get("/byId", authMiddleware, async (req, res) => {
 });
 
 export default router;
-

@@ -27,4 +27,3 @@ export function verifyAccessToken(token: string): TokenPayload {
 export function verifyRefreshToken(token: string): TokenPayload {
   return jwt.verify(token, config.refreshTokenSecret) as TokenPayload;
 }
-

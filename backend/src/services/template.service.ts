@@ -98,7 +98,9 @@ export async function listTemplates(params: TemplateListParams) {
     );
   }
 
-  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(" AND ")}`
+    : "";
 
   const rows = await query<TemplateRow>(
     `
@@ -313,10 +315,7 @@ export async function createTemplate(
   }
 }
 
-export async function updateTemplate(
-  id: number,
-  payload: TemplatePayload
-) {
+export async function updateTemplate(id: number, payload: TemplatePayload) {
   validateTemplatePayload(payload);
 
   const existing = await queryOne<{ id: number }>(
@@ -341,10 +340,9 @@ export async function updateTemplate(
       [payload.organizationId, payload.templateType, id]
     );
 
-    await query(
-      `DELETE FROM template_field_mappings WHERE template_id = $1`,
-      [id]
-    );
+    await query(`DELETE FROM template_field_mappings WHERE template_id = $1`, [
+      id,
+    ]);
 
     for (const field of payload.fields) {
       await query(
@@ -376,4 +374,3 @@ export async function deleteTemplates(ids: number[]) {
 
   return deleted.length;
 }
-

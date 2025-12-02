@@ -94,9 +94,7 @@ router.get("/me", authMiddleware, async (req, res) => {
   try {
     const requestUser = (req as any).user;
     if (!requestUser) {
-      return res
-        .status(401)
-        .json({ statusCode: 401, message: "Unauthorized" });
+      return res.status(401).json({ statusCode: 401, message: "Unauthorized" });
     }
 
     const row = await findUserById(requestUser.id);
@@ -241,4 +239,3 @@ router.delete("/", authMiddleware, async (req, res) => {
 });
 
 export default router;
-

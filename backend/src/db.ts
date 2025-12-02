@@ -21,4 +21,3 @@ export async function queryOne<T extends QueryResultRow = QueryResultRow>(
   const rows = await query<T>(text, params);
   return rows[0] ?? null;
 }
-

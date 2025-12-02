@@ -218,7 +218,9 @@ const USER_SORT_MAP: Record<string, string> = {
   created_at: "u.created_at",
 };
 
-function mapOrganizationTypeId(typeId?: number): OrganizationFilter | undefined {
+function mapOrganizationTypeId(
+  typeId?: number
+): OrganizationFilter | undefined {
   if (typeId === 1) return 1;
   if (typeId === 2) return 2;
   return undefined;
@@ -506,4 +508,3 @@ export async function deleteUsers(ids: string[]) {
 
   return ids.length;
 }
-

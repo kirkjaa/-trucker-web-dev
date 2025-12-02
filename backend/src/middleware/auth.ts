@@ -40,4 +40,3 @@ export function authMiddleware(
       .json({ statusCode: 401, message: "Invalid or expired token" });
   }
 }
-

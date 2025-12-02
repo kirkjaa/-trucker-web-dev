@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
   // Skip middleware during build if NEXTAUTH_SECRET is not set
   if (!process.env.NEXTAUTH_SECRET) {
     // During build, just allow all requests
-    if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET) {
+    if (process.env.NODE_ENV === "production" && !process.env.NEXTAUTH_SECRET) {
       return NextResponse.next();
     }
   }
@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
   // Retrieve the token
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET || 'temp-secret-for-build',
+    secret: process.env.NEXTAUTH_SECRET || "temp-secret-for-build",
   });
 
   // Allow health-check requests

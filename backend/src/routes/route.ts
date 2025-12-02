@@ -173,8 +173,14 @@ function extractCreateRoutePayload(body: any): CreateRoutePayload {
     freightType,
     routeCode: requireString(body.route_code, "route_code"),
     distance,
-    originProvinceId: requireNumericId(body.origin_province_id, "origin_province_id"),
-    originDistrictId: requireNumericId(body.origin_district_id, "origin_district_id"),
+    originProvinceId: requireNumericId(
+      body.origin_province_id,
+      "origin_province_id"
+    ),
+    originDistrictId: requireNumericId(
+      body.origin_district_id,
+      "origin_district_id"
+    ),
     originLatitude: requireNumber(body.origin_latitude, "origin_latitude"),
     originLongitude: requireNumber(body.origin_longitude, "origin_longitude"),
     destinationProvinceId: requireNumericId(
@@ -258,4 +264,3 @@ function normalizeStatus(value?: string | null): RouteStatus | undefined {
 }
 
 export default router;
-
