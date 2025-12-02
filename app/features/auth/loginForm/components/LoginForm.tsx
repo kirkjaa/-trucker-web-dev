@@ -121,17 +121,17 @@ export default function LoginForm() {
           const type = userMeRes.data.organization?.type?.type_code;
 
           if (role === ERoles.ADMIN) {
-            router.push("/admin/factories");
+            window.location.href = "/admin/factories";
           } else if (
             role === ERoles.ORGANIZATION &&
             type === EOrganizationType.FACTORY
           ) {
-            router.push("/factory/list-of-rfq");
+            window.location.href = "/factory/list-of-rfq";
           } else if (
             role === ERoles.ORGANIZATION &&
             type === EOrganizationType.COMPANY
           ) {
-            router.push("/company/quotation-factory");
+            window.location.href = "/company/quotation-factory";
           }
         }
       } else {
