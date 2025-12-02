@@ -161,6 +161,144 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --sidebar-background-hover: 0, 0%, 97%, 1; /* hsla(0, 0%, 97%, 1) */
+
+    /* Background */
+    --background: 0, 0%, 100%, 1;
+    --foreground: 0, 0%, 27%, 1;
+    --card-background: 0, 0%, 100%, 0.8;
+  }
+
+  .dark {
+    /* Primary Oxley Green - Adjusted for dark mode */
+    --primary-oxley-green-main: 140, 23%, 45%, 1;
+    --primary-oxley-green-01: 140, 43%, 55%, 1;
+    --primary-oxley-green-02: 140, 60%, 25%, 1;
+    --primary-oxley-green-03: 139, 50%, 15%, 1;
+    --primary-oxley-green-04: 139, 50%, 12%, 1;
+
+    /* Primary Blue - Adjusted for dark mode */
+    --primary-blue-main: 195, 77%, 45%, 1;
+    --primary-blue-01: 194, 84%, 55%, 1;
+    --primary-blue-02: 194, 60%, 25%, 1;
+    --primary-blue-03: 194, 50%, 15%, 1;
+    --primary-blue-04: 194, 100%, 65%, 1;
+
+    /* Secondary Carribbean Green - Adjusted for dark mode */
+    --secondary-caribbean-green-main: 162, 100%, 38%, 1;
+    --secondary-caribbean-green-main-hover: 162, 100%, 38%, 0.15;
+    --secondary-caribbean-green-01: 162, 100%, 50%, 1;
+    --secondary-caribbean-green-02: 162, 60%, 30%, 1;
+    --secondary-caribbean-green-03: 162, 50%, 15%, 1;
+    --secondary-caribbean-green-04: 163, 100%, 35%, 1;
+
+    /* Secondary Teal Green - Adjusted for dark mode */
+    --secondary-teal-green-main: 173, 86%, 35%, 1;
+    --secondary-teal-green-main-shadow: 173, 86%, 35%, 0.4;
+    --secondary-teal-green-01: 173, 68%, 45%, 1;
+    --secondary-teal-green-02: 173, 60%, 25%, 1;
+    --secondary-teal-green-03: 172, 50%, 15%, 1;
+    --secondary-teal-green-04: 173, 100%, 45%, 1;
+    --secondary-teal-green-hover: 140, 34%, 25%, 1;
+
+    /* Secondary Indigo - Adjusted for dark mode */
+    --secondary-indigo-main: 212, 64%, 50%, 1;
+    --secondary-indigo-01: 212, 49%, 60%, 1;
+    --secondary-indigo-01-shadow: 212, 49%, 60%, 0.4;
+    --secondary-indigo-02: 212, 50%, 25%, 1;
+    --secondary-indigo-03: 212, 40%, 15%, 1;
+    --secondary-indigo-04: 212, 51%, 65%, 1;
+    --secondary-indigo-hover: 212, 51%, 20%, 1;
+
+    /* Secondary Dark Gray - Adjusted for dark mode */
+    --secondary-dark-gray-main: 214, 3%, 60%, 1;
+    --secondary-dark-gray-01: 0, 0%, 50%, 1;
+    --secondary-dark-gray-02: 0, 0%, 35%, 1;
+    --secondary-dark-gray-03: 0, 0%, 20%, 1;
+    --secondary-dark-gray-04: 220, 5%, 70%, 1;
+
+    /* Gradient - Adjusted for dark mode */
+    --gradient-01-start: 140, 23%, 45%, 1;
+    --gradient-01-end: 140, 22%, 35%, 1;
+    --gradient-02-start: 162, 100%, 38%;
+    --gradient-02-end: 195, 82%, 45%, 1;
+    --gradient-03-start: 212, 64%, 45%, 1;
+    --gradient-03-end: 162, 100%, 38%, 1;
+    --gradient-04-start: 212, 63%, 50%, 1;
+    --gradient-04-end: 212, 63%, 40%, 1;
+
+    /* Neutral - Inverted for dark mode */
+    --neutral-00: 220, 15%, 13%, 1;
+    --neutral-01: 220, 15%, 16%, 1;
+    --neutral-02: 220, 12%, 20%, 1;
+    --neutral-03: 220, 10%, 25%, 1;
+    --neutral-04: 220, 8%, 35%, 1;
+    --neutral-05: 220, 5%, 50%, 1;
+    --neutral-06: 220, 5%, 65%, 1;
+    --neutral-07: 220, 3%, 75%, 1;
+    --neutral-08: 220, 3%, 85%, 1;
+    --neutral-09: 220, 3%, 92%, 1;
+
+    /* Communication Color - Adjusted for dark mode */
+    --success-01: 144, 78%, 40%, 1;
+    --success-02: 151, 79%, 45%, 1;
+    --success-03: 144, 50%, 15%, 1;
+    --process-01: 42, 100%, 40%, 1;
+    --process-02: 42, 100%, 55%, 1;
+    --process-03: 42, 50%, 15%, 1;
+    --urgent-fail-01: 1, 97%, 45%, 1;
+    --urgent-fail-02: 1, 79%, 55%, 1;
+    --urgent-fail-02-shadow: 1, 79%, 55%, 0.4;
+    --urgent-fail-03: 1, 50%, 15%, 1;
+    --accept-01: 213, 97%, 45%, 1;
+    --accept-02: 213, 97%, 55%, 1;
+    --accept-03: 212, 50%, 15%;
+
+    /* Toast - Adjusted for dark mode */
+    --info-border: 214, 70%, 50%, 1;
+    --info-background: 213, 50%, 15%, 1;
+    --success-border: 145, 42%, 45%, 1;
+    --success-background: 144, 40%, 15%, 1;
+    --warning-border: 40, 80%, 50%, 1;
+    --warning-background: 41, 50%, 15%, 1;
+    --error-border: 3, 60%, 50%, 1;
+    --error-background: 3, 50%, 15%, 1;
+
+    /* Calendar - Adjusted for dark mode */
+    --date-selected: 170, 38%, 20%, 1;
+    --today: 170, 38%, 25%, 0.5;
+    --day-text: 217, 33%, 85%, 1;
+
+    /* BoxShadow - Adjusted for dark mode */
+    --box-shadow-01: 195, 77%, 31%, 0.2;
+    --box-shadow-02: 0, 0%, 0%, 0.3;
+    --box-shadow-03: 0, 0%, 0%, 0.4;
+    --box-shadow-04: 214, 48%, 10%, 0.5;
+
+    /* Text - Adjusted for dark mode */
+    --main: 232, 23%, 85%, 1;
+    --main02: 215, 16%, 70%, 1;
+
+    /* Modal - Adjusted for dark mode */
+    --modal: 220, 15%, 13%, 1;
+    --table: 220, 12%, 18%, 1;
+
+    /* Sidebar - Adjusted for dark mode */
+    --sidebar-text-head: 216, 15%, 65%, 1;
+    --sidebar-user-card: 195, 77%, 31%, 0.4;
+    --sidebar-background: 220, 15%, 13%, 1;
+    --sidebar-foreground: 240 5.3% 85%;
+    --sidebar-primary: 240 5.9% 90%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 220 10% 20%;
+    --sidebar-accent-foreground: 240 5.9% 90%;
+    --sidebar-border: 220 13% 25%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background-hover: 220, 12%, 18%, 1;
+
+    /* Background - Dark mode */
+    --background: 220, 15%, 10%, 1;
+    --foreground: 220, 3%, 92%, 1;
+    --card-background: 220, 15%, 13%, 0.9;
   }
 }
 
