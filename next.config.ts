@@ -28,7 +28,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
+        protocol: "https" as const,
         hostname: "ssl-new-trucker.s3.ap-southeast-1.amazonaws.com",
       },
     ],
