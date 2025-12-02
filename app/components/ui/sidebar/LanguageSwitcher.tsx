@@ -1,27 +1,43 @@
 "use client";
 
-import { useTransition } from "react";
-import { useLocale } from "next-intl";
-import { setCookie } from "cookies-next";
+import { useTransition, useState, useEffect } from "react";
+import { setCookie, getCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { locales, localeNames, localeFlags, type Locale } from "@/i18n/config";
+import {
+  locales,
+  localeNames,
+  localeFlags,
+  defaultLocale,
+  type Locale,
+} from "@/i18n/config";
 
 interface LanguageSwitcherProps {
   collapsed?: boolean;
 }
 
 export function LanguageSwitcher({ collapsed = false }: LanguageSwitcherProps) {
-  const locale = useLocale() as Locale;
+  const [locale, setLocale] = useState<Locale>(defaultLocale);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // Get locale from cookie on mount
+  useEffect(() => {
+    setMounted(true);
+    const cookieLocale = getCookie("NEXT_LOCALE") as Locale;
+    if (cookieLocale && locales.includes(cookieLocale)) {
+      setLocale(cookieLocale);
+    }
+  }, []);
 
   const handleLanguageChange = (newLocale: Locale) => {
     setCookie("NEXT_LOCALE", newLocale, {
       path: "/",
       maxAge: 60 * 60 * 24 * 365, // 1 year
     });
+    setLocale(newLocale);
 
     startTransition(() => {
       router.refresh();
@@ -30,6 +46,20 @@ export function LanguageSwitcher({ collapsed = false }: LanguageSwitcherProps) {
 
   const currentIndex = locales.indexOf(locale);
   const nextLocale = locales[(currentIndex + 1) % locales.length];
+
+  // Avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-3 p-2 rounded-lg",
+          collapsed && "justify-center"
+        )}
+      >
+        <div className="w-6 h-6 rounded-full bg-neutral-04 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -75,9 +105,18 @@ export function LanguageSwitcher({ collapsed = false }: LanguageSwitcherProps) {
 export function LanguageSwitcherDropdown({
   collapsed = false,
 }: LanguageSwitcherProps) {
-  const locale = useLocale() as Locale;
+  const [locale, setLocale] = useState<Locale>(defaultLocale);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setMounted(true);
+    const cookieLocale = getCookie("NEXT_LOCALE") as Locale;
+    if (cookieLocale && locales.includes(cookieLocale)) {
+      setLocale(cookieLocale);
+    }
+  }, []);
 
   const handleLanguageChange = (newLocale: Locale) => {
     if (newLocale === locale) return;
@@ -86,11 +125,25 @@ export function LanguageSwitcherDropdown({
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
     });
+    setLocale(newLocale);
 
     startTransition(() => {
       router.refresh();
     });
   };
+
+  if (!mounted) {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-3 p-2 rounded-lg",
+          collapsed && "justify-center"
+        )}
+      >
+        <div className="w-6 h-6 rounded-full bg-neutral-04 animate-pulse" />
+      </div>
+    );
+  }
 
   if (collapsed) {
     return (
