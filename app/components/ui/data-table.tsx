@@ -129,8 +129,7 @@ const TableRowHead = React.forwardRef<HTMLTableRowElement, TableRowProps>(
 );
 TableRowHead.displayName = "TableRowHead";
 
-export interface TableHeadProps
-  extends React.ThHTMLAttributes<HTMLTableCellElement> {
+export interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
   isFirst?: boolean;
   isLast?: boolean;
 }
