@@ -26,7 +26,16 @@
     "priceForm": "가격 양식",
     "packages": "패키지",
     "shippingCompanyList": "운송 회사 목록",
-    "routeCode": "경로 코드"
+    "routeCode": "경로 코드",
+    "systemUsersFactory": "시스템 사용자 - 공장",
+    "systemUsersCompany": "시스템 사용자 - 회사",
+    "internalDrivers": "내부 운전자",
+    "freelanceDrivers": "프리랜서 운전자",
+    "reviewFreelanceDrivers": "프리랜서 운전자 검토",
+    "domesticRoutes": "국내 경로 코드",
+    "internationalRoutes": "국제 경로 코드",
+    "confirmDomesticRoutes": "국내 경로 생성 확인",
+    "confirmInternationalRoutes": "국제 경로 생성 확인"
   },
   "common": {
     "search": "검색",

@@ -26,7 +26,16 @@
     "priceForm": "ฟอร์มราคากลาง",
     "packages": "แพ็คแกจ",
     "shippingCompanyList": "รายชื่อบริษัทขนส่ง",
-    "routeCode": "รหัสเส้นทาง"
+    "routeCode": "รหัสเส้นทาง",
+    "systemUsersFactory": "ผู้ใช้ระบบ - โรงงาน",
+    "systemUsersCompany": "ผู้ใช้ระบบ - บริษัท",
+    "internalDrivers": "พนักงานขับรถภายใน",
+    "freelanceDrivers": "คนขับรถอิสระ",
+    "reviewFreelanceDrivers": "รอตรวจสอบคนขับรถอิสระ",
+    "domesticRoutes": "รหัสเส้นทางขนส่งในประเทศ",
+    "internationalRoutes": "รหัสเส้นทางขนส่งต่างประเทศ",
+    "confirmDomesticRoutes": "ยืนยันสร้างรหัสเส้นทางขนส่งในประเทศ",
+    "confirmInternationalRoutes": "ยืนยันสร้างรหัสเส้นทางขนส่งต่างประเทศ"
   },
   "common": {
     "search": "ค้นหา",

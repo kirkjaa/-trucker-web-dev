@@ -26,7 +26,16 @@
     "priceForm": "Price Form",
     "packages": "Packages",
     "shippingCompanyList": "Shipping Company List",
-    "routeCode": "Route Code"
+    "routeCode": "Route Code",
+    "systemUsersFactory": "System Users - Factory",
+    "systemUsersCompany": "System Users - Company",
+    "internalDrivers": "Internal Drivers",
+    "freelanceDrivers": "Freelance Drivers",
+    "reviewFreelanceDrivers": "Review Freelance Drivers",
+    "domesticRoutes": "Domestic Route Codes",
+    "internationalRoutes": "International Route Codes",
+    "confirmDomesticRoutes": "Confirm Domestic Route Creation",
+    "confirmInternationalRoutes": "Confirm International Route Creation"
   },
   "common": {
     "search": "Search",

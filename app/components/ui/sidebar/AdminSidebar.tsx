@@ -5,6 +5,7 @@ import { deleteCookie } from "cookies-next";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import {
@@ -31,111 +32,95 @@ interface IconMapping {
   [key: string]: keyof typeof iconNames;
 }
 
+// Use translation keys instead of Thai strings
 const iconMapping: IconMapping = {
-  จัดการโรงงาน: "FactoryPrimary",
-  จัดการบริษัทขนส่ง: "CompanyPrimary",
-  จัดการผู้ใช้ระบบ: "SidebarUser",
-  จัดการระบบเหรียญ: "CoinsPrimary",
-  จัดการแพ็กเกจ: "TicketPrimary",
-  จัดการรหัสเส้นทาง: "PinPrimary",
-  จัดการคนขับ: "SidebarTransport",
-  อัพโหลดTemplateCSV: "CsvTemplatePrimary",
-  แชท: "ChatPrimary",
-  ประเภทรถบรรทุก: "TruckPrimary",
-  รับส่งข้อมูลลูกค้า: "SidebarForm",
-  ปลั๊กอินเสริม: "PluginPrimary",
+  manageFactory: "FactoryPrimary",
+  manageCompany: "CompanyPrimary",
+  manageSystemUsers: "SidebarUser",
+  manageCoins: "CoinsPrimary",
+  managePackages: "TicketPrimary",
+  manageRouteCodes: "PinPrimary",
+  manageDrivers: "SidebarTransport",
+  uploadTemplateCSV: "CsvTemplatePrimary",
+  chat: "ChatPrimary",
+  truckTypes: "TruckPrimary",
+  customerData: "SidebarForm",
+  plugins: "PluginPrimary",
 };
 
 const sidebarItems: {
   [key: string]: {
-    title?: string;
+    titleKey?: string;
     url: string;
     iconLight?: keyof typeof iconNames;
     iconBulk?: keyof typeof iconNames;
   }[];
 } = {
-  จัดการโรงงาน: [],
-  จัดการบริษัทขนส่ง: [],
-  จัดการผู้ใช้ระบบ: [
+  manageFactory: [],
+  manageCompany: [],
+  manageSystemUsers: [
     {
-      title: "ผู้ใช้ระบบ - โรงงาน",
+      titleKey: "systemUsersFactory",
       url: "/admin/system-users/factories",
       iconLight: "ProfilePrimaryOutLine",
       iconBulk: "ProfilePrimary",
     },
     {
-      title: "ผู้ใช้ระบบ - บริษัท",
+      titleKey: "systemUsersCompany",
       url: "/admin/system-users/companies",
       iconLight: "ProfilePrimaryOutLine",
       iconBulk: "ProfilePrimary",
     },
   ],
-  จัดการคนขับ: [
+  manageDrivers: [
     {
-      title: "พนักงานขับรถภายใน",
+      titleKey: "internalDrivers",
       url: "/admin/drivers/internal",
       iconLight: "ListPrimaryOutLine",
       iconBulk: "ListPrimary",
     },
     {
-      title: "คนขับรถอิสระ",
+      titleKey: "freelanceDrivers",
       url: "/admin/drivers/freelance",
       iconLight: "ListPrimaryOutLine",
       iconBulk: "ListPrimary",
     },
     {
-      title: "รอตรวจสอบคนขับรถอิสระ",
+      titleKey: "reviewFreelanceDrivers",
       url: "/admin/drivers/review/freelance",
       iconLight: "ScanPrimary",
       iconBulk: "ScanPrimary",
     },
   ],
-  /* จัดการระบบเหรียญ: [], */
-  /* จัดการแพ็กเกจ: [], */
-  จัดการรหัสเส้นทาง: [
+  manageRouteCodes: [
     {
-      title: "รหัสเส้นทางขนส่งในประเทศ",
+      titleKey: "domesticRoutes",
       url: "/admin/route/domestic",
       iconLight: "ListPrimaryOutLine",
       iconBulk: "ListPrimary",
     },
     {
-      title: "รหัสเส้นทางขนส่งต่างประเทศ",
+      titleKey: "internationalRoutes",
       url: "/admin/route/international",
       iconLight: "ListPrimaryOutLine",
       iconBulk: "ListPrimary",
     },
     {
-      title: "ยืนยันสร้างรหัสเส้นทางขนส่งในประเทศ",
+      titleKey: "confirmDomesticRoutes",
       url: "/admin/route/confirm/domestic",
       iconLight: "CheckCircleOutline",
       iconBulk: "CheckCircle",
     },
     {
-      title: "ยืนยันสร้างรหัสเส้นทางขนส่งต่างประเทศ",
+      titleKey: "confirmInternationalRoutes",
       url: "/admin/route/confirm/international",
       iconLight: "CheckCircleOutline",
       iconBulk: "CheckCircle",
     },
   ],
-  // ประเภทรถบรรทุก: [
-  //   {
-  //     title: "ประเภทรถบรรทุก",
-  //     url: "/admin/truck/types",
-  //     iconLight: "ListPrimaryOutLine",
-  //     iconBulk: "ListPrimary",
-  //   },
-  //   {
-  //     title: "ขนาดรถบรรทุก",
-  //     url: "/admin/truck/sizes",
-  //     iconLight: "ListPrimaryOutLine",
-  //     iconBulk: "ListPrimary",
-  //   },
-  // ],
-  /* รับส่งข้อมูลลูกค้า: [], */
-  แชท: [],
-  อัพโหลดTemplateCSV: [],
-  ปลั๊กอินเสริม: [],
+  chat: [],
+  uploadTemplateCSV: [],
+  plugins: [],
 };
 
 export default function AdminSidebar() {
@@ -149,6 +134,7 @@ export default function AdminSidebar() {
   const pathName = usePathname();
   const router = useRouter();
   const { state } = useSidebar();
+  const t = useTranslations("sidebar");
   // const { getNotificationList, fetchDataList } = useNotification();
   // const notificationUnread = useMemo(() => {
   //   return getNotificationList().filter((data) => !data.isRead).length;
@@ -163,25 +149,25 @@ export default function AdminSidebar() {
   // Use Effect
   useEffect(() => {
     if (pathName === EAdminPathName.FACTORIES) {
-      setActiveGroup("จัดการโรงงาน");
+      setActiveGroup("manageFactory");
     } else if (pathName === EAdminPathName.COMPANIES) {
-      setActiveGroup("จัดการบริษัทขนส่ง");
+      setActiveGroup("manageCompany");
     } else if (pathName === EAdminPathName.UPLOADTEMPLATECSV) {
-      setActiveGroup("อัพโหลดTemplateCSV");
+      setActiveGroup("uploadTemplateCSV");
     } else if (pathName === EAdminPathName.CHAT) {
-      setActiveGroup("แชท");
+      setActiveGroup("chat");
     } else if (pathName === EAdminPathName.COINS) {
-      setActiveGroup("จัดการระบบเหรียญ");
+      setActiveGroup("manageCoins");
     } else if (pathName === EAdminPathName.PACKAGES) {
-      setActiveGroup("จัดการแพ็กเกจ");
+      setActiveGroup("managePackages");
     } else if (pathName === EAdminPathName.DATAUSERS) {
-      setActiveGroup("รับส่งข้อมูลลูกค้า");
+      setActiveGroup("customerData");
     } else if (pathName === EAdminPathName.PLUGIN) {
-      setActiveGroup("ปลั๊กอินเสริม");
+      setActiveGroup("plugins");
     } else {
-      Object.entries(sidebarItems).forEach(([label, items]) => {
+      Object.entries(sidebarItems).forEach(([key, items]) => {
         if (items.some((item) => pathName.startsWith(item.url))) {
-          setActiveGroup(label);
+          setActiveGroup(key);
         }
       });
     }
@@ -189,21 +175,21 @@ export default function AdminSidebar() {
   }, [pathName]);
 
   useEffect(() => {
-    if (activeGroup === "จัดการโรงงาน") {
+    if (activeGroup === "manageFactory") {
       router.push(EAdminPathName.FACTORIES);
-    } else if (activeGroup === "จัดการบริษัทขนส่ง") {
+    } else if (activeGroup === "manageCompany") {
       router.push(EAdminPathName.COMPANIES);
-    } else if (activeGroup === "จัดการระบบเหรียญ") {
+    } else if (activeGroup === "manageCoins") {
       router.push(EAdminPathName.COINS);
-    } else if (activeGroup === "จัดการแพ็กเกจ") {
+    } else if (activeGroup === "managePackages") {
       router.push(EAdminPathName.PACKAGES);
-    } else if (activeGroup === "อัพโหลดTemplateCSV") {
+    } else if (activeGroup === "uploadTemplateCSV") {
       router.push(EAdminPathName.UPLOADTEMPLATECSV);
-    } else if (activeGroup === "แชท") {
+    } else if (activeGroup === "chat") {
       router.push(EAdminPathName.CHAT);
-    } else if (activeGroup === "รับส่งข้อมูลลูกค้า") {
+    } else if (activeGroup === "customerData") {
       router.push(EAdminPathName.DATAUSERS);
-    } else if (activeGroup === "ปลั๊กอินเสริม") {
+    } else if (activeGroup === "plugins") {
       router.push(EAdminPathName.PLUGIN);
     }
   }, [activeGroup]);
@@ -240,7 +226,9 @@ export default function AdminSidebar() {
             <SidebarTrigger />
           </SidebarHeader>
 
-          <p className="pt-5 body3 text-sidebar-text-head">บัญชีผู้ใช้งาน</p>
+          <p className="pt-5 body3 text-sidebar-text-head">
+            {t("userAccount")}
+          </p>
 
           <div
             className={cn(
@@ -270,7 +258,9 @@ export default function AdminSidebar() {
                     <p className="body3 text-secondary-caribbean-green-main">
                       397
                     </p>
-                    <p className="body3 text-neutral-00">Coins ทีใช้ได้</p>
+                    <p className="body3 text-neutral-00">
+                      {t("coinsAvailable")}
+                    </p>
                   </div>
                 </div>
 
@@ -312,21 +302,22 @@ export default function AdminSidebar() {
           <ThemeToggle collapsed={state === "collapsed"} />
           <LanguageSwitcher collapsed={state === "collapsed"} />
 
-          <p className="body3 text-sidebar-text-head">เมนูหลัก</p>
+          <p className="body3 text-sidebar-text-head">{t("mainMenu")}</p>
         </div>
 
         <SidebarContent>
           <div className="px-8 flex flex-col gap-2">
-            {Object.entries(sidebarItems).map(([label, items]) => (
+            {Object.entries(sidebarItems).map(([key, items]) => (
               <SideBarGroup
-                key={label}
-                iconMain={iconMapping[label] as keyof typeof iconNames}
-                label={label}
-                items={items}
-                isOpen={activeGroup === label}
-                onClick={() =>
-                  setActiveGroup(activeGroup === label ? null : label)
-                }
+                key={key}
+                iconMain={iconMapping[key] as keyof typeof iconNames}
+                label={t(key)}
+                items={items.map((item) => ({
+                  ...item,
+                  title: item.titleKey ? t(item.titleKey) : undefined,
+                }))}
+                isOpen={activeGroup === key}
+                onClick={() => setActiveGroup(activeGroup === key ? null : key)}
                 pathName={pathName}
                 handleControlClick={handleControlClick}
               />
