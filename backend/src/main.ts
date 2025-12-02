@@ -16,6 +16,7 @@ import adminUserFactoryRoutes from "./routes/admin/userFactory";
 import adminCompanyRoutes from "./routes/admin/company";
 import adminUserCompanyRoutes from "./routes/admin/userCompany";
 import userRoutes from "./routes/users";
+import singleUserRoutes from "./routes/user";
 import { getUploadsDir } from "./utils/upload";
 
 async function bootstrap() {
@@ -37,6 +38,7 @@ async function bootstrap() {
 
   app.use("/v1/auth", authRoutes);
   app.use("/v1/users", userRoutes);
+  app.use("/v1/user", singleUserRoutes);
   app.use("/v1/organization", organizationRoutes);
   app.use("/v1/route", routeRoutes);
   app.use("/v1/chat", chatRoutes);
