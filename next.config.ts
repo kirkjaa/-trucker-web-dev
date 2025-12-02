@@ -20,7 +20,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const nextConfig = {
-  output: "standalone",
+  output: "standalone" as const,
   reactStrictMode: false,
   devIndicators: {
     appIsrStatus: false,
