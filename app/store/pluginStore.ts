@@ -1,14 +1,8 @@
 import { create } from "zustand";
 
-import {
-  pluginApi,
-  PluginParams,
-} from "@/app/services/plugin/pluginApi";
+import { pluginApi, PluginParams } from "@/app/services/plugin/pluginApi";
 import { IResponseWithPaginate } from "@/app/types/global";
-import {
-  IPlugin,
-  IPluginPayload,
-} from "@/app/types/plugin/pluginType";
+import { IPlugin, IPluginPayload } from "@/app/types/plugin/pluginType";
 
 type PluginStore = {
   pluginParams: PluginParams;
@@ -100,11 +94,3 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
     return response.statusCode === 200;
   },
 }));
-
-
-
-
-
-
-
-

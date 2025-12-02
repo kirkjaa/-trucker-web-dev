@@ -91,4 +91,3 @@ export function ThemeToggle({ collapsed = false }: ThemeToggleProps) {
     </div>
   );
 }
-

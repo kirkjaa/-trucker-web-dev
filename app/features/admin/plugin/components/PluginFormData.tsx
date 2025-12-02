@@ -174,9 +174,7 @@ export default function PluginFormData({
               })}
               placeholder="ชื่อผู้ใช้งาน"
               value={formData.accountUsername}
-              onChange={(e) =>
-                onInputChange("accountUsername", e.target.value)
-              }
+              onChange={(e) => onInputChange("accountUsername", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -193,9 +191,7 @@ export default function PluginFormData({
               placeholder="รหัสผ่าน"
               type="password"
               value={formData.accountPassword}
-              onChange={(e) =>
-                onInputChange("accountPassword", e.target.value)
-              }
+              onChange={(e) => onInputChange("accountPassword", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -210,9 +206,7 @@ export default function PluginFormData({
               placeholder="ยืนยันรหัสผ่าน"
               type="password"
               value={formData.accountPassword}
-              onChange={(e) =>
-                onInputChange("accountPassword", e.target.value)
-              }
+              onChange={(e) => onInputChange("accountPassword", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -335,9 +329,7 @@ export default function PluginFormData({
                   placeholder="0.00"
                   type="number"
                   value={formData.yearlyPrice}
-                  onChange={(e) =>
-                    onInputChange("yearlyPrice", e.target.value)
-                  }
+                  onChange={(e) => onInputChange("yearlyPrice", e.target.value)}
                   disabled={disabled}
                 />
               </div>

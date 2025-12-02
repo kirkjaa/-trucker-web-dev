@@ -16,14 +16,8 @@ import NoDataTable from "@/app/components/ui/featureComponents/NoDataTable";
 import { Icons } from "@/app/icons";
 
 export default function PluginListTable() {
-  const {
-    headerList,
-    handleSort,
-    fetchDataList,
-    loading,
-    plugins,
-    sortKey,
-  } = usePluginListTable();
+  const { headerList, handleSort, fetchDataList, loading, plugins, sortKey } =
+    usePluginListTable();
 
   useEffect(() => {
     fetchDataList();
@@ -53,9 +47,7 @@ export default function PluginListTable() {
         <td className="py-4 text-sm">{plugin.name}</td>
         <td className="py-4 text-sm">
           <p className="font-semibold">{plugin.company_name}</p>
-          <p className="text-neutral-05">
-            {plugin.company_location || "-"}
-          </p>
+          <p className="text-neutral-05">{plugin.company_location || "-"}</p>
         </td>
         <td className="py-4 text-sm">
           {new Date(plugin.created_at).toLocaleDateString("th-TH")}
@@ -65,7 +57,9 @@ export default function PluginListTable() {
             ? `${plugin.created_by.first_name} ${plugin.created_by.last_name}`
             : "-"}
         </td>
-        <td className="py-4 text-sm">{plugin.available_credit.toLocaleString()}</td>
+        <td className="py-4 text-sm">
+          {plugin.available_credit.toLocaleString()}
+        </td>
         <td className="py-4">
           <span
             className={clsx(

@@ -110,9 +110,7 @@ export default function usePluginForm() {
     limitedOrderQuota: formData.limitedOrderQuota
       ? Number(formData.limitedOrderQuota)
       : null,
-    limitedPrice: formData.limitedPrice
-      ? Number(formData.limitedPrice)
-      : null,
+    limitedPrice: formData.limitedPrice ? Number(formData.limitedPrice) : null,
     monthlyDurationDays: formData.monthlyDurationDays
       ? Number(formData.monthlyDurationDays)
       : null,

@@ -48,7 +48,10 @@ export default function PluginFormTable({
           </TableHeader>
           <TableBody>
             {data.length === 0 ? (
-              <NoDataTable title="ยังไม่มีฟังก์ชันการใช้งาน" colSpan={headerList.length} />
+              <NoDataTable
+                title="ยังไม่มีฟังก์ชันการใช้งาน"
+                colSpan={headerList.length}
+              />
             ) : (
               data.map((feature, index) => (
                 <TableRow key={`${feature.featureName}-${index}`}>

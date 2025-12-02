@@ -87,7 +87,9 @@ export const useOrderStore = create<orderStore>((set, get) => ({
   error: null, // Initialize error
 
   // API Get
-  getAllOrderList: async (getAllParams: getAllParams):Promise<IResponseWithPaginate<Order[]>> => {
+  getAllOrderList: async (
+    getAllParams: getAllParams
+  ): Promise<IResponseWithPaginate<Order[]>> => {
     set({ isLoading: true, error: null });
     const currentParams = get().orderParams;
     try {

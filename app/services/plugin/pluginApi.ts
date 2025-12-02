@@ -6,10 +6,7 @@ import {
   IBaseResponseData,
   IResponseWithPaginate,
 } from "@/app/types/global";
-import {
-  IPlugin,
-  IPluginPayload,
-} from "@/app/types/plugin/pluginType";
+import { IPlugin, IPluginPayload } from "@/app/types/plugin/pluginType";
 
 export interface PluginParams extends IBaseParams {}
 
@@ -53,4 +50,3 @@ export const pluginApi = {
     return response;
   },
 };
-
