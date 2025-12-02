@@ -7,6 +7,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +16,7 @@ import {
   useSidebar,
 } from "./sidebar";
 import SideBarGroup from "./SidebarGroup";
+import { ThemeToggle } from "./ThemeToggle";
 
 import MyProfileModal from "@/app/features/profile/components/MyProfileModal";
 import useMyProfile from "@/app/features/profile/hooks/useMyProfile";
@@ -25,9 +27,6 @@ import formatFullName from "@/app/utils/formatFullName";
 import { cn } from "@/lib/utils";
 import sidebarLogo from "@/public/images/logo-sidebar.png";
 import placeHolderPerson from "@/public/placeHolderPerson.png";
-
-import { ThemeToggle } from "./ThemeToggle";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface IconMapping {
   [key: string]: keyof typeof iconNames;

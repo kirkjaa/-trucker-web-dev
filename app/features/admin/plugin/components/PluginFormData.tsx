@@ -3,9 +3,10 @@
 import React from "react";
 import clsx from "clsx";
 
+import { PluginFormState } from "../hooks/usePluginForm";
+
 import UploadImage from "@/app/components/ui/featureComponents/UploadImage";
 import { Input } from "@/app/components/ui/input";
-import { PluginFormState } from "../hooks/usePluginForm";
 
 type PluginFormDataProps = {
   formData: PluginFormState;

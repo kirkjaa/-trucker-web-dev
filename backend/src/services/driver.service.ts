@@ -1,8 +1,9 @@
 import { query, queryOne } from "../db";
+
 import {
-  UserPayload,
   createUserRecord,
   updateUserRecord,
+  UserPayload,
 } from "./user.service";
 
 const DRIVER_SORT_MAP: Record<string, string> = {
@@ -344,7 +345,7 @@ export async function createInternalDriver(payload: UserPayload) {
 
 export async function updateInternalDriver(id: string, payload?: UserPayload) {
   const driver = await queryOne<{ id: string; user_id: string }>(
-    `SELECT id, user_id FROM drivers WHERE id = $1 AND deleted = false AND type = 'internal'`,
+    "SELECT id, user_id FROM drivers WHERE id = $1 AND deleted = false AND type = 'internal'",
     [id]
   );
 
@@ -437,7 +438,7 @@ export async function updateFreelanceDriver(
   options: DriverUpdateOptions
 ) {
   const driver = await queryOne<{ id: string; user_id: string }>(
-    `SELECT id, user_id FROM drivers WHERE id = $1 AND deleted = false AND type = 'freelance'`,
+    "SELECT id, user_id FROM drivers WHERE id = $1 AND deleted = false AND type = 'freelance'",
     [id]
   );
 
@@ -501,7 +502,7 @@ export async function updateFreelanceDriver(
 
 export async function deleteDriver(id: string) {
   const driver = await queryOne<{ user_id: string }>(
-    `SELECT user_id FROM drivers WHERE id = $1 AND deleted = false`,
+    "SELECT user_id FROM drivers WHERE id = $1 AND deleted = false",
     [id]
   );
 
@@ -512,11 +513,11 @@ export async function deleteDriver(id: string) {
   await query("BEGIN");
   try {
     await query(
-      `UPDATE drivers SET deleted = true, updated_at = NOW() WHERE id = $1`,
+      "UPDATE drivers SET deleted = true, updated_at = NOW() WHERE id = $1",
       [id]
     );
     await query(
-      `UPDATE users SET deleted = true, updated_at = NOW() WHERE id = $1`,
+      "UPDATE users SET deleted = true, updated_at = NOW() WHERE id = $1",
       [driver.user_id]
     );
     await query("COMMIT");

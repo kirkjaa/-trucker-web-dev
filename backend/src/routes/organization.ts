@@ -10,6 +10,7 @@ import {
   updateOrganization,
 } from "../services/organization.service";
 import { upload } from "../utils/upload";
+
 import { extractOrganizationPayload } from "./utils/organizationPayload";
 
 const router = Router();

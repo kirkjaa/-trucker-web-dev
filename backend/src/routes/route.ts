@@ -2,12 +2,12 @@ import { Router } from "express";
 
 import { authMiddleware } from "../middleware/auth";
 import {
-  CreateRoutePayload,
-  RouteStatus,
   createRoute,
+  CreateRoutePayload,
   listRoutes,
   listRoutesByStatus,
   routeMessages,
+  RouteStatus,
   updateRouteStatus,
 } from "../services/route.service";
 

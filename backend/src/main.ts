@@ -2,22 +2,22 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 
-import { config } from "./config";
-import authRoutes from "./routes/auth";
-import organizationRoutes from "./routes/organization";
-import driverRoutes from "./routes/driver";
-import routeRoutes from "./routes/route";
-import chatRoutes from "./routes/chat";
-import templateRoutes from "./routes/template";
-import pluginRoutes from "./routes/plugin";
-import masterRoutes from "./routes/master";
-import adminFactoryRoutes from "./routes/admin/factory";
-import adminUserFactoryRoutes from "./routes/admin/userFactory";
 import adminCompanyRoutes from "./routes/admin/company";
+import adminFactoryRoutes from "./routes/admin/factory";
 import adminUserCompanyRoutes from "./routes/admin/userCompany";
-import userRoutes from "./routes/users";
+import adminUserFactoryRoutes from "./routes/admin/userFactory";
+import authRoutes from "./routes/auth";
+import chatRoutes from "./routes/chat";
+import driverRoutes from "./routes/driver";
+import masterRoutes from "./routes/master";
+import organizationRoutes from "./routes/organization";
+import pluginRoutes from "./routes/plugin";
+import routeRoutes from "./routes/route";
+import templateRoutes from "./routes/template";
 import singleUserRoutes from "./routes/user";
+import userRoutes from "./routes/users";
 import { getUploadsDir } from "./utils/upload";
+import { config } from "./config";
 
 async function bootstrap() {
   const app = express();

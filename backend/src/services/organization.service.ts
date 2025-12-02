@@ -297,7 +297,7 @@ export async function updateOrganization(
   payload: OrganizationPayload
 ) {
   const existing = await queryOne<{ id: string }>(
-    `SELECT id FROM organizations WHERE id = $1 AND deleted = false`,
+    "SELECT id FROM organizations WHERE id = $1 AND deleted = false",
     [id]
   );
 
@@ -352,7 +352,7 @@ export async function updateOrganization(
 
     if (payload.documentDeleteIds?.length) {
       await query(
-        `DELETE FROM organization_documents WHERE organization_id = $1 AND id = ANY($2::uuid[])`,
+        "DELETE FROM organization_documents WHERE organization_id = $1 AND id = ANY($2::uuid[])",
         [id, payload.documentDeleteIds]
       );
     }
@@ -375,7 +375,7 @@ export async function deleteOrganizations(ids: string[]) {
   }
 
   await query(
-    `UPDATE organizations SET deleted = true, updated_at = NOW() WHERE id = ANY($1::uuid[])`,
+    "UPDATE organizations SET deleted = true, updated_at = NOW() WHERE id = ANY($1::uuid[])",
     [ids]
   );
 
@@ -599,7 +599,7 @@ async function upsertAddress({
   longitude?: string;
 }) {
   const existing = await queryOne<{ id: string }>(
-    `SELECT id FROM organization_addresses WHERE organization_id = $1 ORDER BY created_at ASC LIMIT 1`,
+    "SELECT id FROM organization_addresses WHERE organization_id = $1 ORDER BY created_at ASC LIMIT 1",
     [organizationId]
   );
 

@@ -1,17 +1,17 @@
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
-import { setCookie, getCookie } from "cookies-next";
+import { useEffect, useState, useTransition } from "react";
+import { getCookie, setCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 
-import { cn } from "@/lib/utils";
 import {
-  locales,
-  localeNames,
-  localeFlags,
   defaultLocale,
   type Locale,
+  localeFlags,
+  localeNames,
+  locales,
 } from "@/i18n/config";
+import { cn } from "@/lib/utils";
 
 interface LanguageSwitcherProps {
   collapsed?: boolean;

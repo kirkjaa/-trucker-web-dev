@@ -427,7 +427,7 @@ export async function createUserRecord(
 
 export async function updateUserRecord(id: string, payload: UserPayload) {
   const existing = await queryOne<{ id: string }>(
-    `SELECT id FROM users WHERE id = $1 AND deleted = false`,
+    "SELECT id FROM users WHERE id = $1 AND deleted = false",
     [id]
   );
 
@@ -502,7 +502,7 @@ export async function deleteUsers(ids: string[]) {
     return 0;
   }
 
-  await query(`UPDATE users SET deleted = true WHERE id = ANY($1::uuid[])`, [
+  await query("UPDATE users SET deleted = true WHERE id = ANY($1::uuid[])", [
     ids,
   ]);
 

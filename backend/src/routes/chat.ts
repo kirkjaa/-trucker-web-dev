@@ -1,9 +1,9 @@
-import { Router, Response } from "express";
+import { Response, Router } from "express";
 
 import { AuthenticatedRequest, authMiddleware } from "../middleware/auth";
 import {
-  ChatServiceError,
   chatMessages,
+  ChatServiceError,
   createChatMessage,
   listChatGroups,
   listChatMessages,

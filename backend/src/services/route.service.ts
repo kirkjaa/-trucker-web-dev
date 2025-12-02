@@ -498,7 +498,7 @@ export async function updateRouteStatus(id: string, status: RouteStatus) {
 
 async function getProvince(id: number) {
   const province = await queryOne<ProvinceRow>(
-    `SELECT id, name_th, name_en FROM provinces WHERE id = $1`,
+    "SELECT id, name_th, name_en FROM provinces WHERE id = $1",
     [id]
   );
 
@@ -511,7 +511,7 @@ async function getProvince(id: number) {
 
 async function getDistrict(id: number) {
   const district = await queryOne<DistrictRow>(
-    `SELECT id, name_th, name_en FROM districts WHERE id = $1`,
+    "SELECT id, name_th, name_en FROM districts WHERE id = $1",
     [id]
   );
 

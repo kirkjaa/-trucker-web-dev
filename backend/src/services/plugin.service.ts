@@ -353,7 +353,7 @@ export async function createPlugin(creatorId: string, payload: PluginPayload) {
 
 export async function updatePlugin(id: number, payload: PluginPayload) {
   const existing = await queryOne<{ id: number }>(
-    `SELECT id FROM plugins WHERE id = $1`,
+    "SELECT id FROM plugins WHERE id = $1",
     [id]
   );
 
@@ -413,7 +413,7 @@ export async function updatePlugin(id: number, payload: PluginPayload) {
     );
 
     if (payload.features) {
-      await query(`DELETE FROM plugin_features WHERE plugin_id = $1`, [id]);
+      await query("DELETE FROM plugin_features WHERE plugin_id = $1", [id]);
 
       for (const feature of payload.features) {
         await query(
@@ -453,7 +453,7 @@ export async function deletePlugins(ids: number[]) {
   }
 
   const deleted = await query<{ id: number }>(
-    `DELETE FROM plugins WHERE id = ANY($1::int[]) RETURNING id`,
+    "DELETE FROM plugins WHERE id = ANY($1::int[]) RETURNING id",
     [ids]
   );
 

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+import { PluginFeatureForm } from "../hooks/usePluginForm";
+
 import { Button } from "@/app/components/ui/button";
 import {
   Dialog,
@@ -10,7 +12,6 @@ import {
 } from "@/app/components/ui/dialog";
 import { Input } from "@/app/components/ui/input";
 import { useToast } from "@/app/components/ui/toast/use-toast";
-import { PluginFeatureForm } from "../hooks/usePluginForm";
 
 type AddFunctionPluginModalProps = {
   open: boolean;

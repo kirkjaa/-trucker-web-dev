@@ -319,7 +319,7 @@ export async function updateTemplate(id: number, payload: TemplatePayload) {
   validateTemplatePayload(payload);
 
   const existing = await queryOne<{ id: number }>(
-    `SELECT id FROM templates WHERE id = $1`,
+    "SELECT id FROM templates WHERE id = $1",
     [id]
   );
 
@@ -340,7 +340,7 @@ export async function updateTemplate(id: number, payload: TemplatePayload) {
       [payload.organizationId, payload.templateType, id]
     );
 
-    await query(`DELETE FROM template_field_mappings WHERE template_id = $1`, [
+    await query("DELETE FROM template_field_mappings WHERE template_id = $1", [
       id,
     ]);
 
@@ -368,7 +368,7 @@ export async function deleteTemplates(ids: number[]) {
   }
 
   const deleted = await query<{ id: number }>(
-    `DELETE FROM templates WHERE id = ANY($1::int[]) RETURNING id`,
+    "DELETE FROM templates WHERE id = ANY($1::int[]) RETURNING id",
     [ids]
   );
 

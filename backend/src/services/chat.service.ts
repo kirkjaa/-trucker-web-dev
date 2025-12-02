@@ -169,7 +169,7 @@ export async function listChatMessages(
   );
 
   const totalRow = await queryOne<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM chat_messages WHERE room_id = $1`,
+    "SELECT COUNT(*)::int AS count FROM chat_messages WHERE room_id = $1",
     [roomId]
   );
   const total = totalRow?.count ?? 0;
@@ -226,7 +226,7 @@ export async function createChatMessage({
     [roomId, senderId, normalizedType, messageText || null, fileUrl ?? null]
   );
 
-  await query(`UPDATE chat_rooms SET last_message_at = NOW() WHERE id = $1`, [
+  await query("UPDATE chat_rooms SET last_message_at = NOW() WHERE id = $1", [
     roomId,
   ]);
 

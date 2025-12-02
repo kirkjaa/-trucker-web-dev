@@ -1,5 +1,8 @@
 import React from "react";
 
+import { PluginFeatureForm } from "../hooks/usePluginForm";
+
+import { Button } from "@/app/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,8 +13,6 @@ import {
   TableRowHead,
 } from "@/app/components/ui/data-table";
 import NoDataTable from "@/app/components/ui/featureComponents/NoDataTable";
-import { Button } from "@/app/components/ui/button";
-import { PluginFeatureForm } from "../hooks/usePluginForm";
 import { Icons } from "@/app/icons";
 
 type PluginFormTableProps = {

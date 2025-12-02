@@ -2,15 +2,16 @@ import { Router } from "express";
 
 import { authMiddleware } from "../middleware/auth";
 import {
+  buildUserResponse,
+  createUserRecord,
   deleteUsers,
+  findUserById,
   getUserDetail,
   listUsers,
   updateUserRecord,
-  createUserRecord,
-  buildUserResponse,
-  findUserById,
 } from "../services/user.service";
 import { upload } from "../utils/upload";
+
 import { extractUserPayload } from "./utils/userPayload";
 
 const router = Router();

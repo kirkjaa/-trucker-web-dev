@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
-import { fileURLToPath } from "url";
-import path from "path";
 import createNextIntlPlugin from "next-intl/plugin";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
