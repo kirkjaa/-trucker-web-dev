@@ -10,7 +10,7 @@ const Table = React.forwardRef<
     <table
       ref={ref}
       className={cn(
-        "w-full caption-bottom text-base font-medium text-main-01 flex flex-col gap-2",
+        "w-full caption-bottom text-base font-medium text-main-01 dark:text-white flex flex-col gap-2",
         className
       )}
       {...props}
@@ -27,7 +27,7 @@ const TableCustom = React.forwardRef<
     <table
       ref={ref}
       className={cn(
-        "caption-bottom text-base font-medium text-main-01 flex flex-col gap-2",
+        "caption-bottom text-base font-medium text-main-01 dark:text-white flex flex-col gap-2",
         className
       )}
       {...props}
@@ -81,7 +81,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
       <tr
         ref={ref}
         className={cn(
-          "shadow-table py-3 bg-white rounded-md flex items-center justify-between w-full hover:border-2 hover:border-secondary-caribbean-green-main",
+          "shadow-table py-3 bg-white dark:bg-[#2d323b] rounded-md flex items-center justify-between w-full hover:border-2 hover:border-secondary-caribbean-green-main dark:text-white transition-colors",
           className
         )}
         {...props}
@@ -99,7 +99,7 @@ const TableRowCustom = React.forwardRef<HTMLTableRowElement, TableRowProps>(
       <tr
         ref={ref}
         className={cn(
-          "shadow-table py-3 bg-white rounded-md flex items-center justify-between w-full",
+          "shadow-table py-3 bg-white dark:bg-[#2d323b] rounded-md flex items-center justify-between w-full dark:text-white transition-colors",
           className
         )}
         {...props}

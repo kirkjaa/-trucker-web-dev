@@ -47,7 +47,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       /* inside content */
       <div
         className={cn(
-          `flex h-10 items-center rounded-${rounded} border-2 ${borderColor} ${bgColor} overflow-hidden text-sm`,
+          `flex h-10 items-center rounded-${rounded} border-2 ${borderColor} ${bgColor} dark:bg-[#2d323b] dark:border-[#3d4451] overflow-hidden text-sm`,
           className
         )}
       >
@@ -61,7 +61,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           className={cn(
-            `w-full px-3 py-2 rounded-${rounded} placeholder:${placeholderColor}  focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-neutral-02 ${bgColor}`,
+            `w-full px-3 py-2 rounded-${rounded} placeholder:${placeholderColor} dark:placeholder:text-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-neutral-02 ${bgColor} dark:bg-[#2d323b] dark:text-white`,
             className
             // type === "file" && "hidden"
           )}
