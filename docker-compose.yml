@@ -12,7 +12,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
-      - ./database/demo_seed.sql:/docker-entrypoint-initdb.d/20_demo_seed.sql:ro
+      - ./database/demo_seed.sql:/docker-entrypoint-initdb.d/10_demo_seed.sql:ro
+      - ./database/full_demo_seed.sql:/docker-entrypoint-initdb.d/20_full_demo_seed.sql:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
