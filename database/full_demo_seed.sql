@@ -280,24 +280,211 @@ WHERE f.type = 'FACTORY'
 COMMIT;
 
 -- ============================================================================
--- SECTION 5: CHAT DATA
+-- SECTION 5: USERS AND DRIVERS
 -- ============================================================================
 
 BEGIN;
 
--- Create chat rooms between existing demo users
+-- Factory Staff Users (2 per factory = ~40 users)
+INSERT INTO users (id, display_code, username, email, password_hash, first_name, last_name, dial_code, phone, role, position_id, organization_id, status)
+SELECT 
+    ('f1a' || LPAD(ROW_NUMBER() OVER()::text, 5, '0') || '-aaaa-bbbb-cccc-' || LPAD(ROW_NUMBER() OVER()::text, 12, '0'))::uuid,
+    'USR-FACT-' || LPAD(ROW_NUMBER() OVER()::text, 4, '0'),
+    'factory.user.' || LPAD(ROW_NUMBER() OVER()::text, 3, '0') || '@trucker.demo',
+    'factory.user.' || LPAD(ROW_NUMBER() OVER()::text, 3, '0') || '@trucker.demo',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    (ARRAY['สุภาพร', 'สุดา', 'วิภา', 'นิตยา', 'พรทิพย์', 'จิราภรณ์', 'วราภรณ์', 'สุวรรณา', 'อรุณี', 'ปราณี', 'สมศรี', 'วันดี', 'สุมาลี', 'รัตนา', 'พิมพา', 'ประภา', 'วิไล', 'สมหญิง', 'บุญมี', 'ทองใบ'])[1 + (ROW_NUMBER() OVER() % 20)],
+    (ARRAY['เจริญสุข', 'ทองคำ', 'แก้วมณี', 'ศรีวิลัย', 'พิทักษ์', 'รักษาศีล', 'มั่งมี', 'ศิริมงคล', 'บุญประเสริฐ', 'ศรีประเสริฐ'])[1 + (ROW_NUMBER() OVER() % 10)],
+    '+66',
+    '02' || LPAD((1000000 + ROW_NUMBER() OVER() * 111)::text, 7, '0'),
+    'ORGANIZATION',
+    (SELECT id FROM user_positions WHERE code = 'FACTORY_MANAGER'),
+    o.id,
+    'ACTIVE'
+FROM organizations o
+CROSS JOIN generate_series(1, 2) s
+WHERE o.type = 'FACTORY' AND o.display_code LIKE 'FACT-%'
+ON CONFLICT (username) DO NOTHING;
+
+-- Company Staff Users (2 per company = ~36 users)
+INSERT INTO users (id, display_code, username, email, password_hash, first_name, last_name, dial_code, phone, role, position_id, organization_id, status)
+SELECT 
+    ('c1a' || LPAD(ROW_NUMBER() OVER()::text, 5, '0') || '-aaaa-bbbb-cccc-' || LPAD(ROW_NUMBER() OVER()::text, 12, '0'))::uuid,
+    'USR-COMP-' || LPAD(ROW_NUMBER() OVER()::text, 4, '0'),
+    'company.user.' || LPAD(ROW_NUMBER() OVER()::text, 3, '0') || '@trucker.demo',
+    'company.user.' || LPAD(ROW_NUMBER() OVER()::text, 3, '0') || '@trucker.demo',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    (ARRAY['กิตติพงษ์', 'ธีรพงษ์', 'สุรพงษ์', 'วิชาญ', 'สุธี', 'อนุสรณ์', 'ประวิทย์', 'สุรศักดิ์', 'วีรศักดิ์', 'ชัยยศ', 'ณัฐพล', 'พีระพงษ์', 'อดิศักดิ์', 'เอกชัย', 'วรวุฒิ', 'ศุภชัย', 'อภิชาติ', 'ธนา'])[1 + (ROW_NUMBER() OVER() % 18)],
+    (ARRAY['โชติช่วง', 'รุ่งโรจน์', 'เจริญชัย', 'มีบุญ', 'ศิริวัฒน์', 'วิไลพร', 'ชัยนาท', 'สุขเกษม', 'บุญเรือง', 'ศรีจันทร์'])[1 + (ROW_NUMBER() OVER() % 10)],
+    '+66',
+    '02' || LPAD((2000000 + ROW_NUMBER() OVER() * 222)::text, 7, '0'),
+    'ORGANIZATION',
+    (SELECT id FROM user_positions WHERE code = 'COMPANY_MANAGER'),
+    o.id,
+    'ACTIVE'
+FROM organizations o
+CROSS JOIN generate_series(1, 2) s
+WHERE o.type = 'COMPANY' AND o.display_code LIKE 'COMP-%'
+ON CONFLICT (username) DO NOTHING;
+
+-- Internal Drivers (20 drivers attached to companies)
+INSERT INTO users (id, display_code, username, email, password_hash, first_name, last_name, dial_code, phone, role, organization_id, status)
+SELECT
+    ('d1a' || LPAD(n::text, 5, '0') || '-aaaa-bbbb-cccc-' || LPAD(n::text, 12, '0'))::uuid,
+    'DRV-INT-' || LPAD(n::text, 4, '0'),
+    'driver.internal.' || n || '@trucker.demo',
+    'driver.internal.' || n || '@trucker.demo',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    (ARRAY['สมชาย', 'สมศักดิ์', 'สมหมาย', 'ประสิทธิ์', 'วิชัย', 'สุชาติ', 'อนุชา', 'พิชัย', 'วีระ', 'ชัยวัฒน์', 'ธนา', 'กิตติ', 'อภิชาติ', 'วรวุฒิ', 'ณัฐพล', 'ศุภชัย', 'พีระพงษ์', 'สุรชัย', 'อดิศักดิ์', 'เอกชัย'])[1 + (n % 20)],
+    (ARRAY['ใจดี', 'สุขสม', 'มั่นคง', 'เจริญรุ่ง', 'ศรีสวัสดิ์', 'ทองดี', 'แสงทอง', 'พรมมา', 'จันทร์เพ็ญ', 'ดวงแก้ว'])[1 + (n % 10)],
+    '+66',
+    '08' || (1 + (n % 9))::text || LPAD((1000000 + n * 1234)::text, 7, '0'),
+    'DRIVER',
+    (SELECT id FROM organizations WHERE type = 'COMPANY' AND display_code LIKE 'COMP-%' ORDER BY random() LIMIT 1),
+    'ACTIVE'
+FROM generate_series(1, 20) n
+ON CONFLICT (username) DO NOTHING;
+
+-- Freelance Approved Drivers (20 drivers)
+INSERT INTO users (id, display_code, username, email, password_hash, first_name, last_name, dial_code, phone, role, status)
+SELECT
+    ('d2a' || LPAD(n::text, 5, '0') || '-aaaa-bbbb-cccc-' || LPAD(n::text, 12, '0'))::uuid,
+    'DRV-FRE-' || LPAD(n::text, 4, '0'),
+    'driver.freelance.' || n || '@trucker.demo',
+    'driver.freelance.' || n || '@trucker.demo',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    (ARRAY['บุญชู', 'สำราญ', 'ทองใบ', 'บุญมี', 'สุนทร', 'ประยุทธ์', 'มานพ', 'สนั่น', 'บุญส่ง', 'ถาวร', 'สมาน', 'บุญเลิศ', 'สุพจน์', 'ประเสริฐ', 'บุญเกิด', 'สุวิทย์', 'ประสาน', 'สมพงษ์', 'บุญธรรม', 'สมบูรณ์'])[1 + (n % 20)],
+    (ARRAY['รักษาดี', 'มีทรัพย์', 'ชาวนา', 'ศรีสง่า', 'พันธ์ดี', 'มากมี', 'ใจซื่อ', 'ภักดี', 'สมานมิตร', 'จิตรดี'])[1 + (n % 10)],
+    '+66',
+    '09' || (1 + (n % 9))::text || LPAD((2000000 + n * 5678)::text, 7, '0'),
+    'DRIVER',
+    'ACTIVE'
+FROM generate_series(1, 20) n
+ON CONFLICT (username) DO NOTHING;
+
+-- Freelance Pending Drivers (10 drivers for review flow)
+INSERT INTO users (id, display_code, username, email, password_hash, first_name, last_name, dial_code, phone, role, status)
+SELECT
+    ('d3a' || LPAD(n::text, 5, '0') || '-aaaa-bbbb-cccc-' || LPAD(n::text, 12, '0'))::uuid,
+    'DRV-PND-' || LPAD(n::text, 4, '0'),
+    'driver.pending.' || n || '@trucker.demo',
+    'driver.pending.' || n || '@trucker.demo',
+    crypt('Demo@123', gen_salt('bf', 10)),
+    (ARRAY['อนันต์', 'วิเชียร', 'สุริยา', 'ไพศาล', 'ภาณุ', 'เกรียงไกร', 'ไกรสร', 'พิเชษฐ์', 'อำนาจ', 'ไพโรจน์'])[1 + (n % 10)],
+    (ARRAY['กล้าหาญ', 'ไทยเจริญ', 'ศรีโสภา', 'มหาศักดิ์', 'พลศักดิ์', 'เกียรติศักดิ์', 'บุญประเสริฐ', 'แสงจันทร์', 'มหาชัย', 'บุญเพิ่ม'])[1 + (n % 10)],
+    '+66',
+    '06' || (1 + (n % 9))::text || LPAD((3000000 + n * 9012)::text, 7, '0'),
+    'DRIVER',
+    'PENDING'
+FROM generate_series(1, 10) n
+ON CONFLICT (username) DO NOTHING;
+
+-- Create driver records for internal drivers
+INSERT INTO drivers (id, display_code, user_id, type, company_id, status)
+SELECT 
+    uuid_generate_v4(),
+    'DRV-REC-INT-' || LPAD(ROW_NUMBER() OVER()::text, 4, '0'),
+    u.id,
+    'internal',
+    u.organization_id,
+    'APPROVED'
+FROM users u
+WHERE u.display_code LIKE 'DRV-INT-%'
+ON CONFLICT (display_code) DO NOTHING;
+
+-- Create driver records for freelance approved drivers
+INSERT INTO drivers (id, display_code, user_id, type, company_id, status, id_card_image_url, vehicle_registration_image_url, vehicle_license_image_url)
+SELECT 
+    uuid_generate_v4(),
+    'DRV-REC-FRE-' || LPAD(ROW_NUMBER() OVER()::text, 4, '0'),
+    u.id,
+    'freelance',
+    (SELECT id FROM organizations WHERE type = 'COMPANY' AND display_code LIKE 'COMP-%' ORDER BY random() LIMIT 1),
+    'APPROVED',
+    'https://ssl-new-trucker.s3.ap-southeast-1.amazonaws.com/demo/idcard-' || u.display_code || '.jpg',
+    'https://ssl-new-trucker.s3.ap-southeast-1.amazonaws.com/demo/vehicle-reg-' || u.display_code || '.jpg',
+    'https://ssl-new-trucker.s3.ap-southeast-1.amazonaws.com/demo/license-' || u.display_code || '.jpg'
+FROM users u
+WHERE u.display_code LIKE 'DRV-FRE-%'
+ON CONFLICT (display_code) DO NOTHING;
+
+-- Create driver records for freelance pending drivers
+INSERT INTO drivers (id, display_code, user_id, type, status, id_card_image_url, vehicle_registration_image_url, vehicle_license_image_url)
+SELECT 
+    uuid_generate_v4(),
+    'DRV-REC-PND-' || LPAD(ROW_NUMBER() OVER()::text, 4, '0'),
+    u.id,
+    'freelance',
+    'PENDING',
+    'https://ssl-new-trucker.s3.ap-southeast-1.amazonaws.com/demo/idcard-' || u.display_code || '.jpg',
+    'https://ssl-new-trucker.s3.ap-southeast-1.amazonaws.com/demo/vehicle-reg-' || u.display_code || '.jpg',
+    'https://ssl-new-trucker.s3.ap-southeast-1.amazonaws.com/demo/license-' || u.display_code || '.jpg'
+FROM users u
+WHERE u.display_code LIKE 'DRV-PND-%'
+ON CONFLICT (display_code) DO NOTHING;
+
+-- Create trucks for drivers
+INSERT INTO trucks (id, truck_code, license_plate_value, license_plate_province, brand, year, color, type, fuel_type, size, department_type, company_id, driver_id, capacity_weight, capacity_weight_unit, is_active)
+SELECT
+    uuid_generate_v4(),
+    'TRK-' || LPAD(ROW_NUMBER() OVER()::text, 4, '0'),
+    (10 + (ROW_NUMBER() OVER() % 90))::text || '-' || LPAD((1000 + ROW_NUMBER() OVER() * 123)::text, 4, '0'),
+    (ARRAY['กรุงเทพมหานคร', 'ชลบุรี', 'ระยอง', 'สมุทรปราการ', 'ปทุมธานี', 'อยุธยา', 'นครราชสีมา', 'ขอนแก่น', 'เชียงใหม่', 'สงขลา'])[1 + (ROW_NUMBER() OVER() % 10)],
+    (ARRAY['Isuzu', 'Hino', 'UD Trucks', 'Mitsubishi Fuso', 'Volvo', 'Scania', 'Mercedes-Benz', 'MAN', 'DAF', 'Foton'])[1 + (ROW_NUMBER() OVER() % 10)],
+    (2018 + (ROW_NUMBER() OVER() % 7))::text,
+    (ARRAY['White', 'Blue', 'Green', 'Red', 'Silver'])[1 + (ROW_NUMBER() OVER() % 5)],
+    (ARRAY['TRAILER', 'SEMI_TRAILER', 'CARGO_VAN', 'TANKER_TRUCK', 'PICKUP_TRUCK']::truck_type[])[1 + (ROW_NUMBER() OVER() % 5)],
+    (ARRAY['DIESEL', 'BIODIESEL', 'CNG', 'LNG']::truck_fuel_type[])[1 + (ROW_NUMBER() OVER() % 4)],
+    (ARRAY['6_WHEEL', '10_WHEEL', '18_WHEEL', '12_WHEEL']::vehicle_size[])[1 + (ROW_NUMBER() OVER() % 4)],
+    CASE WHEN d.type = 'internal' THEN 'company'::truck_department_type ELSE 'freelance'::truck_department_type END,
+    d.company_id,
+    d.id,
+    CASE 
+        WHEN ROW_NUMBER() OVER() % 4 = 0 THEN 5000
+        WHEN ROW_NUMBER() OVER() % 4 = 1 THEN 10000
+        WHEN ROW_NUMBER() OVER() % 4 = 2 THEN 15000
+        ELSE 20000
+    END,
+    'kg',
+    true
+FROM drivers d
+WHERE d.status = 'APPROVED'
+  AND d.display_code LIKE 'DRV-REC-%';
+
+COMMIT;
+
+-- ============================================================================
+-- SECTION 6: CHAT DATA
+-- ============================================================================
+
+BEGIN;
+
+-- Create chat rooms: Factory users talking to Company users
 INSERT INTO chat_rooms (id, participant1_id, participant2_id, last_message_at)
 SELECT 
     uuid_generate_v4(),
-    u1.id,
-    u2.id,
+    f_user.id,
+    c_user.id,
     NOW() - (ROW_NUMBER() OVER() || ' hours')::interval
-FROM (SELECT id FROM users WHERE role = 'ORGANIZATION' LIMIT 5) u1
-CROSS JOIN (SELECT id FROM users WHERE role = 'ORGANIZATION' OFFSET 5 LIMIT 5) u2
-ON CONFLICT DO NOTHING;
+FROM (SELECT id FROM users WHERE display_code LIKE 'USR-FACT-%' LIMIT 10) f_user
+CROSS JOIN LATERAL (
+    SELECT id FROM users WHERE display_code LIKE 'USR-COMP-%' ORDER BY random() LIMIT 2
+) c_user;
 
--- Add sample chat messages
-INSERT INTO chat_messages (id, room_id, sender_id, message_type, content, is_read)
+-- Create chat rooms: Company users talking to Drivers
+INSERT INTO chat_rooms (id, participant1_id, participant2_id, last_message_at)
+SELECT 
+    uuid_generate_v4(),
+    c_user.id,
+    d_user.id,
+    NOW() - (ROW_NUMBER() OVER() || ' hours')::interval
+FROM (SELECT id FROM users WHERE display_code LIKE 'USR-COMP-%' LIMIT 10) c_user
+CROSS JOIN LATERAL (
+    SELECT id FROM users WHERE display_code LIKE 'DRV-INT-%' OR display_code LIKE 'DRV-FRE-%' ORDER BY random() LIMIT 2
+) d_user;
+
+-- Add sample chat messages - RFQ discussions
+INSERT INTO chat_messages (id, room_id, sender_id, message_type, content, is_read, created_at)
 SELECT 
     uuid_generate_v4(),
     cr.id,
@@ -305,24 +492,61 @@ SELECT
     'txt',
     (ARRAY[
         'สวัสดีครับ ต้องการสอบถามเรื่องการขนส่งครับ',
-        'สวัสดีครับ ยินดีให้บริการครับ',
-        'ราคาเส้นทาง กรุงเทพ-เชียงใหม่ เท่าไหร่ครับ?',
-        '15,000 บาท/เที่ยว สำหรับรถ 10 ล้อครับ',
-        'รับทราบครับ ขอใบเสนอราคาด้วยครับ',
-        'ส่งให้ทางอีเมลเลยนะครับ',
-        'ขอบคุณครับ',
-        'ยินดีครับ มีอะไรสอบถามเพิ่มเติมได้เลยครับ',
-        'ต้องการรถวันไหนครับ?',
-        'วันจันทร์หน้าครับ พร้อมส่งสินค้า 8 โมงเช้า',
-        'รับทราบครับ จะจัดรถให้ครับ',
-        'ขอบคุณมากครับ'
-    ])[1 + (s % 12)],
-    CASE WHEN s < 8 THEN true ELSE false END
+        'สวัสดีครับ ยินดีให้บริการครับ สนใจเส้นทางไหนครับ?',
+        'เส้นทาง กรุงเทพ-เชียงใหม่ ครับ ราคาที่เสนอพอจะลดได้ไหมครับ?',
+        'ขอดูรายละเอียดก่อนนะครับ ถ้าปริมาณมากอาจพิจารณาได้ครับ',
+        'ปริมาณประมาณ 20 เที่ยว/เดือนครับ',
+        'รับทราบครับ จะส่งใบเสนอราคาใหม่ให้ภายในวันนี้ครับ',
+        'ขอบคุณครับ รอใบเสนอราคานะครับ',
+        'ส่งให้แล้วครับ ลองตรวจสอบดูนะครับ',
+        'ได้รับแล้วครับ กำลังพิจารณาอยู่',
+        'มีข้อสงสัยเพิ่มเติมสอบถามได้เลยนะครับ',
+        'เรื่องรถที่จะใช้ เป็นรถขนาดไหนครับ?',
+        'ใช้รถ 10 ล้อ หรือ 18 ล้อ ได้ทั้งสองแบบครับ',
+        'รับทราบครับ ขอปรึกษาผู้บริหารก่อนนะครับ',
+        'ได้ครับ ไม่เร่งครับ',
+        'ตกลงครับ เลือกรถ 10 ล้อ ราคา 15,000 บาท/เที่ยว',
+        'ขอบคุณครับ จะดำเนินการทำสัญญาต่อไปครับ'
+    ])[1 + ((s - 1) % 16)],
+    CASE WHEN s < 12 THEN true ELSE false END,
+    NOW() - ((100 - s) || ' minutes')::interval
 FROM chat_rooms cr
-CROSS JOIN generate_series(1, 12) s
-WHERE cr.participant1_id IS NOT NULL
-LIMIT 100
-ON CONFLICT DO NOTHING;
+CROSS JOIN generate_series(1, 16) s
+WHERE cr.participant1_id IN (SELECT id FROM users WHERE display_code LIKE 'USR-FACT-%')
+LIMIT 200;
+
+-- Add sample chat messages - Driver coordination
+INSERT INTO chat_messages (id, room_id, sender_id, message_type, content, is_read, created_at)
+SELECT 
+    uuid_generate_v4(),
+    cr.id,
+    CASE WHEN s % 2 = 1 THEN cr.participant1_id ELSE cr.participant2_id END,
+    'txt',
+    (ARRAY[
+        'พี่ครับ พรุ่งนี้มีงานให้ครับ เส้นทาง แหลมฉบัง-มาบตาพุด',
+        'รับครับ ต้องไปรับของกี่โมงครับ?',
+        '8 โมงเช้าครับ ที่ท่าเรือแหลมฉบัง ประตู 3',
+        'รับทราบครับ จะไปถึงก่อนเวลาครับ',
+        'สินค้าเป็นตู้คอนเทนเนอร์ 40 ฟุต นะครับ',
+        'รับทราบครับ เตรียมรถหัวลากให้เรียบร้อยแล้วครับ',
+        'ดีครับ ขับขี่ปลอดภัยนะครับ',
+        'ครับผม ขอบคุณครับ',
+        'ถึงแล้วครับ กำลังรอคิวขึ้นของ',
+        'รับทราบครับ แจ้งเมื่อออกจากท่าเรือด้วยนะครับ',
+        'ออกจากท่าเรือแล้วครับ คาดว่าถึง 11 โมงครับ',
+        'ดีครับ ผมแจ้งลูกค้าให้แล้ว',
+        'ถึงปลายทางแล้วครับ กำลังรอลงของ',
+        'เรียบร้อยครับ ขอบคุณมากครับ',
+        'ยินดีครับ ไว้มีงานอีกนะครับ',
+        'ครับผม'
+    ])[1 + ((s - 1) % 16)],
+    CASE WHEN s < 12 THEN true ELSE false END,
+    NOW() - ((80 - s) || ' minutes')::interval
+FROM chat_rooms cr
+CROSS JOIN generate_series(1, 16) s
+WHERE cr.participant1_id IN (SELECT id FROM users WHERE display_code LIKE 'USR-COMP-%')
+  AND cr.participant2_id IN (SELECT id FROM users WHERE display_code LIKE 'DRV-%')
+LIMIT 200;
 
 -- Update last_message_at for all rooms
 UPDATE chat_rooms cr
@@ -334,7 +558,7 @@ SET last_message_at = COALESCE(
 COMMIT;
 
 -- ============================================================================
--- SECTION 6: ADDITIONAL PACKAGES
+-- SECTION 7: ADDITIONAL PACKAGES
 -- ============================================================================
 
 BEGIN;
