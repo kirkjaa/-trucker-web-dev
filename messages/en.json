@@ -59,7 +59,36 @@
     "name": "Name",
     "email": "Email",
     "phone": "Phone",
-    "address": "Address"
+    "address": "Address",
+    "downloadTemplate": "Download Template",
+    "importCsv": "Import CSV",
+    "addRouteCode": "Add Route Code",
+    "deleteSelected": "Delete {count} selected",
+    "confirmDeleteCompany": "Confirm Delete Company",
+    "confirmDeleteFactory": "Confirm Delete Factory",
+    "deleteConfirmMessage": "Do you want to delete {type} #{name}?",
+    "deleteWarning": "Once deleted, it cannot be recovered and all data will be permanently deleted",
+    "factory": "factory",
+    "company": "company"
+  },
+  "factories": {
+    "title": "Manage Factories",
+    "addFactory": "Add Factory",
+    "factoryCode": "Factory Code",
+    "factoryName": "Factory Name",
+    "manager": "Manager",
+    "addManager": "+ Add Manager",
+    "package": "Package",
+    "phoneNumber": "Phone Number",
+    "email": "Email",
+    "location": "Location",
+    "viewLocation": "View Location"
+  },
+  "companies": {
+    "title": "Manage Shipping Companies",
+    "addCompany": "Add Company",
+    "companyCode": "Company Code",
+    "companyName": "Company Name"
   },
   "auth": {
     "login": "Login",

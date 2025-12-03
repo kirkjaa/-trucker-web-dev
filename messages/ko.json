@@ -59,7 +59,36 @@
     "name": "이름",
     "email": "이메일",
     "phone": "전화번호",
-    "address": "주소"
+    "address": "주소",
+    "downloadTemplate": "템플릿 다운로드",
+    "importCsv": "CSV 가져오기",
+    "addRouteCode": "경로 코드 추가",
+    "deleteSelected": "{count}개 선택 삭제",
+    "confirmDeleteCompany": "회사 삭제 확인",
+    "confirmDeleteFactory": "공장 삭제 확인",
+    "deleteConfirmMessage": "{type} #{name}을(를) 삭제하시겠습니까?",
+    "deleteWarning": "삭제 후에는 복구할 수 없으며 모든 데이터가 영구적으로 삭제됩니다",
+    "factory": "공장",
+    "company": "회사"
+  },
+  "factories": {
+    "title": "공장 관리",
+    "addFactory": "공장 추가",
+    "factoryCode": "공장 코드",
+    "factoryName": "공장 이름",
+    "manager": "관리자",
+    "addManager": "+ 관리자 추가",
+    "package": "패키지",
+    "phoneNumber": "전화번호",
+    "email": "이메일",
+    "location": "위치",
+    "viewLocation": "위치 보기"
+  },
+  "companies": {
+    "title": "운송 회사 관리",
+    "addCompany": "회사 추가",
+    "companyCode": "회사 코드",
+    "companyName": "회사 이름"
   },
   "auth": {
     "login": "로그인",

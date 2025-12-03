@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import clsx from "clsx";
+import { useTranslations } from "next-intl";
 
 import { useOrganizationStore } from "../../../../store/organization/organizationStore";
 import FactoriesAndCompaniesLatLngModal from "../../components/FactoriesAndCompaniesLatLngModal";
@@ -34,6 +35,10 @@ export default function FactoriesAndComponiesListTable() {
       getOrganizationParams: state.getOrganizationParams,
     })
   );
+
+  // Translations
+  const t = useTranslations("factories");
+  const tCommon = useTranslations("common");
 
   // Hook
   const {
@@ -119,12 +124,12 @@ export default function FactoriesAndComponiesListTable() {
                   variant="main"
                   onClick={() => handleClickAddUserAdmin(data)}
                 >
-                  + เพิ่มผู้ดูแล
+                  {t("addManager")}
                 </Button>
               ) : (
                 data.admin.fullName
               )} */}
-              ผู้ดูแล
+              {t("manager")}
             </TableCell>
             <TableCell className="w-[15%] text-sm break-words">
               Package
@@ -141,7 +146,7 @@ export default function FactoriesAndComponiesListTable() {
                 className="text-secondary-caribbean-green-main cursor-pointer"
               >
                 <p className="flex items-center">
-                  ดูพิกัดสถานที่
+                  {t("viewLocation")}
                   <span>
                     <Icons
                       name="ChevronRight"
@@ -183,23 +188,53 @@ export default function FactoriesAndComponiesListTable() {
         <Table>
           <TableHeader>
             <TableRowHead>
-              {headerList.map(({ key, label, sortable = true, width }) => (
-                <TableHead
-                  key={key}
-                  className={`w-[${width}] text-sm flex items-center gap-1`}
-                >
-                  {label}
-                  {sortable && key && (
-                    <Icons
-                      name="Swap"
-                      className={clsx("w-4 h-4", {
-                        "cursor-pointer": sortable,
-                      })}
-                      onClick={() => sortable && key && handleSort(key as any)}
-                    />
-                  )}
-                </TableHead>
-              ))}
+              {headerList.map(({ key, label, sortable = true, width }) => {
+                // Translate header labels
+                const translatedLabel = (() => {
+                  switch (key) {
+                    case "display_code":
+                      return pathName.includes(EAdminPathName.COMPANIES)
+                        ? t("factoryCode").replace("Factory", "Company")
+                        : t("factoryCode");
+                    case "name":
+                      return pathName.includes(EAdminPathName.COMPANIES)
+                        ? t("factoryName").replace("Factory", "Company")
+                        : t("factoryName");
+                    case "admin":
+                      return t("manager");
+                    case "package":
+                      return t("package");
+                    case "phone":
+                      return t("phoneNumber");
+                    case "email":
+                      return t("email");
+                    case "address":
+                      return t("location");
+                    default:
+                      return label;
+                  }
+                })();
+
+                return (
+                  <TableHead
+                    key={key}
+                    className={`w-[${width}] text-sm flex items-center gap-1`}
+                  >
+                    {translatedLabel}
+                    {sortable && key && (
+                      <Icons
+                        name="Swap"
+                        className={clsx("w-4 h-4", {
+                          "cursor-pointer": sortable,
+                        })}
+                        onClick={() =>
+                          sortable && key && handleSort(key as any)
+                        }
+                      />
+                    )}
+                  </TableHead>
+                );
+              })}
             </TableRowHead>
           </TableHeader>
           <TableBody>{renderTableRows()}</TableBody>
@@ -222,7 +257,7 @@ export default function FactoriesAndComponiesListTable() {
         onSubmit={handleClickAddAdminUser}
         open={openModal}
         setOpen={setOpenModal}
-        title="เพิ่มผู้ดูแล"
+        title={t("addManager")}
         userAdminList={allUserAdminList}
         onClickSearch={(val) => handleSearchAdminUser(val)}
       />
@@ -249,10 +284,14 @@ export default function FactoriesAndComponiesListTable() {
       <ModalNotification
         open={openDeleteModal}
         setOpen={setOpenDeleteModal}
-        title={`ยืนยันการลบ${pathName.includes(EAdminPathName.FACTORIES) ? "โรงงาน" : "บริษัท"}`}
-        description={`คุณต้องการลบ${pathName.includes(EAdminPathName.FACTORIES) ? "โรงงาน" : "บริษัท"} #${selectedOrg?.name} หรือไม่?`}
-        description2="เมื่อลบจะไม่สามารถกู้คืนได้และข้อมูลทั้งหมดจะถูกลบอย่างถาวร"
-        buttonText="ยืนยัน"
+        title={
+          pathName.includes(EAdminPathName.FACTORIES)
+            ? tCommon("confirmDeleteFactory")
+            : tCommon("confirmDeleteCompany")
+        }
+        description={`${tCommon("delete")} ${pathName.includes(EAdminPathName.FACTORIES) ? tCommon("factory") : tCommon("company")} #${selectedOrg?.name}?`}
+        description2={tCommon("deleteWarning")}
+        buttonText={tCommon("confirm")}
         isConfirmOnly={false}
         isDelete
         icon={<Icons name="DialogDelete" className="w-16 h-16" />}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 
 import useSearchBarAdmin from "../hooks/useSearchBarAdmin";
 import useCreateRouteModal from "../route/hooks/useCreateRouteModal";
@@ -17,6 +18,9 @@ export default function SearchBar() {
   //   (state) => state.getOrganizationParams
   // );
   // const getUserParams = useUserStore((state) => state.getUserParams);
+
+  // Translations
+  const t = useTranslations("common");
 
   // Hook
   const {
@@ -125,7 +129,7 @@ export default function SearchBar() {
           <Input
             value={search}
             className="h-11 w-full rounded-3xl border-neutral-04"
-            placeholder="ค้นหา"
+            placeholder={t("search")}
             onChange={(e) => setSearch(e.target.value)}
           />
           {/* <Button className="rounded-l-none" onClick={handleSearch}>
@@ -133,7 +137,9 @@ export default function SearchBar() {
           </Button> */}
         </div>
         <div className="flex items-center gap-4">
-          <p className="">ผลลัพธ์ {dataCount} รายการ</p>
+          <p className="">
+            {t("results")} {dataCount} {t("items")}
+          </p>
           {visibleDowloadTemplate && (
             <Button
               variant="main-light"
@@ -141,7 +147,7 @@ export default function SearchBar() {
               onClick={handleDownloadTemplate}
             >
               <Icons name="CsvFile" className="w-6 h-6" />
-              ดาวน์โหลดเทมเพลต
+              {t("downloadTemplate")}
             </Button>
           )}
           {visibleImportCsv && (
@@ -150,26 +156,28 @@ export default function SearchBar() {
               onClick={() => handleSetFormType("import")}
             >
               <Icons name="PaperUpload" className="w-6 h-6" />
-              นำเข้า CSV
+              {t("importCsv")}
             </Button>
           )}
           {visibleBtnAddRoute && (
             <Button variant="filter" onClick={handleClickOpenModalCreateRoute}>
               <Icons name="Plus" className="w-4 h-6" />
-              เพิ่มรหัสเส้นทาง
+              {t("addRouteCode")}
             </Button>
           )}
           {visibleBtnFilter && (
             <Button variant="filter" onClick={handleClearFilter}>
               <Icons name="Filter" className="w-6 h-6" />
-              <p>แสดงทั้งหมด</p>
+              <p>{t("showAll")}</p>
             </Button>
           )}
 
           {getSelectedListId().length > 0 && (
             <Button onClick={onClickDeleteList} className="bg-red-500">
               <Icons name="Bin" className="w-6 h-6" />
-              <p>ลบ {getSelectedListId().length} รายการที่เลือก</p>
+              <p>
+                {t("delete")} {getSelectedListId().length} {t("items")}
+              </p>
             </Button>
           )}
           {visibleBtnPlus &&
@@ -209,10 +217,10 @@ export default function SearchBar() {
       <ModalNotification
         open={openModalDeleteList}
         setOpen={setOpenModalDeleteList}
-        title="ยืนยันการลบบริษัท"
-        description={`คุณต้องการลบบริษัท #${selectedListId.map((item) => item.name).join(", ")} หรือไม่?`}
-        description2="เมื่อลบจะไม่สามารถกู้คืนได้และข้อมูลทั้งหมดจะถูกลบอย่างถาวร"
-        buttonText="ยืนยัน"
+        title={t("confirmDeleteCompany")}
+        description={`${t("delete")} #${selectedListId.map((item) => item.name).join(", ")}?`}
+        description2={t("deleteWarning")}
+        buttonText={t("confirm")}
         isConfirmOnly={false}
         isDelete
         icon={<Icons name="DialogDelete" className="w-16 h-16" />}

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import SearchBar from "../components/SearchBar";
 
@@ -12,6 +13,8 @@ import { EAdminPathName } from "@/app/types/enum";
 export default function OrganizationRender() {
   // Hook
   const pathName = usePathname();
+  const tFactories = useTranslations("factories");
+  const tCompanies = useTranslations("companies");
 
   return (
     <div className="flex flex-col gap-4">
@@ -23,8 +26,8 @@ export default function OrganizationRender() {
         }
         title={
           pathName === EAdminPathName.FACTORIES
-            ? "จัดการบริษัทขนส่ง"
-            : "จัดการโรงงาน"
+            ? tFactories("title")
+            : tCompanies("title")
         }
       />
       <SearchBar />

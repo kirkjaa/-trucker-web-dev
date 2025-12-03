@@ -59,7 +59,36 @@
     "name": "ชื่อ",
     "email": "อีเมล",
     "phone": "เบอร์โทรศัพท์",
-    "address": "ที่อยู่"
+    "address": "ที่อยู่",
+    "downloadTemplate": "ดาวน์โหลดเทมเพลต",
+    "importCsv": "นำเข้า CSV",
+    "addRouteCode": "เพิ่มรหัสเส้นทาง",
+    "deleteSelected": "ลบ {count} รายการที่เลือก",
+    "confirmDeleteCompany": "ยืนยันการลบบริษัท",
+    "confirmDeleteFactory": "ยืนยันการลบโรงงาน",
+    "deleteConfirmMessage": "คุณต้องการลบ{type} #{name} หรือไม่?",
+    "deleteWarning": "เมื่อลบจะไม่สามารถกู้คืนได้และข้อมูลทั้งหมดจะถูกลบอย่างถาวร",
+    "factory": "โรงงาน",
+    "company": "บริษัท"
+  },
+  "factories": {
+    "title": "จัดการโรงงาน",
+    "addFactory": "เพิ่มโรงงาน",
+    "factoryCode": "รหัสโรงงาน",
+    "factoryName": "ชื่อโรงงาน",
+    "manager": "ผู้ดูแล",
+    "addManager": "+ เพิ่มผู้ดูแล",
+    "package": "แพ็คเก้จ",
+    "phoneNumber": "เบอร์โทรศัพท์",
+    "email": "อีเมล",
+    "location": "พิกัดสถานที่",
+    "viewLocation": "ดูพิกัดสถานที่"
+  },
+  "companies": {
+    "title": "จัดการบริษัทขนส่ง",
+    "addCompany": "เพิ่มบริษัท",
+    "companyCode": "รหัสบริษัท",
+    "companyName": "ชื่อบริษัท"
   },
   "auth": {
     "login": "เข้าสู่ระบบ",
