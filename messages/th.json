@@ -67,7 +67,17 @@
     "username": "ชื่อผู้ใช้",
     "password": "รหัสผ่าน",
     "forgotPassword": "ลืมรหัสผ่าน",
-    "rememberMe": "จดจำฉัน"
+    "rememberMe": "จดจำฉัน",
+    "signIn": "ลงชื่อเข้าใช้งาน",
+    "welcomeMessage": "ยินดีต้อนรับเข้าสู่ระบบ The Trucker",
+    "usernameOrPhone": "ชื่อผู้ใช้งาน หรือ เบอร์โทรศัพท์",
+    "enterData": "กรุณากรอกข้อมูล",
+    "enterPassword": "กรุณากรอกรหัสผ่าน",
+    "keepMeLoggedIn": "ให้ฉันอยู่ในระบบต่อไป",
+    "loginButton": "ลงชื่อเข้าใช้งาน",
+    "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่",
+    "loginFailed": "เข้าสู่ระบบล้มเหลว กรุณาลองใหม่",
+    "copyright": "Copyright © By Ssllogistics Company Limited"
   },
   "languages": {
     "thai": "ไทย",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import clsx from "clsx";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/app/components/ui/button";
@@ -34,6 +35,7 @@ export default function LoginForm() {
 
   // Hooks
   const { toast } = useToast();
+  const t = useTranslations("auth");
   const {
     reset,
     formState: { errors },
@@ -135,7 +137,7 @@ export default function LoginForm() {
       } else {
         toast({
           icon: "ToastError",
-          description: "Email or password invalid please try again",
+          description: t("invalidCredentials"),
           variant: "error",
         });
       }
@@ -144,7 +146,7 @@ export default function LoginForm() {
     } catch (error) {
       toast({
         icon: "Error",
-        description: "Login fail please try again",
+        description: t("loginFailed"),
         variant: "error",
       });
     } finally {
@@ -164,8 +166,8 @@ export default function LoginForm() {
           <div className="flex gap-1 items-center">
             <Icons name="LoginIcon" className="w-20 h-20" />
             <div>
-              <h5 className="text-login-01">ลงชื่อเข้าใช้งาน</h5>
-              <p className="body1">ยินดีต้อนรับเข้าสู่ระบบ The Trucker</p>
+              <h5 className="text-login-01">{t("signIn")}</h5>
+              <p className="body1">{t("welcomeMessage")}</p>
             </div>
           </div>
 
@@ -174,7 +176,7 @@ export default function LoginForm() {
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-1">
                 <div className="flex gap-2">
-                  <p className="body1">ชื่อผู้ใช้งาน หรือ เบอร์โทรศัพท์</p>
+                  <p className="body1">{t("usernameOrPhone")}</p>
                   <p className="body1 text-urgent-fail-02">*</p>
                 </div>
                 <Input
@@ -182,7 +184,7 @@ export default function LoginForm() {
                   className={clsx("w-96", {
                     "border-red-500": errors.username,
                   })}
-                  placeholder="กรุณากรอกข้อมูล"
+                  placeholder={t("enterData")}
                   label="EMAIL"
                   rounded="3xl"
                   FrontIcon={<Icons name="Profile" className="w-5" />}
@@ -199,7 +201,7 @@ export default function LoginForm() {
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex gap-2">
-                  <p className="body1">รหัสผ่าน</p>
+                  <p className="body1">{t("password")}</p>
                   <p className="body1 text-urgent-fail-02">*</p>
                 </div>
                 <Input
@@ -208,7 +210,7 @@ export default function LoginForm() {
                     "border-red-500": errors.password,
                   })}
                   rounded="3xl"
-                  placeholder="กรุณากรอกรหัสผ่าน"
+                  placeholder={t("enterPassword")}
                   FrontIcon={<Icons name="Lock" className="w-5" />}
                   BackIcon={
                     isShowPassword ? (
@@ -238,17 +240,19 @@ export default function LoginForm() {
                     setValue("is_remembered", checked === true)
                   }
                 />
-                <p className="body2">ให้ฉันอยู่ในระบบต่อไป</p>
+                <p className="body2">{t("keepMeLoggedIn")}</p>
               </div>
             </div>
             {/* Button */}
             <Button className="w-96 bg-gradient-04 relative">
-              <p className="text-xl font-normal leading-5">ลงชื่อเข้าใช้งาน</p>
+              <p className="text-xl font-normal leading-5">
+                {t("loginButton")}
+              </p>
               <Icons name="ChevronRight" className="w-5 absolute right-5" />
             </Button>
           </div>
           <p className="bg-neutral-50/40 px-7 py-2 rounded-3xl text-center body1 mt-20">
-            Copyright © By Ssllogistics Company Limited{" "}
+            {t("copyright")}
           </p>
         </div>
       </div>
