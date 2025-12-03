@@ -249,8 +249,7 @@ FROM organizations f
 CROSS JOIN master_routes mr
 WHERE f.type = 'FACTORY' 
   AND f.display_code LIKE 'FACT-%'
-  AND mr.display_code LIKE 'RT-INT-%'
-ON CONFLICT (display_code) DO UPDATE SET offer_price = EXCLUDED.offer_price, updated_at = NOW();
+  AND mr.display_code LIKE 'RT-INT-%';
 
 -- Link factories to domestic routes
 INSERT INTO factory_routes (id, factory_id, master_route_id, route_factory_code, shipping_type, type, distance_value, distance_unit, status, offer_price, unit, display_code)
@@ -276,9 +275,7 @@ FROM organizations f
 CROSS JOIN master_routes mr
 WHERE f.type = 'FACTORY' 
   AND f.display_code LIKE 'FACT-%'
-  AND mr.display_code LIKE 'RT-BKK-%'
-  AND random() < 0.3
-ON CONFLICT (display_code) DO UPDATE SET offer_price = EXCLUDED.offer_price, updated_at = NOW();
+  AND mr.display_code LIKE 'RT-BKK-%';
 
 COMMIT;
 
