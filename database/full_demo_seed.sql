@@ -147,74 +147,74 @@ COMMIT;
 
 BEGIN;
 
--- DOMESTIC ROUTES (50)
+-- DOMESTIC ROUTES (30) - Using uuid_generate_v4() for valid UUIDs
 INSERT INTO master_routes (id, display_code, origin_province, origin_district, origin_latitude, origin_longitude, destination_province, destination_district, destination_latitude, destination_longitude, distance_value, distance_unit)
 VALUES
     -- Bangkok Hub Routes
-    ('r0000001-0001-0001-0001-000000000001', 'RT-BKK-CMI', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 700, 'km'),
-    ('r0000001-0001-0001-0001-000000000002', 'RT-BKK-KKN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 450, 'km'),
-    ('r0000001-0001-0001-0001-000000000003', 'RT-BKK-PKT', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Phuket', 'Mueang', 7.8804, 98.3923, 840, 'km'),
-    ('r0000001-0001-0001-0001-000000000004', 'RT-BKK-UDN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Udon Thani', 'Mueang', 17.4138, 102.7870, 560, 'km'),
-    ('r0000001-0001-0001-0001-000000000005', 'RT-BKK-NMA', 'Bangkok', 'Khlong Toei', 13.7237, 100.5584, 'Nakhon Ratchasima', 'Mueang', 14.9799, 102.0978, 260, 'km'),
-    ('r0000001-0001-0001-0001-000000000006', 'RT-BKK-SRT', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Surat Thani', 'Mueang', 9.1382, 99.3217, 640, 'km'),
-    ('r0000001-0001-0001-0001-000000000007', 'RT-BKK-HYI', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Songkhla', 'Hat Yai', 7.0086, 100.4747, 950, 'km'),
-    ('r0000001-0001-0001-0001-000000000008', 'RT-BKK-CRI', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chiang Rai', 'Mueang', 19.9071, 99.8305, 830, 'km'),
-    ('r0000001-0001-0001-0001-000000000009', 'RT-BKK-UBN', 'Bangkok', 'Khlong Toei', 13.7237, 100.5584, 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 630, 'km'),
-    ('r0000001-0001-0001-0001-000000000010', 'RT-BKK-NKS', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Nakhon Si Thammarat', 'Mueang', 8.4304, 99.9631, 780, 'km'),
+    ('a0000001-0001-0001-0001-000000000001', 'RT-BKK-CMI', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 700, 'km'),
+    ('a0000001-0001-0001-0001-000000000002', 'RT-BKK-KKN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 450, 'km'),
+    ('a0000001-0001-0001-0001-000000000003', 'RT-BKK-PKT', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Phuket', 'Mueang', 7.8804, 98.3923, 840, 'km'),
+    ('a0000001-0001-0001-0001-000000000004', 'RT-BKK-UDN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Udon Thani', 'Mueang', 17.4138, 102.7870, 560, 'km'),
+    ('a0000001-0001-0001-0001-000000000005', 'RT-BKK-NMA', 'Bangkok', 'Khlong Toei', 13.7237, 100.5584, 'Nakhon Ratchasima', 'Mueang', 14.9799, 102.0978, 260, 'km'),
+    ('a0000001-0001-0001-0001-000000000006', 'RT-BKK-SRT', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Surat Thani', 'Mueang', 9.1382, 99.3217, 640, 'km'),
+    ('a0000001-0001-0001-0001-000000000007', 'RT-BKK-HYI', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Songkhla', 'Hat Yai', 7.0086, 100.4747, 950, 'km'),
+    ('a0000001-0001-0001-0001-000000000008', 'RT-BKK-CRI', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chiang Rai', 'Mueang', 19.9071, 99.8305, 830, 'km'),
+    ('a0000001-0001-0001-0001-000000000009', 'RT-BKK-UBN', 'Bangkok', 'Khlong Toei', 13.7237, 100.5584, 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 630, 'km'),
+    ('a0000001-0001-0001-0001-000000000010', 'RT-BKK-NKS', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Nakhon Si Thammarat', 'Mueang', 8.4304, 99.9631, 780, 'km'),
     -- EEC Routes
-    ('r0000001-0001-0001-0001-000000000011', 'RT-BKK-LCB', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 120, 'km'),
-    ('r0000001-0001-0001-0001-000000000012', 'RT-BKK-MTP', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Rayong', 'Map Ta Phut', 12.7032, 101.1496, 180, 'km'),
-    ('r0000001-0001-0001-0001-000000000013', 'RT-LCB-MTP', 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 'Rayong', 'Map Ta Phut', 12.7032, 101.1496, 85, 'km'),
-    ('r0000001-0001-0001-0001-000000000014', 'RT-BKK-SRC', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chonburi', 'Si Racha', 13.1737, 100.9270, 100, 'km'),
-    ('r0000001-0001-0001-0001-000000000015', 'RT-BKK-CCO', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chachoengsao', 'Mueang', 13.6904, 101.0779, 80, 'km'),
+    ('a0000001-0001-0001-0001-000000000011', 'RT-BKK-LCB', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 120, 'km'),
+    ('a0000001-0001-0001-0001-000000000012', 'RT-BKK-MTP', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Rayong', 'Map Ta Phut', 12.7032, 101.1496, 180, 'km'),
+    ('a0000001-0001-0001-0001-000000000013', 'RT-LCB-MTP', 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 'Rayong', 'Map Ta Phut', 12.7032, 101.1496, 85, 'km'),
+    ('a0000001-0001-0001-0001-000000000014', 'RT-BKK-SRC', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chonburi', 'Si Racha', 13.1737, 100.9270, 100, 'km'),
+    ('a0000001-0001-0001-0001-000000000015', 'RT-BKK-CCO', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Chachoengsao', 'Mueang', 13.6904, 101.0779, 80, 'km'),
     -- Industrial Routes
-    ('r0000001-0001-0001-0001-000000000016', 'RT-BKK-AYA', 'Bangkok', 'Bang Sue', 13.8027, 100.5354, 'Ayutthaya', 'Bang Pa-in', 14.2267, 100.5768, 60, 'km'),
-    ('r0000001-0001-0001-0001-000000000017', 'RT-AYA-SBR', 'Ayutthaya', 'Bang Pa-in', 14.2267, 100.5768, 'Saraburi', 'Mueang', 14.5289, 100.9094, 50, 'km'),
-    ('r0000001-0001-0001-0001-000000000018', 'RT-BKK-SMK', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Samut Prakan', 'Bang Phli', 13.6107, 100.7241, 25, 'km'),
-    ('r0000001-0001-0001-0001-000000000019', 'RT-BKK-SKN', 'Bangkok', 'Thon Buri', 13.7196, 100.4853, 'Samut Sakhon', 'Mueang', 13.5475, 100.2749, 35, 'km'),
-    ('r0000001-0001-0001-0001-000000000020', 'RT-BKK-NPT', 'Bangkok', 'Thon Buri', 13.7196, 100.4853, 'Nakhon Pathom', 'Mueang', 13.8196, 100.0614, 55, 'km'),
+    ('a0000001-0001-0001-0001-000000000016', 'RT-BKK-AYA', 'Bangkok', 'Bang Sue', 13.8027, 100.5354, 'Ayutthaya', 'Bang Pa-in', 14.2267, 100.5768, 60, 'km'),
+    ('a0000001-0001-0001-0001-000000000017', 'RT-AYA-SBR', 'Ayutthaya', 'Bang Pa-in', 14.2267, 100.5768, 'Saraburi', 'Mueang', 14.5289, 100.9094, 50, 'km'),
+    ('a0000001-0001-0001-0001-000000000018', 'RT-BKK-SMK', 'Bangkok', 'Bang Na', 13.6686, 100.6012, 'Samut Prakan', 'Bang Phli', 13.6107, 100.7241, 25, 'km'),
+    ('a0000001-0001-0001-0001-000000000019', 'RT-BKK-SKN', 'Bangkok', 'Thon Buri', 13.7196, 100.4853, 'Samut Sakhon', 'Mueang', 13.5475, 100.2749, 35, 'km'),
+    ('a0000001-0001-0001-0001-000000000020', 'RT-BKK-NPT', 'Bangkok', 'Thon Buri', 13.7196, 100.4853, 'Nakhon Pathom', 'Mueang', 13.8196, 100.0614, 55, 'km'),
     -- Northern Routes
-    ('r0000001-0001-0001-0001-000000000021', 'RT-CMI-LPN', 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 'Lamphun', 'Mueang', 18.5742, 99.0087, 25, 'km'),
-    ('r0000001-0001-0001-0001-000000000022', 'RT-CMI-LPG', 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 'Lampang', 'Mueang', 18.2888, 99.4906, 100, 'km'),
-    ('r0000001-0001-0001-0001-000000000023', 'RT-CMI-CRI', 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 'Chiang Rai', 'Mueang', 19.9071, 99.8305, 180, 'km'),
+    ('a0000001-0001-0001-0001-000000000021', 'RT-CMI-LPN', 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 'Lamphun', 'Mueang', 18.5742, 99.0087, 25, 'km'),
+    ('a0000001-0001-0001-0001-000000000022', 'RT-CMI-LPG', 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 'Lampang', 'Mueang', 18.2888, 99.4906, 100, 'km'),
+    ('a0000001-0001-0001-0001-000000000023', 'RT-CMI-CRI', 'Chiang Mai', 'Mueang', 18.7883, 98.9853, 'Chiang Rai', 'Mueang', 19.9071, 99.8305, 180, 'km'),
     -- Isan Routes
-    ('r0000001-0001-0001-0001-000000000024', 'RT-KKN-UDN', 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 'Udon Thani', 'Mueang', 17.4138, 102.7870, 120, 'km'),
-    ('r0000001-0001-0001-0001-000000000025', 'RT-KKN-NKP', 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 'Nakhon Phanom', 'Mueang', 17.3944, 104.7696, 290, 'km'),
-    ('r0000001-0001-0001-0001-000000000026', 'RT-NMA-KKN', 'Nakhon Ratchasima', 'Mueang', 14.9799, 102.0978, 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 190, 'km'),
-    ('r0000001-0001-0001-0001-000000000027', 'RT-UDN-NKI', 'Udon Thani', 'Mueang', 17.4138, 102.7870, 'Nong Khai', 'Mueang', 17.8782, 102.7428, 55, 'km'),
-    ('r0000001-0001-0001-0001-000000000028', 'RT-UBN-MKM', 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 'Mukdahan', 'Mueang', 16.5426, 104.7253, 170, 'km'),
+    ('a0000001-0001-0001-0001-000000000024', 'RT-KKN-UDN', 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 'Udon Thani', 'Mueang', 17.4138, 102.7870, 120, 'km'),
+    ('a0000001-0001-0001-0001-000000000025', 'RT-KKN-NKP', 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 'Nakhon Phanom', 'Mueang', 17.3944, 104.7696, 290, 'km'),
+    ('a0000001-0001-0001-0001-000000000026', 'RT-NMA-KKN', 'Nakhon Ratchasima', 'Mueang', 14.9799, 102.0978, 'Khon Kaen', 'Mueang', 16.4419, 102.8360, 190, 'km'),
+    ('a0000001-0001-0001-0001-000000000027', 'RT-UDN-NKI', 'Udon Thani', 'Mueang', 17.4138, 102.7870, 'Nong Khai', 'Mueang', 17.8782, 102.7428, 55, 'km'),
+    ('a0000001-0001-0001-0001-000000000028', 'RT-UBN-MKM', 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 'Mukdahan', 'Mueang', 16.5426, 104.7253, 170, 'km'),
     -- Southern Routes
-    ('r0000001-0001-0001-0001-000000000029', 'RT-SRT-PKT', 'Surat Thani', 'Mueang', 9.1382, 99.3217, 'Phuket', 'Mueang', 7.8804, 98.3923, 250, 'km'),
-    ('r0000001-0001-0001-0001-000000000030', 'RT-HYI-PKT', 'Songkhla', 'Hat Yai', 7.0086, 100.4747, 'Phuket', 'Mueang', 7.8804, 98.3923, 310, 'km')
+    ('a0000001-0001-0001-0001-000000000029', 'RT-SRT-PKT', 'Surat Thani', 'Mueang', 9.1382, 99.3217, 'Phuket', 'Mueang', 7.8804, 98.3923, 250, 'km'),
+    ('a0000001-0001-0001-0001-000000000030', 'RT-HYI-PKT', 'Songkhla', 'Hat Yai', 7.0086, 100.4747, 'Phuket', 'Mueang', 7.8804, 98.3923, 310, 'km')
 ON CONFLICT (display_code) DO UPDATE SET distance_value = EXCLUDED.distance_value, updated_at = NOW();
 
 -- INTERNATIONAL ROUTES (17)
 INSERT INTO master_routes (id, display_code, origin_province, origin_district, origin_latitude, origin_longitude, destination_province, destination_district, destination_latitude, destination_longitude, return_point_province, return_point_district, return_point_latitude, return_point_longitude, distance_value, distance_unit)
 VALUES
     -- Thailand - Laos
-    ('r0000001-0001-0002-0001-000000000001', 'RT-INT-BKK-VTE', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Vientiane (Laos)', 'Sisattanak', 17.9757, 102.6331, 'Nong Khai', 'Mueang', 17.8782, 102.7428, 650, 'km'),
-    ('r0000001-0001-0002-0001-000000000002', 'RT-INT-NKI-VTE', 'Nong Khai', 'Mueang', 17.8782, 102.7428, 'Vientiane (Laos)', 'Sisattanak', 17.9757, 102.6331, 'Nong Khai', 'Mueang', 17.8782, 102.7428, 25, 'km'),
-    ('r0000001-0001-0002-0001-000000000003', 'RT-INT-MKM-SVN', 'Mukdahan', 'Mueang', 16.5426, 104.7253, 'Savannakhet (Laos)', 'Kaysone', 16.5533, 104.7522, 'Mukdahan', 'Mueang', 16.5426, 104.7253, 10, 'km'),
-    ('r0000001-0001-0002-0001-000000000004', 'RT-INT-UBN-PKS', 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 'Pakse (Laos)', 'Paksong', 15.1200, 105.7996, 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 120, 'km'),
+    ('b0000001-0001-0002-0001-000000000001', 'RT-INT-BKK-VTE', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Vientiane (Laos)', 'Sisattanak', 17.9757, 102.6331, 'Nong Khai', 'Mueang', 17.8782, 102.7428, 650, 'km'),
+    ('b0000001-0001-0002-0001-000000000002', 'RT-INT-NKI-VTE', 'Nong Khai', 'Mueang', 17.8782, 102.7428, 'Vientiane (Laos)', 'Sisattanak', 17.9757, 102.6331, 'Nong Khai', 'Mueang', 17.8782, 102.7428, 25, 'km'),
+    ('b0000001-0001-0002-0001-000000000003', 'RT-INT-MKM-SVN', 'Mukdahan', 'Mueang', 16.5426, 104.7253, 'Savannakhet (Laos)', 'Kaysone', 16.5533, 104.7522, 'Mukdahan', 'Mueang', 16.5426, 104.7253, 10, 'km'),
+    ('b0000001-0001-0002-0001-000000000004', 'RT-INT-UBN-PKS', 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 'Pakse (Laos)', 'Paksong', 15.1200, 105.7996, 'Ubon Ratchathani', 'Mueang', 15.2287, 104.8564, 120, 'km'),
     -- Thailand - Cambodia
-    ('r0000001-0001-0002-0001-000000000005', 'RT-INT-BKK-PNH', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Phnom Penh (Cambodia)', 'Chamkarmon', 11.5564, 104.9282, 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 660, 'km'),
-    ('r0000001-0001-0002-0001-000000000006', 'RT-INT-ARP-PPT', 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 'Poipet (Cambodia)', 'Poipet', 13.6578, 102.5631, 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 8, 'km'),
-    ('r0000001-0001-0002-0001-000000000007', 'RT-INT-TRT-KKG', 'Trat', 'Khlong Yai', 11.7619, 102.8890, 'Koh Kong (Cambodia)', 'Smach Mean Chey', 11.6154, 102.9839, 'Trat', 'Khlong Yai', 11.7619, 102.8890, 15, 'km'),
+    ('b0000001-0001-0002-0001-000000000005', 'RT-INT-BKK-PNH', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Phnom Penh (Cambodia)', 'Chamkarmon', 11.5564, 104.9282, 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 660, 'km'),
+    ('b0000001-0001-0002-0001-000000000006', 'RT-INT-ARP-PPT', 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 'Poipet (Cambodia)', 'Poipet', 13.6578, 102.5631, 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 8, 'km'),
+    ('b0000001-0001-0002-0001-000000000007', 'RT-INT-TRT-KKG', 'Trat', 'Khlong Yai', 11.7619, 102.8890, 'Koh Kong (Cambodia)', 'Smach Mean Chey', 11.6154, 102.9839, 'Trat', 'Khlong Yai', 11.7619, 102.8890, 15, 'km'),
     -- Thailand - Malaysia
-    ('r0000001-0001-0002-0001-000000000008', 'RT-INT-HYI-PNG', 'Songkhla', 'Hat Yai', 7.0086, 100.4747, 'Penang (Malaysia)', 'George Town', 5.4141, 100.3288, 'Songkhla', 'Sadao', 6.6394, 100.4233, 180, 'km'),
-    ('r0000001-0001-0002-0001-000000000009', 'RT-INT-BKK-KUL', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Kuala Lumpur (Malaysia)', 'Sentul', 3.1390, 101.6869, 'Songkhla', 'Sadao', 6.6394, 100.4233, 1400, 'km'),
-    ('r0000001-0001-0002-0001-000000000010', 'RT-INT-SDK-BWT', 'Songkhla', 'Sadao', 6.6394, 100.4233, 'Bukit Kayu Hitam (Malaysia)', 'Changlun', 6.5383, 100.4181, 'Songkhla', 'Sadao', 6.6394, 100.4233, 5, 'km'),
+    ('b0000001-0001-0002-0001-000000000008', 'RT-INT-HYI-PNG', 'Songkhla', 'Hat Yai', 7.0086, 100.4747, 'Penang (Malaysia)', 'George Town', 5.4141, 100.3288, 'Songkhla', 'Sadao', 6.6394, 100.4233, 180, 'km'),
+    ('b0000001-0001-0002-0001-000000000009', 'RT-INT-BKK-KUL', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Kuala Lumpur (Malaysia)', 'Sentul', 3.1390, 101.6869, 'Songkhla', 'Sadao', 6.6394, 100.4233, 1400, 'km'),
+    ('b0000001-0001-0002-0001-000000000010', 'RT-INT-SDK-BWT', 'Songkhla', 'Sadao', 6.6394, 100.4233, 'Bukit Kayu Hitam (Malaysia)', 'Changlun', 6.5383, 100.4181, 'Songkhla', 'Sadao', 6.6394, 100.4233, 5, 'km'),
     -- Thailand - Myanmar
-    ('r0000001-0001-0002-0001-000000000011', 'RT-INT-MST-MWD', 'Tak', 'Mae Sot', 16.7130, 98.5708, 'Myawaddy (Myanmar)', 'Myawaddy', 16.6896, 98.5092, 'Tak', 'Mae Sot', 16.7130, 98.5708, 8, 'km'),
-    ('r0000001-0001-0002-0001-000000000012', 'RT-INT-CRI-TCK', 'Chiang Rai', 'Mae Sai', 20.4283, 99.8828, 'Tachileik (Myanmar)', 'Tachileik', 20.4478, 99.8806, 'Chiang Rai', 'Mae Sai', 20.4283, 99.8828, 3, 'km'),
+    ('b0000001-0001-0002-0001-000000000011', 'RT-INT-MST-MWD', 'Tak', 'Mae Sot', 16.7130, 98.5708, 'Myawaddy (Myanmar)', 'Myawaddy', 16.6896, 98.5092, 'Tak', 'Mae Sot', 16.7130, 98.5708, 8, 'km'),
+    ('b0000001-0001-0002-0001-000000000012', 'RT-INT-CRI-TCK', 'Chiang Rai', 'Mae Sai', 20.4283, 99.8828, 'Tachileik (Myanmar)', 'Tachileik', 20.4478, 99.8806, 'Chiang Rai', 'Mae Sai', 20.4283, 99.8828, 3, 'km'),
     -- Thailand - Vietnam
-    ('r0000001-0001-0002-0001-000000000013', 'RT-INT-BKK-SGN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Ho Chi Minh City (Vietnam)', 'District 1', 10.8231, 106.6297, 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 900, 'km'),
-    ('r0000001-0001-0002-0001-000000000014', 'RT-INT-MKM-DNB', 'Mukdahan', 'Mueang', 16.5426, 104.7253, 'Da Nang (Vietnam)', 'Hai Chau', 16.0544, 108.2022, 'Mukdahan', 'Mueang', 16.5426, 104.7253, 550, 'km'),
+    ('b0000001-0001-0002-0001-000000000013', 'RT-INT-BKK-SGN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Ho Chi Minh City (Vietnam)', 'District 1', 10.8231, 106.6297, 'Sa Kaeo', 'Aranyaprathet', 13.6881, 102.5012, 900, 'km'),
+    ('b0000001-0001-0002-0001-000000000014', 'RT-INT-MKM-DNB', 'Mukdahan', 'Mueang', 16.5426, 104.7253, 'Da Nang (Vietnam)', 'Hai Chau', 16.0544, 108.2022, 'Mukdahan', 'Mueang', 16.5426, 104.7253, 550, 'km'),
     -- Thailand - Singapore
-    ('r0000001-0001-0002-0001-000000000015', 'RT-INT-BKK-SIN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Singapore', 'Tuas', 1.3521, 103.6500, 'Songkhla', 'Sadao', 6.6394, 100.4233, 1430, 'km'),
+    ('b0000001-0001-0002-0001-000000000015', 'RT-INT-BKK-SIN', 'Bangkok', 'Lat Krabang', 13.7270, 100.7510, 'Singapore', 'Tuas', 1.3521, 103.6500, 'Songkhla', 'Sadao', 6.6394, 100.4233, 1430, 'km'),
     -- Thailand - China (R3A)
-    ('r0000001-0001-0002-0001-000000000016', 'RT-INT-CRI-KMG', 'Chiang Rai', 'Chiang Saen', 20.2743, 100.0847, 'Kunming (China)', 'Yunnan', 24.8801, 102.8329, 'Chiang Rai', 'Chiang Khong', 20.2639, 100.4050, 1200, 'km'),
-    ('r0000001-0001-0002-0001-000000000017', 'RT-INT-LCB-SIN', 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 'Singapore', 'PSA Port', 1.2644, 103.8200, 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 1550, 'km')
+    ('b0000001-0001-0002-0001-000000000016', 'RT-INT-CRI-KMG', 'Chiang Rai', 'Chiang Saen', 20.2743, 100.0847, 'Kunming (China)', 'Yunnan', 24.8801, 102.8329, 'Chiang Rai', 'Chiang Khong', 20.2639, 100.4050, 1200, 'km'),
+    ('b0000001-0001-0002-0001-000000000017', 'RT-INT-LCB-SIN', 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 'Singapore', 'PSA Port', 1.2644, 103.8200, 'Chonburi', 'Laem Chabang', 13.0827, 100.8830, 1550, 'km')
 ON CONFLICT (display_code) DO UPDATE SET distance_value = EXCLUDED.distance_value, updated_at = NOW();
 
 COMMIT;
