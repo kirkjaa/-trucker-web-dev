@@ -225,7 +225,7 @@ COMMIT;
 
 BEGIN;
 
--- Link all new factories to international routes
+-- Link all new factories to international routes (50% pending for confirm page demo)
 INSERT INTO factory_routes (id, factory_id, master_route_id, route_factory_code, shipping_type, type, distance_value, distance_unit, status, offer_price, unit, display_code)
 SELECT 
     uuid_generate_v4(),
@@ -236,7 +236,7 @@ SELECT
     'abroad'::route_type,
     mr.distance_value,
     'km',
-    'confirmed'::route_status,
+    CASE WHEN random() > 0.5 THEN 'confirmed'::route_status ELSE 'pending'::route_status END,
     CASE 
         WHEN mr.distance_value < 100 THEN 8000
         WHEN mr.distance_value < 500 THEN 15000
@@ -459,31 +459,49 @@ COMMIT;
 
 BEGIN;
 
--- Create chat rooms: Factory users talking to Company users
+-- Create chat rooms between ANY users (simplified approach for demo)
+-- Room 1: Demo Admin to any organization user
 INSERT INTO chat_rooms (id, participant1_id, participant2_id, last_message_at)
 SELECT 
     uuid_generate_v4(),
-    f_user.id,
-    c_user.id,
-    NOW() - (ROW_NUMBER() OVER() || ' hours')::interval
-FROM (SELECT id FROM users WHERE display_code LIKE 'USR-FACT-%' LIMIT 10) f_user
-CROSS JOIN LATERAL (
-    SELECT id FROM users WHERE display_code LIKE 'USR-COMP-%' ORDER BY random() LIMIT 2
-) c_user;
+    u1.id,
+    u2.id,
+    NOW() - ((n * 30) || ' minutes')::interval
+FROM 
+    (SELECT id FROM users WHERE role = 'ADMIN' LIMIT 1) u1,
+    (SELECT id FROM users WHERE role = 'ORGANIZATION' ORDER BY id LIMIT 5) u2,
+    generate_series(1, 1) n
+WHERE u1.id IS NOT NULL AND u2.id IS NOT NULL
+ON CONFLICT DO NOTHING;
 
--- Create chat rooms: Company users talking to Drivers
+-- Create chat rooms: Organization users talking to each other
 INSERT INTO chat_rooms (id, participant1_id, participant2_id, last_message_at)
 SELECT 
     uuid_generate_v4(),
-    c_user.id,
-    d_user.id,
-    NOW() - (ROW_NUMBER() OVER() || ' hours')::interval
-FROM (SELECT id FROM users WHERE display_code LIKE 'USR-COMP-%' LIMIT 10) c_user
-CROSS JOIN LATERAL (
-    SELECT id FROM users WHERE display_code LIKE 'DRV-INT-%' OR display_code LIKE 'DRV-FRE-%' ORDER BY random() LIMIT 2
-) d_user;
+    u1.id,
+    u2.id,
+    NOW() - ((ROW_NUMBER() OVER() * 15) || ' minutes')::interval
+FROM 
+    (SELECT id FROM users WHERE role = 'ORGANIZATION' ORDER BY id LIMIT 10) u1,
+    (SELECT id FROM users WHERE role = 'ORGANIZATION' ORDER BY id DESC LIMIT 10) u2
+WHERE u1.id < u2.id
+LIMIT 20
+ON CONFLICT DO NOTHING;
 
--- Add sample chat messages - RFQ discussions
+-- Create chat rooms: Organization users talking to Drivers
+INSERT INTO chat_rooms (id, participant1_id, participant2_id, last_message_at)
+SELECT 
+    uuid_generate_v4(),
+    u1.id,
+    u2.id,
+    NOW() - ((ROW_NUMBER() OVER() * 20) || ' minutes')::interval
+FROM 
+    (SELECT id FROM users WHERE role = 'ORGANIZATION' ORDER BY id LIMIT 10) u1,
+    (SELECT id FROM users WHERE role = 'DRIVER' ORDER BY id LIMIT 10) u2
+LIMIT 15
+ON CONFLICT DO NOTHING;
+
+-- Add sample chat messages to ALL chat rooms
 INSERT INTO chat_messages (id, room_id, sender_id, message_type, content, is_read, created_at)
 SELECT 
     uuid_generate_v4(),
@@ -512,15 +530,15 @@ SELECT
     NOW() - ((100 - s) || ' minutes')::interval
 FROM chat_rooms cr
 CROSS JOIN generate_series(1, 16) s
-WHERE cr.participant1_id IN (SELECT id FROM users WHERE display_code LIKE 'USR-FACT-%')
-LIMIT 200;
+WHERE cr.participant1_id IS NOT NULL AND cr.participant2_id IS NOT NULL
+LIMIT 300;
 
--- Add sample chat messages - Driver coordination
+-- Add more chat messages - Driver coordination style
 INSERT INTO chat_messages (id, room_id, sender_id, message_type, content, is_read, created_at)
 SELECT 
     uuid_generate_v4(),
     cr.id,
-    CASE WHEN s % 2 = 1 THEN cr.participant1_id ELSE cr.participant2_id END,
+    CASE WHEN s % 2 = 0 THEN cr.participant1_id ELSE cr.participant2_id END,
     'txt',
     (ARRAY[
         'พี่ครับ พรุ่งนี้มีงานให้ครับ เส้นทาง แหลมฉบัง-มาบตาพุด',
@@ -540,12 +558,14 @@ SELECT
         'ยินดีครับ ไว้มีงานอีกนะครับ',
         'ครับผม'
     ])[1 + ((s - 1) % 16)],
-    CASE WHEN s < 12 THEN true ELSE false END,
-    NOW() - ((80 - s) || ' minutes')::interval
+    CASE WHEN s < 10 THEN true ELSE false END,
+    NOW() - ((50 - s) || ' minutes')::interval
 FROM chat_rooms cr
-CROSS JOIN generate_series(1, 16) s
-WHERE cr.participant1_id IN (SELECT id FROM users WHERE display_code LIKE 'USR-COMP-%')
-  AND cr.participant2_id IN (SELECT id FROM users WHERE display_code LIKE 'DRV-%')
+CROSS JOIN generate_series(1, 10) s
+WHERE cr.participant1_id IS NOT NULL AND cr.participant2_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM chat_messages cm WHERE cm.room_id = cr.id
+  )
 LIMIT 200;
 
 -- Update last_message_at for all rooms
