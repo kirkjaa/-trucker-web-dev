@@ -199,7 +199,9 @@ export default function SystemUsersListTable() {
         open={openDeleteModal}
         setOpen={setOpenDeleteModal}
         title={t("confirmDeleteUser")}
-        description={t("deleteUserMessage", { name: selectedData?.first_name || "" })}
+        description={t("deleteUserMessage", {
+          name: selectedData?.first_name || "",
+        })}
         description2={tCommon("deleteWarning")}
         buttonText={tCommon("confirm")}
         isConfirmOnly={false}
