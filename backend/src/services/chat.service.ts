@@ -86,7 +86,54 @@ export interface ChatMessageListResult {
   };
 }
 
-export async function listChatGroups(userId: string) {
+export async function listChatGroups(userId: string, userRole?: string) {
+  const isSuperAdmin = userRole === "SUPERADMIN";
+
+  // For SUPERADMIN, show all chat rooms with both participants' names
+  if (isSuperAdmin) {
+    const rows = await query<ChatGroupRow & { participant1_name: string; participant2_name: string }>(
+      `
+        SELECT
+          cr.id,
+          cr.created_at,
+          cr.last_message_at,
+          cr.participant1_id AS other_user_id,
+          CONCAT(u1.first_name, ' ', u1.last_name) AS participant1_name,
+          CONCAT(u2.first_name, ' ', u2.last_name) AS participant2_name,
+          u1.first_name AS other_first_name,
+          u1.last_name AS other_last_name,
+          lm.content AS last_message,
+          lm.message_type AS last_message_type,
+          lm.created_at AS last_message_created_at
+        FROM chat_rooms cr
+        JOIN users u1 ON u1.id = cr.participant1_id
+        JOIN users u2 ON u2.id = cr.participant2_id
+        LEFT JOIN LATERAL (
+          SELECT content, message_type, created_at
+          FROM chat_messages
+          WHERE room_id = cr.id
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) lm ON true
+        ORDER BY COALESCE(lm.created_at, cr.last_message_at, cr.created_at) DESC
+      `,
+      []
+    );
+
+    const data: ChatGroupDto[] = rows.map((row: any) => ({
+      groupId: row.id,
+      groupName: `${row.participant1_name?.trim() || "User 1"} - ${row.participant2_name?.trim() || "User 2"}`,
+      lastMessage: buildLastMessagePreview(row),
+      createdAt: row.last_message_created_at ?? row.created_at,
+    }));
+
+    return {
+      message: SUCCESS_MESSAGES.GROUPS,
+      data,
+    };
+  }
+
+  // For regular users, show only their chat rooms
   const rows = await query<ChatGroupRow>(
     `
       SELECT
@@ -136,11 +183,12 @@ export async function listChatGroups(userId: string) {
 export async function listChatMessages(
   roomId: string,
   userId: string,
+  userRole: string | undefined,
   page: number,
   limit: number,
   sortDirection: "ASC" | "DESC"
 ): Promise<ChatMessageListResult> {
-  await ensureRoomAccess(roomId, userId);
+  await ensureRoomAccess(roomId, userId, userRole);
 
   const safeLimit = Math.min(Math.max(limit, 1), 200);
   const safePage = Math.max(page, 1);
@@ -256,7 +304,24 @@ function buildLastMessagePreview(row: ChatGroupRow) {
   return row.last_message ?? "";
 }
 
-async function ensureRoomAccess(roomId: string, userId: string) {
+async function ensureRoomAccess(
+  roomId: string,
+  userId: string,
+  userRole?: string
+) {
+  // SUPERADMIN can access any chat room
+  if (userRole === "SUPERADMIN") {
+    const roomExists = await queryOne<{ id: string }>(
+      "SELECT id FROM chat_rooms WHERE id = $1",
+      [roomId]
+    );
+    if (!roomExists) {
+      throw new ChatServiceError(404, "Chat room not found");
+    }
+    return;
+  }
+
+  // Regular users can only access rooms they are a participant in
   const existing = await queryOne<{ id: string }>(
     `
       SELECT id

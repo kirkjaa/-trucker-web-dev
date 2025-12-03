@@ -19,6 +19,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user?.id;
+      const userRole = req.user?.role;
       if (!userId) {
         return res.status(401).json({
           statusCode: 401,
@@ -26,7 +27,7 @@ router.get(
         });
       }
 
-      const result = await listChatGroups(userId);
+      const result = await listChatGroups(userId, userRole);
       return res.json({
         statusCode: 200,
         message: chatMessages.GROUPS,
@@ -44,6 +45,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user?.id;
+      const userRole = req.user?.role;
       if (!userId) {
         return res.status(401).json({
           statusCode: 401,
@@ -72,6 +74,7 @@ router.get(
       const result = await listChatMessages(
         roomId,
         userId,
+        userRole,
         page,
         limit,
         sortDirection
