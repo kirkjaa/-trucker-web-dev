@@ -1,7 +1,7 @@
 import React from "react";
 
-import DriversInternalRender from "@/app/features/admin/drivers/internal/Index";
+import DriversReviewRender from "@/app/features/admin/drivers/review/Index";
 
 export default function Page() {
-  return <DriversInternalRender title="รอตรวจสอบคนขับรถอิสระ" />;
+  return <DriversReviewRender />;
 }

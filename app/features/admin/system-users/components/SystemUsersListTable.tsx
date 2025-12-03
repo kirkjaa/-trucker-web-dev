@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import clsx from "clsx";
+import { useTranslations } from "next-intl";
 
 import useSystemUserListTable from "../hooks/useSystemUserListTable";
 
@@ -25,6 +26,9 @@ import formatFullName from "@/app/utils/formatFullName";
 import formatPhoneNumber from "@/app/utils/formatPhoneNumber";
 
 export default function SystemUsersListTable() {
+  const t = useTranslations("systemUsers");
+  const tCommon = useTranslations("common");
+
   // Global State
   const { allUserByTypeId, getUserParams } = useUserStore((state) => ({
     allUserByTypeId: state.allUserByTypeId,
@@ -33,7 +37,6 @@ export default function SystemUsersListTable() {
 
   // Hook
   const {
-    headerList,
     handleSort,
     pathName,
     fetchDataList,
@@ -54,6 +57,26 @@ export default function SystemUsersListTable() {
     handleClickConfirmDelete,
     // setSelectedListId,
   } = useSystemUserListTable();
+
+  // Translated header list
+  const headerList = useMemo(
+    () => [
+      {
+        key: "id",
+        label: pathName.includes(EAdminPathName.SYSTEMUSERSFACTORIES)
+          ? t("organization")
+          : t("organization"),
+        width: "15%",
+      },
+      { key: "display_code", label: t("userCode"), width: "12%" },
+      { key: "fullName", label: t("fullName"), width: "18%", sortable: false },
+      { key: "userName", label: t("userName"), width: "12%", sortable: false },
+      { key: "phone", label: t("phoneNumber"), width: "14%", sortable: false },
+      { key: "email", label: t("email"), width: "20%" },
+      { key: "actions", label: "", width: "10%", sortable: false },
+    ],
+    [pathName, t]
+  );
 
   // Use Effect
   useEffect(() => {
@@ -167,18 +190,18 @@ export default function SystemUsersListTable() {
         phone={dataById?.phone && formatPhoneNumber(dataById?.phone)}
         display={
           pathName.includes(EAdminPathName.SYSTEMUSERSCOMPANIES)
-            ? "บริษัท"
-            : "โรงงาน"
+            ? tCommon("company")
+            : tCommon("factory")
         }
         displayData={dataById?.organization && dataById?.organization.name}
       />
       <ModalNotification
         open={openDeleteModal}
         setOpen={setOpenDeleteModal}
-        title={`คุณต้องการลบผู้ใช้${pathName.includes(EAdminPathName.SYSTEMUSERSCOMPANIES) ? "บริษัท" : "โรงงาน"}`}
-        description={`คุณต้องการลบผู้ใช้ #${selectedData?.first_name} หรือไม่?`}
-        description2="เมื่อลบจะไม่สามารถกู้คืนได้และข้อมูลทั้งหมดจะถูกลบอย่างถาวร"
-        buttonText="ยืนยัน"
+        title={t("confirmDeleteUser")}
+        description={t("deleteUserMessage", { name: selectedData?.first_name })}
+        description2={tCommon("deleteWarning")}
+        buttonText={tCommon("confirm")}
         isConfirmOnly={false}
         isDelete
         icon={<Icons name="DialogDelete" className="w-16 h-16" />}
