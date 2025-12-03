@@ -269,13 +269,13 @@ export default function FactoriesAndComponiesListTable() {
       />
       <FactoriesAndCompaniesLatLngModal
         lattitude={
-          selectedData?.addresses[0].latitude
-            ? selectedData?.addresses[0].latitude.toString()
+          selectedData?.addresses?.[0]?.latitude
+            ? selectedData.addresses[0].latitude.toString()
             : ""
         }
         longitude={
-          selectedData?.addresses[0].longitude
-            ? selectedData?.addresses[0].longitude.toString()
+          selectedData?.addresses?.[0]?.longitude
+            ? selectedData.addresses[0].longitude.toString()
             : ""
         }
         open={openLatLngModal}

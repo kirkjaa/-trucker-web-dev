@@ -101,13 +101,13 @@ export default function FactoriesAndCompaniesModal({
             <div className="w-[49%]">
               <FactoriesAndComponiesLocationCard
                 latitude={
-                  data?.addresses[0].latitude
-                    ? data?.addresses[0].latitude.toString()
+                  data?.addresses?.[0]?.latitude
+                    ? data.addresses[0].latitude.toString()
                     : ""
                 }
                 longitude={
-                  data?.addresses[0].longitude
-                    ? data?.addresses[0].longitude.toString()
+                  data?.addresses?.[0]?.longitude
+                    ? data.addresses[0].longitude.toString()
                     : ""
                 }
               />
