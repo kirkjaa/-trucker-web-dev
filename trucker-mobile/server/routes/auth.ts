@@ -33,10 +33,22 @@ interface DesktopUser {
 
 router.post("/login", async (req: Request, res: Response) => {
   try {
-    const { username, password } = loginSchema.parse(req.body);
+    console.log("Login attempt with body:", JSON.stringify(req.body));
+    
+    const parseResult = loginSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      console.log("Zod validation failed:", parseResult.error.errors);
+      return res.status(400).json({ 
+        error: "Invalid input", 
+        details: parseResult.error.errors 
+      });
+    }
+    
+    const { username, password } = parseResult.data;
+    console.log("Looking up user:", username);
 
     // Query desktop database schema - search by username or email
-    const result = await db.execute(sql`
+    const result = await db.execute<DesktopUser>(sql`
       SELECT 
         id, display_code, username, email, password_hash, 
         first_name, last_name, phone, image_url, role, status
@@ -46,16 +58,22 @@ router.post("/login", async (req: Request, res: Response) => {
       LIMIT 1
     `);
 
-    const users = result.rows as DesktopUser[];
-
-    if (!users || users.length === 0) {
+    console.log("Query result:", JSON.stringify(result));
+    
+    // Handle different result formats from drizzle
+    const rows = Array.isArray(result) ? result : (result as any).rows || [];
+    
+    if (!rows || rows.length === 0) {
+      console.log("User not found");
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const user = users[0];
+    const user = rows[0] as DesktopUser;
+    console.log("Found user:", user.username, "Status:", user.status, "Role:", user.role);
 
     // Check if user is active
     if (user.status !== "ACTIVE") {
+      console.log("User not active:", user.status);
       return res
         .status(401)
         .json({ error: "Account is not active. Please contact admin." });
@@ -63,14 +81,19 @@ router.post("/login", async (req: Request, res: Response) => {
 
     // Verify password
     if (!user.password_hash) {
+      console.log("No password hash for user");
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    console.log("Comparing password...");
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
+      console.log("Password mismatch");
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    console.log("Password valid, generating token...");
+    
     // Map desktop role to mobile role
     const mobileRole = mapDesktopRoleToMobile(user.role);
     const displayName =
@@ -85,6 +108,8 @@ router.post("/login", async (req: Request, res: Response) => {
       displayName: displayName,
     });
 
+    console.log("Login successful for:", user.username);
+    
     res.json({
       token,
       user: {
@@ -99,20 +124,15 @@ router.post("/login", async (req: Request, res: Response) => {
         avatar: user.image_url,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ error: "Invalid input", details: error.errors });
-    }
+  } catch (error: any) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
 
 router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const result = await db.execute(sql`
+    const result = await db.execute<DesktopUser>(sql`
       SELECT 
         id, display_code, username, email, 
         first_name, last_name, phone, image_url, role, status
@@ -122,13 +142,13 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
       LIMIT 1
     `);
 
-    const users = result.rows as DesktopUser[];
+    const rows = Array.isArray(result) ? result : (result as any).rows || [];
 
-    if (!users || users.length === 0) {
+    if (!rows || rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const user = users[0];
+    const user = rows[0] as DesktopUser;
     const mobileRole = mapDesktopRoleToMobile(user.role);
     const displayName =
       [user.first_name, user.last_name].filter(Boolean).join(" ") ||
