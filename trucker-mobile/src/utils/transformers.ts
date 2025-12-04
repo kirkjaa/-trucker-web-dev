@@ -188,3 +188,183 @@ export function formatTime(dateString: string | null): string {
   return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
+// ============================================================================
+// Job Detail Types (matching App.tsx internal types)
+// ============================================================================
+
+export type CurrentJobDetailStopAction = {
+  key: string;
+  label: string;
+};
+
+export type CurrentJobDetailStop = {
+  id: string;
+  title: string;
+  badge?: { label: string; tone: "success" | "warning" | "error" };
+  contactName: string;
+  contactRole: string;
+  routeCode: string;
+  cargo: string;
+  scheduleLabel: string;
+  scheduleValue: string;
+  note: string;
+  isHighlighted?: boolean;
+  actions: CurrentJobDetailStopAction[];
+  address: string;
+  mapImage: string;
+  productDescription?: string;
+  checkInLabel?: string;
+  checkInValue?: string;
+  checkInCta?: string;
+  postCheckInCta?: string;
+  postCheckInIcon?: string;
+  paymentInfo?: {
+    method: string;
+    amount: string;
+    timestamp: string;
+  };
+  podTimestamp?: string;
+};
+
+export type CurrentJobDetail = {
+  id: string;
+  code: string;
+  price: string;
+  stopCount: string;
+  cargoTotal: string;
+  customer: string;
+  issueLabel: string;
+  footerCta: string;
+  stops: CurrentJobDetailStop[];
+};
+
+/**
+ * Transform API Job to CurrentJobDetail format for job detail screens
+ */
+export function transformJobToDetail(
+  job: Job,
+  mapImage: string = "/assets/images/map.png"
+): CurrentJobDetail {
+  const stops: CurrentJobDetailStop[] = (job.stops || []).map((stop, index) => {
+    const isPickup = index === 0;
+    const isDropoff = index === (job.stops?.length || 1) - 1;
+    const stopType = isPickup ? "Pickup" : isDropoff ? "Drop-off" : "Stop";
+    
+    const scheduleDate = stop.arrivalTime 
+      ? new Date(stop.arrivalTime) 
+      : job.pickupDate 
+        ? new Date(job.pickupDate) 
+        : new Date();
+
+    return {
+      id: stop.id,
+      title: `${stopType} • ${stop.name}`,
+      badge: stop.status === "completed" 
+        ? { label: "Completed", tone: "success" as const }
+        : stop.status === "ready"
+          ? { label: "Ready", tone: "warning" as const }
+          : index === 0 
+            ? { label: "On schedule", tone: "success" as const }
+            : undefined,
+      contactName: stop.contact || "Contact TBD",
+      contactRole: isPickup ? "Warehouse contact" : "Receiving contact",
+      routeCode: `${job.jobNumber} · ${stop.name.split(",")[0]}`,
+      cargo: stop.cargo || job.cargo || "General cargo",
+      scheduleLabel: isPickup ? "Pick-up time" : "Drop-off time",
+      scheduleValue: formatDate(scheduleDate.toISOString()) + " · " + formatTime(scheduleDate.toISOString()),
+      note: stop.notes || "No special instructions",
+      isHighlighted: index === 0 && !stop.checkedIn,
+      actions: [
+        { key: "call", label: "Call" },
+        { key: "route", label: "Route" },
+        { key: "info", label: "View info" },
+        ...(isPickup ? [{ key: "status", label: "Update status" }] : []),
+      ],
+      address: stop.address || stop.name,
+      mapImage: mapImage,
+      productDescription: stop.cargo || job.cargo,
+      checkInLabel: "Check-in time",
+      checkInValue: stop.checkedInAt 
+        ? formatDate(stop.checkedInAt) + " · " + formatTime(stop.checkedInAt)
+        : formatDate(scheduleDate.toISOString()) + " · " + formatTime(scheduleDate.toISOString()),
+      checkInCta: stop.checkedIn ? undefined : "Check in",
+      postCheckInCta: isDropoff && stop.checkedIn ? "Pay" : undefined,
+      paymentInfo: isDropoff ? {
+        method: "On delivery",
+        amount: formatCurrency(job.price),
+        timestamp: formatDate(new Date().toISOString()) + " | " + formatTime(new Date().toISOString()),
+      } : undefined,
+    };
+  });
+
+  // If no stops, create default pickup/dropoff stops
+  if (stops.length === 0) {
+    const pickupDate = job.pickupDate ? new Date(job.pickupDate) : new Date();
+    const deliveryDate = job.deliveryDate ? new Date(job.deliveryDate) : new Date();
+
+    stops.push({
+      id: `${job.id}-pickup`,
+      title: `Pickup • ${job.origin.split(",")[0]}`,
+      badge: { label: "On schedule", tone: "success" },
+      contactName: job.customer?.name || "Contact TBD",
+      contactRole: "Warehouse contact",
+      routeCode: `${job.jobNumber} · ${job.origin.split(",")[0]}`,
+      cargo: job.cargo || "General cargo",
+      scheduleLabel: "Pick-up time",
+      scheduleValue: formatDate(pickupDate.toISOString()) + " · " + formatTime(pickupDate.toISOString()),
+      note: "Contact warehouse on arrival",
+      isHighlighted: true,
+      actions: [
+        { key: "call", label: "Call" },
+        { key: "route", label: "Route" },
+        { key: "info", label: "View info" },
+        { key: "status", label: "Update status" },
+      ],
+      address: job.origin,
+      mapImage: mapImage,
+      productDescription: job.cargo,
+      checkInLabel: "Check-in time",
+      checkInValue: formatDate(pickupDate.toISOString()) + " · " + formatTime(pickupDate.toISOString()),
+      checkInCta: "Check in",
+    });
+
+    stops.push({
+      id: `${job.id}-dropoff`,
+      title: `Drop-off • ${job.destination.split(",")[0]}`,
+      contactName: "Receiving contact",
+      contactRole: "Receiving lead",
+      routeCode: `${job.jobNumber} · ${job.destination.split(",")[0]}`,
+      cargo: job.cargo || "General cargo",
+      scheduleLabel: "Drop-off time",
+      scheduleValue: formatDate(deliveryDate.toISOString()) + " · " + formatTime(deliveryDate.toISOString()),
+      note: "Verify delivery with receiving team",
+      actions: [
+        { key: "call", label: "Call" },
+        { key: "route", label: "Route" },
+        { key: "info", label: "View info" },
+      ],
+      address: job.destination,
+      mapImage: mapImage,
+      checkInCta: "Check in",
+      postCheckInCta: "Pay",
+      paymentInfo: {
+        method: "On delivery",
+        amount: formatCurrency(job.price),
+        timestamp: formatDate(new Date().toISOString()) + " | " + formatTime(new Date().toISOString()),
+      },
+    });
+  }
+
+  return {
+    id: job.id,
+    code: job.jobNumber,
+    price: formatCurrency(job.price),
+    stopCount: `Stops: ${stops.length}`,
+    cargoTotal: `Cargo: ${job.cargo || "General"}${job.cargoWeight ? ` (${job.cargoWeight} kg)` : ""}`,
+    customer: job.customer?.name || "Unknown Customer",
+    issueLabel: "Report issue",
+    footerCta: job.status === "pending" ? "Start job" : job.status === "in_progress" ? "Continue" : "Completed",
+    stops,
+  };
+}
+

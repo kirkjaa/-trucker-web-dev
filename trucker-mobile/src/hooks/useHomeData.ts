@@ -3,8 +3,10 @@ import { api } from "../api";
 import {
   transformJobToRecommended,
   transformBidToBidOrder,
+  transformJobToDetail,
   type RecommendedJob,
   type BidOrder,
+  type CurrentJobDetail,
 } from "../utils/transformers";
 
 interface HomeData {
@@ -86,6 +88,9 @@ interface MyJobsData {
   activeJobs: any[];
   completedJobs: any[];
   pendingJobs: any[];
+  // Transformed for UI
+  currentJobs: RecommendedJob[];
+  jobDetails: Record<string, CurrentJobDetail>;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -95,6 +100,8 @@ export function useMyJobsData(): MyJobsData {
   const [activeJobs, setActiveJobs] = useState<any[]>([]);
   const [completedJobs, setCompletedJobs] = useState<any[]>([]);
   const [pendingJobs, setPendingJobs] = useState<any[]>([]);
+  const [currentJobs, setCurrentJobs] = useState<RecommendedJob[]>([]);
+  const [jobDetails, setJobDetails] = useState<Record<string, CurrentJobDetail>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,6 +117,18 @@ export function useMyJobsData(): MyJobsData {
       setActiveJobs(active);
       setCompletedJobs(completed);
       setPendingJobs(pending);
+
+      // Combine all jobs for current jobs screen
+      const allMyJobs = [...active, ...pending];
+      const transformedJobs = allMyJobs.map(transformJobToRecommended);
+      setCurrentJobs(transformedJobs);
+
+      // Create job details lookup
+      const details: Record<string, CurrentJobDetail> = {};
+      for (const job of allMyJobs) {
+        details[job.id] = transformJobToDetail(job);
+      }
+      setJobDetails(details);
     } catch (err: any) {
       console.error("Failed to fetch my jobs:", err);
       setError(err.message);
@@ -126,6 +145,8 @@ export function useMyJobsData(): MyJobsData {
     activeJobs,
     completedJobs,
     pendingJobs,
+    currentJobs,
+    jobDetails,
     loading,
     error,
     refetch: fetchData,

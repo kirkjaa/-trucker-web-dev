@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import './App.css'
 import { api, setAuthToken, getAuthToken } from './api'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
-import { useHomeData, useDashboardData } from './hooks/useHomeData'
+import { useHomeData, useDashboardData, useMyJobsData } from './hooks/useHomeData'
 import Chat from './components/chat/ChatNew'
 import PrivateChat from './components/chat/PrivateChat'
 import GroupChat from './components/chat/GroupChat'
@@ -443,6 +443,10 @@ function App() {
   // Fetch real data from API when logged in
   const { recommendedJobs: apiJobs, bidOrders: apiBids, refetchJobs, refetchBids } = useHomeData()
   const { stats: dashboardStats } = useDashboardData()
+  const { currentJobs: myCurrentJobs, jobDetails: apiJobDetails, refetch: refetchMyJobs } = useMyJobsData()
+
+  // State for dynamic job details from API
+  const [dynamicJobDetails, setDynamicJobDetails] = useState<Record<string, any>>({})
 
   // Update jobs from API data
   useEffect(() => {
@@ -468,6 +472,20 @@ function App() {
       setAvailableJobs(transformedJobs)
     }
   }, [activeUser, apiJobs])
+
+  // Update accepted jobs (my current jobs) from API data
+  useEffect(() => {
+    if (activeUser && myCurrentJobs.length > 0) {
+      setAcceptedJobs(myCurrentJobs)
+    }
+  }, [activeUser, myCurrentJobs])
+
+  // Update job details from API
+  useEffect(() => {
+    if (activeUser && Object.keys(apiJobDetails).length > 0) {
+      setDynamicJobDetails(apiJobDetails)
+    }
+  }, [activeUser, apiJobDetails])
 
   // Update bids from API data
   useEffect(() => {
