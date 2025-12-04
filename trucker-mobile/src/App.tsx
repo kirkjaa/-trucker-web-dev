@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import './App.css'
 import { api, setAuthToken, getAuthToken } from './api'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
+import { useHomeData, useDashboardData } from './hooks/useHomeData'
 import Chat from './components/chat/ChatNew'
 import PrivateChat from './components/chat/PrivateChat'
 import GroupChat from './components/chat/GroupChat'
@@ -438,6 +439,42 @@ function App() {
   const [podNotification, setPodNotification] = useState<{ jobId: string; stopId: string } | null>(null)
   const podNotificationTimeoutRef = useRef<number | null>(null)
   const [bidOrders, setBidOrders] = useState<BidOrder[]>(() => MOCK_BID_ORDERS.map((bid) => ({ ...bid })))
+
+  // Fetch real data from API when logged in
+  const { recommendedJobs: apiJobs, bidOrders: apiBids, refetchJobs, refetchBids } = useHomeData()
+  const { stats: dashboardStats } = useDashboardData()
+
+  // Update jobs from API data
+  useEffect(() => {
+    if (activeUser && apiJobs.length > 0) {
+      // Transform API jobs to match the RecommendedJob type
+      const transformedJobs: RecommendedJob[] = apiJobs.map((job) => ({
+        ...job,
+        // Ensure all required fields are present
+        id: job.id,
+        codeLabel: job.codeLabel,
+        date: job.date,
+        time: job.time,
+        employer: job.employer,
+        jobType: job.jobType,
+        price: job.price,
+        direction: job.direction,
+        category: job.category,
+        route: job.route,
+        startDate: job.startDate,
+        startTime: job.startTime,
+        sections: job.sections,
+      }))
+      setAvailableJobs(transformedJobs)
+    }
+  }, [activeUser, apiJobs])
+
+  // Update bids from API data
+  useEffect(() => {
+    if (activeUser && apiBids.length > 0) {
+      setBidOrders(apiBids)
+    }
+  }, [activeUser, apiBids])
 
   const handleSubmitBid = (bidId: string, amount: number) => {
     setBidOrders((prevBids) =>
