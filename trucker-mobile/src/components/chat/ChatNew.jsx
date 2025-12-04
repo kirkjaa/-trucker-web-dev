@@ -20,14 +20,49 @@ const imgControl =
   "data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 4.5V19.5' stroke='%235A6472' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M12 4.5V19.5' stroke='%235A6472' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M17 4.5V19.5' stroke='%235A6472' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='7' cy='9.5' r='2' fill='%23EEF2F7' stroke='%235A6472' stroke-width='1.2'/%3E%3Ccircle cx='12' cy='14.5' r='2' fill='%23EEF2F7' stroke='%235A6472' stroke-width='1.2'/%3E%3Ccircle cx='17' cy='8.5' r='2' fill='%23EEF2F7' stroke='%235A6472' stroke-width='1.2'/%3E%3C/svg%3E"
 const imgHomeIndicator = "/assets/icons/chat-new/home-indicator.svg"
 
+// Default mock data for fallback
+const MOCK_COMPANIES = [
+  { id: 'cmp-1', name: 'Ocean Express Logistics', avatar: imgFrame10, lastMessage: 'Typing...', time: '16:02', unreadCount: 2 },
+  { id: 'cmp-2', name: 'Swift Cargo Solutions', avatar: imgFrame11, lastMessage: "It's very good to use", time: '10:02', unreadCount: 0 },
+]
+
+const MOCK_FRIENDS = [
+  { id: 'fr-1', name: 'James', avatar: imgFrame12, lastMessage: 'Typing...', time: '16:02', unreadCount: 1 },
+  { id: 'fr-2', name: 'Ryan', avatar: imgFrame13, lastMessage: 'Yes, we did it! 🔥', time: '14:23', unreadCount: 0 },
+  { id: 'fr-3', name: 'Lee', avatar: imgFrame14, lastMessage: "It's very good to use", time: '10:02', unreadCount: 0 },
+]
+
+const MOCK_GROUPS = [
+  { id: 'grp-1', name: 'Work contact group (4)', avatar: imgGroupIcon1, unreadCount: 0 },
+  { id: 'grp-2', name: 'Work contact group (2)', avatar: imgGroupIcon2, unreadCount: 0 },
+]
+
 export default function ChatNew({
   onNavigateToChat,
   onNavigateToGroup,
   onNavigateToSubMenu,
   onSelectTab,
   userRole,
+  threads = null,
+  loading = false,
 }) {
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Use API data if available, otherwise use mock data
+  const companies = threads?.companies?.length > 0 ? threads.companies : MOCK_COMPANIES
+  const groups = threads?.groups?.length > 0 ? threads.groups : MOCK_GROUPS
+  const friends = MOCK_FRIENDS // Friends still use mock (no separate API category)
+
+  // Filter by search query
+  const filterBySearch = (items) => {
+    if (!searchQuery.trim()) return items
+    const query = searchQuery.toLowerCase()
+    return items.filter((item) => item.name.toLowerCase().includes(query))
+  }
+
+  const filteredCompanies = filterBySearch(companies)
+  const filteredFriends = filterBySearch(friends)
+  const filteredGroups = filterBySearch(groups)
 
   return (
     <div className="chat-screen">
@@ -66,125 +101,91 @@ export default function ChatNew({
           </div>
         </div>
 
+        {loading && (
+          <div className="chat-screen__loading">
+            <span>Loading conversations...</span>
+          </div>
+        )}
+
         {/* Companies */}
-        <section>
-          <div className="chat-screen__section-title">
-            <span>Companies (2)</span>
-          </div>
+        {filteredCompanies.length > 0 && (
+          <section>
+            <div className="chat-screen__section-title">
+              <span>Companies ({filteredCompanies.length})</span>
+            </div>
 
-          <div className="chat-screen__thread" onClick={onNavigateToChat}>
-            <div className="chat-screen__avatar">
-              <img src={imgFrame10} alt="Ocean Express Logistics" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">Ocean Express Logistics</span>
-                <span className="chat-screen__thread-time">16:02</span>
+            {filteredCompanies.map((company) => (
+              <div key={company.id} className="chat-screen__thread" onClick={onNavigateToChat}>
+                <div className="chat-screen__avatar">
+                  <img src={company.avatar || imgFrame10} alt={company.name} />
+                </div>
+                <div className="chat-screen__thread-main">
+                  <div className="chat-screen__thread-row">
+                    <span className="chat-screen__thread-name">{company.name}</span>
+                    {company.time && <span className="chat-screen__thread-time">{company.time}</span>}
+                  </div>
+                  {company.lastMessage && (
+                    <div className="chat-screen__thread-subrow">
+                      <span>{company.lastMessage}</span>
+                      {company.unreadCount > 0 && <span className="chat-screen__badge">{company.unreadCount}</span>}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="chat-screen__thread-subrow">
-                <span>Typing...</span>
-                <span className="chat-screen__badge">2</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="chat-screen__thread" onClick={onNavigateToChat}>
-            <div className="chat-screen__avatar">
-              <img src={imgFrame11} alt="Swift Cargo Solutions" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">Swift Cargo Solutions</span>
-                <span className="chat-screen__thread-time">10:02</span>
-              </div>
-              <div className="chat-screen__thread-subrow">
-                <span>It's very good to use</span>
-              </div>
-            </div>
-          </div>
-        </section>
+            ))}
+          </section>
+        )}
 
         {/* Friends */}
-        <section>
-          <div className="chat-screen__section-title">
-            <span>Friends (3)</span>
-          </div>
+        {filteredFriends.length > 0 && (
+          <section>
+            <div className="chat-screen__section-title">
+              <span>Friends ({filteredFriends.length})</span>
+            </div>
 
-          <div className="chat-screen__thread" onClick={onNavigateToChat}>
-            <div className="chat-screen__avatar">
-              <img src={imgFrame12} alt="James" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">James</span>
-                <span className="chat-screen__thread-time">16:02</span>
+            {filteredFriends.map((friend) => (
+              <div key={friend.id} className="chat-screen__thread" onClick={onNavigateToChat}>
+                <div className="chat-screen__avatar">
+                  <img src={friend.avatar || imgFrame12} alt={friend.name} />
+                </div>
+                <div className="chat-screen__thread-main">
+                  <div className="chat-screen__thread-row">
+                    <span className="chat-screen__thread-name">{friend.name}</span>
+                    {friend.time && <span className="chat-screen__thread-time">{friend.time}</span>}
+                  </div>
+                  {friend.lastMessage && (
+                    <div className="chat-screen__thread-subrow">
+                      <span>{friend.lastMessage}</span>
+                      {friend.unreadCount > 0 && <span className="chat-screen__badge">{friend.unreadCount}</span>}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="chat-screen__thread-subrow">
-                <span>Typing...</span>
-                <span className="chat-screen__badge">1</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="chat-screen__thread" onClick={onNavigateToChat}>
-            <div className="chat-screen__avatar">
-              <img src={imgFrame13} alt="Ryan" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">Ryan</span>
-                <span className="chat-screen__thread-time">14:23</span>
-              </div>
-              <div className="chat-screen__thread-subrow">
-                <span>Yes, we did it! 🔥</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="chat-screen__thread" onClick={onNavigateToChat}>
-            <div className="chat-screen__avatar">
-              <img src={imgFrame14} alt="Lee" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">Lee</span>
-                <span className="chat-screen__thread-time">10:02</span>
-              </div>
-              <div className="chat-screen__thread-subrow">
-                <span>It's very good to use</span>
-              </div>
-            </div>
-          </div>
-        </section>
+            ))}
+          </section>
+        )}
 
         {/* Groups */}
-        <section>
-          <div className="chat-screen__section-title">
-            <span>Groups (2)</span>
-          </div>
+        {filteredGroups.length > 0 && (
+          <section>
+            <div className="chat-screen__section-title">
+              <span>Groups ({filteredGroups.length})</span>
+            </div>
 
-          <div className="chat-screen__thread" onClick={onNavigateToGroup}>
-            <div className="chat-screen__avatar">
-              <img src={imgGroupIcon1} alt="Work contact group (4)" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">Work contact group (4)</span>
+            {filteredGroups.map((group) => (
+              <div key={group.id} className="chat-screen__thread" onClick={onNavigateToGroup}>
+                <div className="chat-screen__avatar">
+                  <img src={group.avatar || imgGroupIcon1} alt={group.name} />
+                </div>
+                <div className="chat-screen__thread-main">
+                  <div className="chat-screen__thread-row">
+                    <span className="chat-screen__thread-name">{group.name}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="chat-screen__thread" onClick={onNavigateToGroup}>
-            <div className="chat-screen__avatar">
-              <img src={imgGroupIcon2} alt="Work contact group (2)" />
-            </div>
-            <div className="chat-screen__thread-main">
-              <div className="chat-screen__thread-row">
-                <span className="chat-screen__thread-name">Work contact group (2)</span>
-              </div>
-            </div>
-          </div>
-        </section>
+            ))}
+          </section>
+        )}
       </main>
 
       {/* Bottom navigation */}

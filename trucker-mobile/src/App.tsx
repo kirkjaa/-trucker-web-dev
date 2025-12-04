@@ -5,6 +5,7 @@ import './App.css'
 import { api, setAuthToken, getAuthToken } from './api'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { useHomeData, useDashboardData, useMyJobsData } from './hooks/useHomeData'
+import { useConversations, transformConversationToThread } from './hooks/useChat'
 import { setJobDetails as setGlobalJobDetails, getJobDetail as getGlobalJobDetail, hasJobDetail } from './stores/jobDetailsStore'
 import Chat from './components/chat/ChatNew'
 import PrivateChat from './components/chat/PrivateChat'
@@ -4561,6 +4562,13 @@ function ChatScreen({ onSelectTab, userRole }: ChatScreenProps) {
   >('chat')
   const [returnPage, setReturnPage] = useState<'chat' | 'privateChat' | 'groupChat'>('chat')
 
+  // Fetch real chat conversations from API
+  const { companies, groups, loading: chatLoading } = useConversations()
+  const chatThreads = {
+    companies: companies.map(transformConversationToThread),
+    groups: groups.map(transformConversationToThread),
+  }
+
   const scale = useChatViewportScale(CHAT_DEVICE_WIDTH, CHAT_DEVICE_HEIGHT)
 
   useEffect(() => {
@@ -4615,6 +4623,8 @@ function ChatScreen({ onSelectTab, userRole }: ChatScreenProps) {
               }}
               onSelectTab={onSelectTab}
               userRole={userRole}
+              threads={chatThreads}
+              loading={chatLoading}
             />
           ) : currentPage === 'privateChat' ? (
             <PrivateChat
