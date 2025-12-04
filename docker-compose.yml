@@ -14,10 +14,9 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
       - ./database/demo_seed.sql:/docker-entrypoint-initdb.d/10_demo_seed.sql:ro
       - ./database/full_demo_seed.sql:/docker-entrypoint-initdb.d/20_full_demo_seed.sql:ro
-      # Mobile app schema and seed data (optional - only needed for standalone mode)
-      # Uncomment these lines if running mobile in standalone mode (API_MODE=standalone)
-      # - ./database/mobile_schema.sql:/docker-entrypoint-initdb.d/30_mobile_schema.sql:ro
-      # - ./database/mobile_demo_seed.sql:/docker-entrypoint-initdb.d/40_mobile_demo_seed.sql:ro
+      # Mobile app schema and seed data
+      - ./database/mobile_schema.sql:/docker-entrypoint-initdb.d/30_mobile_schema.sql:ro
+      - ./database/mobile_demo_seed.sql:/docker-entrypoint-initdb.d/40_mobile_demo_seed.sql:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
@@ -152,10 +151,10 @@ services:
     environment:
       NODE_ENV: production
       PORT: 5003
-      # Desktop API URL - mobile backend proxies requests here
+      # Desktop API URL - mobile backend proxies requests here (not used in standalone mode)
       DESKTOP_API_URL: ${DESKTOP_API_URL:-https://api.trw.q9.quest}
-      # API mode: 'proxy' to use desktop API, 'standalone' for local DB
-      API_MODE: proxy
+      # API mode: 'standalone' uses local DB tables, 'proxy' forwards to desktop API
+      API_MODE: standalone
       # Database connection (fallback for standalone mode)
       DATABASE_URL: postgresql://${POSTGRES_USER:-trucker_user}:${POSTGRES_PASSWORD:-change_this_password}@postgres:5432/${POSTGRES_DB:-trucker_web}
       # JWT secret (must match desktop for token validation)

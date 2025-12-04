@@ -1,19 +1,28 @@
 import { pgTable, text, integer, boolean, timestamp, decimal, uuid, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-export const userRoleEnum = pgEnum('user_role', ['admin', 'company', 'customer', 'shipping']);
-export const jobStatusEnum = pgEnum('job_status', ['pending', 'in_progress', 'completed', 'cancelled']);
-export const bidStatusEnum = pgEnum('bid_status', ['open', 'submitted', 'accepted', 'rejected', 'expired']);
-export const vehicleStatusEnum = pgEnum('vehicle_status', ['available', 'in_use', 'maintenance', 'unavailable']);
-export const stopStatusEnum = pgEnum('stop_status', ['pending', 'ready', 'completed']);
-export const conversationTypeEnum = pgEnum('conversation_type', ['private', 'group']);
+// ============================================================================
+// ENUMS (matching mobile_schema.sql)
+// ============================================================================
 
-export const users = pgTable('users', {
+export const mobileUserRoleEnum = pgEnum('mobile_user_role', ['admin', 'company', 'customer', 'shipping']);
+export const mobileJobStatusEnum = pgEnum('mobile_job_status', ['pending', 'in_progress', 'completed', 'cancelled']);
+export const mobileBidStatusEnum = pgEnum('mobile_bid_status', ['open', 'submitted', 'accepted', 'rejected', 'expired']);
+export const mobileVehicleStatusEnum = pgEnum('mobile_vehicle_status', ['available', 'in_use', 'maintenance', 'unavailable']);
+export const mobileStopStatusEnum = pgEnum('mobile_stop_status', ['pending', 'ready', 'completed']);
+export const mobileConversationTypeEnum = pgEnum('mobile_conversation_type', ['private', 'group']);
+
+// ============================================================================
+// MOBILE USER PROFILES
+// ============================================================================
+
+export const users = pgTable('mobile_user_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
+  desktopUserId: uuid('desktop_user_id'),
   username: text('username').unique().notNull(),
   email: text('email').unique().notNull(),
-  password: text('password').notNull(),
-  role: userRoleEnum('role').notNull().default('customer'),
+  passwordHash: text('password_hash').notNull(),
+  role: mobileUserRoleEnum('role').notNull().default('shipping'),
   displayName: text('display_name').notNull(),
   firstName: text('first_name'),
   lastName: text('last_name'),
@@ -24,8 +33,13 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const customers = pgTable('customers', {
+// ============================================================================
+// MOBILE CUSTOMERS
+// ============================================================================
+
+export const customers = pgTable('mobile_customers', {
   id: uuid('id').defaultRandom().primaryKey(),
+  desktopOrganizationId: uuid('desktop_organization_id'),
   name: text('name').notNull(),
   email: text('email'),
   phone: text('phone'),
@@ -41,7 +55,11 @@ export const customers = pgTable('customers', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const products = pgTable('products', {
+// ============================================================================
+// MOBILE PRODUCTS
+// ============================================================================
+
+export const products = pgTable('mobile_products', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   category: text('category').notNull(),
@@ -55,7 +73,11 @@ export const products = pgTable('products', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const vehicles = pgTable('vehicles', {
+// ============================================================================
+// MOBILE VEHICLES
+// ============================================================================
+
+export const vehicles = pgTable('mobile_vehicles', {
   id: uuid('id').defaultRandom().primaryKey(),
   registrationNumber: text('registration_number').unique().notNull(),
   registrationProvince: text('registration_province'),
@@ -67,7 +89,7 @@ export const vehicles = pgTable('vehicles', {
   plateType: text('plate_type'),
   payload: decimal('payload', { precision: 10, scale: 2 }),
   serviceYears: integer('service_years'),
-  status: vehicleStatusEnum('status').default('available'),
+  status: mobileVehicleStatusEnum('status').default('available'),
   driverId: uuid('driver_id').references(() => users.id),
   hasTrailer: boolean('has_trailer').default(false),
   trailerRegistration: text('trailer_registration'),
@@ -76,13 +98,17 @@ export const vehicles = pgTable('vehicles', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const jobs = pgTable('jobs', {
+// ============================================================================
+// MOBILE JOBS
+// ============================================================================
+
+export const jobs = pgTable('mobile_jobs', {
   id: uuid('id').defaultRandom().primaryKey(),
   jobNumber: text('job_number').unique().notNull(),
   customerId: uuid('customer_id').references(() => customers.id),
   vehicleId: uuid('vehicle_id').references(() => vehicles.id),
   driverId: uuid('driver_id').references(() => users.id),
-  status: jobStatusEnum('status').default('pending'),
+  status: mobileJobStatusEnum('status').default('pending'),
   origin: text('origin').notNull(),
   destination: text('destination').notNull(),
   distance: decimal('distance', { precision: 10, scale: 2 }),
@@ -100,7 +126,11 @@ export const jobs = pgTable('jobs', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const jobStops = pgTable('job_stops', {
+// ============================================================================
+// MOBILE JOB STOPS
+// ============================================================================
+
+export const jobStops = pgTable('mobile_job_stops', {
   id: uuid('id').defaultRandom().primaryKey(),
   jobId: uuid('job_id').references(() => jobs.id).notNull(),
   sequence: integer('sequence').notNull(),
@@ -111,14 +141,18 @@ export const jobStops = pgTable('job_stops', {
   cargo: text('cargo'),
   arrivalTime: timestamp('arrival_time'),
   departureTime: timestamp('departure_time'),
-  status: stopStatusEnum('status').default('pending'),
+  status: mobileStopStatusEnum('status').default('pending'),
   checkedIn: boolean('checked_in').default(false),
   checkedInAt: timestamp('checked_in_at'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-export const expenses = pgTable('expenses', {
+// ============================================================================
+// MOBILE EXPENSES
+// ============================================================================
+
+export const expenses = pgTable('mobile_expenses', {
   id: uuid('id').defaultRandom().primaryKey(),
   jobId: uuid('job_id').references(() => jobs.id),
   stopId: uuid('stop_id').references(() => jobStops.id),
@@ -133,7 +167,11 @@ export const expenses = pgTable('expenses', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-export const revenues = pgTable('revenues', {
+// ============================================================================
+// MOBILE REVENUES
+// ============================================================================
+
+export const revenues = pgTable('mobile_revenues', {
   id: uuid('id').defaultRandom().primaryKey(),
   jobId: uuid('job_id').references(() => jobs.id),
   customerId: uuid('customer_id').references(() => customers.id),
@@ -148,7 +186,11 @@ export const revenues = pgTable('revenues', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-export const bids = pgTable('bids', {
+// ============================================================================
+// MOBILE BIDS
+// ============================================================================
+
+export const bids = pgTable('mobile_bids', {
   id: uuid('id').defaultRandom().primaryKey(),
   bidNumber: text('bid_number').unique().notNull(),
   customerId: uuid('customer_id').references(() => customers.id),
@@ -158,7 +200,8 @@ export const bids = pgTable('bids', {
   cargoWeight: decimal('cargo_weight', { precision: 10, scale: 2 }),
   requestedPrice: decimal('requested_price', { precision: 12, scale: 2 }),
   submittedPrice: decimal('submitted_price', { precision: 12, scale: 2 }),
-  status: bidStatusEnum('status').default('open'),
+  minimumBid: decimal('minimum_bid', { precision: 12, scale: 2 }),
+  status: mobileBidStatusEnum('status').default('open'),
   pickupDate: timestamp('pickup_date'),
   expiresAt: timestamp('expires_at'),
   notes: text('notes'),
@@ -166,9 +209,13 @@ export const bids = pgTable('bids', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const conversations = pgTable('conversations', {
+// ============================================================================
+// MOBILE CONVERSATIONS
+// ============================================================================
+
+export const conversations = pgTable('mobile_conversations', {
   id: uuid('id').defaultRandom().primaryKey(),
-  type: conversationTypeEnum('type').default('private'),
+  type: mobileConversationTypeEnum('type').default('private'),
   name: text('name'),
   avatar: text('avatar'),
   createdById: uuid('created_by_id').references(() => users.id),
@@ -176,7 +223,11 @@ export const conversations = pgTable('conversations', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const conversationParticipants = pgTable('conversation_participants', {
+// ============================================================================
+// MOBILE CONVERSATION PARTICIPANTS
+// ============================================================================
+
+export const conversationParticipants = pgTable('mobile_conversation_participants', {
   id: uuid('id').defaultRandom().primaryKey(),
   conversationId: uuid('conversation_id').references(() => conversations.id).notNull(),
   userId: uuid('user_id').references(() => users.id).notNull(),
@@ -185,7 +236,11 @@ export const conversationParticipants = pgTable('conversation_participants', {
   isMuted: boolean('is_muted').default(false),
 });
 
-export const messages = pgTable('messages', {
+// ============================================================================
+// MOBILE MESSAGES
+// ============================================================================
+
+export const messages = pgTable('mobile_messages', {
   id: uuid('id').defaultRandom().primaryKey(),
   conversationId: uuid('conversation_id').references(() => conversations.id).notNull(),
   senderId: uuid('sender_id').references(() => users.id).notNull(),
@@ -195,6 +250,10 @@ export const messages = pgTable('messages', {
   isRead: boolean('is_read').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// ============================================================================
+// RELATIONS
+// ============================================================================
 
 export const usersRelations = relations(users, ({ many }) => ({
   jobs: many(jobs),
@@ -229,10 +288,19 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   jobs: many(jobs),
 }));
 
+export const bidsRelations = relations(bids, ({ one }) => ({
+  customer: one(customers, { fields: [bids.customerId], references: [customers.id] }),
+}));
+
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
   createdBy: one(users, { fields: [conversations.createdById], references: [users.id] }),
   participants: many(conversationParticipants),
   messages: many(messages),
+}));
+
+export const conversationParticipantsRelations = relations(conversationParticipants, ({ one }) => ({
+  conversation: one(conversations, { fields: [conversationParticipants.conversationId], references: [conversations.id] }),
+  user: one(users, { fields: [conversationParticipants.userId], references: [users.id] }),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({

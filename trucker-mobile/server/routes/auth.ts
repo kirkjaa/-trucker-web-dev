@@ -1,7 +1,8 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "../db";
-import { sql } from "drizzle-orm";
+import { users } from "../db/schema";
+import { eq, or } from "drizzle-orm";
 import {
   generateToken,
   authMiddleware,
@@ -16,28 +17,21 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-// Desktop database user interface
-interface DesktopUser {
-  id: string;
-  display_code: string;
-  username: string;
-  email: string | null;
-  password_hash: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-  image_url: string | null;
-  role: string;
-  status: string;
-}
+const registerSchema = z.object({
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+  displayName: z.string().min(1),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional(),
+  role: z.enum(["admin", "company", "customer", "shipping"]).default("shipping"),
+});
 
 router.post("/login", async (req: Request, res: Response) => {
   try {
-    console.log("Login attempt with body:", JSON.stringify(req.body));
-    
     const parseResult = loginSchema.safeParse(req.body);
     if (!parseResult.success) {
-      console.log("Zod validation failed:", parseResult.error.errors);
       return res.status(400).json({ 
         error: "Invalid input", 
         details: parseResult.error.errors 
@@ -45,83 +39,58 @@ router.post("/login", async (req: Request, res: Response) => {
     }
     
     const { username, password } = parseResult.data;
-    console.log("Looking up user:", username);
 
-    // Query desktop database schema - search by username or email
-    const result = await db.execute<DesktopUser>(sql`
-      SELECT 
-        id, display_code, username, email, password_hash, 
-        first_name, last_name, phone, image_url, role, status
-      FROM users 
-      WHERE (username = ${username} OR email = ${username})
-        AND deleted = false
-      LIMIT 1
-    `);
+    // Query mobile_user_profiles table - search by username or email
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.username, username), eq(users.email, username)))
+      .limit(1);
 
-    console.log("Query result:", JSON.stringify(result));
-    
-    // Handle different result formats from drizzle
-    const rows = Array.isArray(result) ? result : (result as any).rows || [];
-    
-    if (!rows || rows.length === 0) {
-      console.log("User not found");
+    if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const user = rows[0] as DesktopUser;
-    console.log("Found user:", user.username, "Status:", user.status, "Role:", user.role);
-
     // Check if user is active
-    if (user.status !== "ACTIVE") {
-      console.log("User not active:", user.status);
-      return res
-        .status(401)
-        .json({ error: "Account is not active. Please contact admin." });
+    if (!user.isActive) {
+      return res.status(401).json({ error: "Account is not active. Please contact admin." });
     }
 
     // Verify password
-    if (!user.password_hash) {
-      console.log("No password hash for user");
+    if (!user.passwordHash) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    console.log("Comparing password...");
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
-      console.log("Password mismatch");
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    console.log("Password valid, generating token...");
-    
-    // Map desktop role to mobile role
-    const mobileRole = mapDesktopRoleToMobile(user.role);
     const displayName =
-      [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+      [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+      user.displayName ||
       user.username;
 
     const token = generateToken({
       id: user.id,
       username: user.username,
-      email: user.email || "",
-      role: mobileRole,
+      email: user.email,
+      role: user.role || "shipping",
       displayName: displayName,
     });
 
-    console.log("Login successful for:", user.username);
-    
     res.json({
       token,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: mobileRole,
+        role: user.role,
         displayName: displayName,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         phone: user.phone,
-        avatar: user.image_url,
+        avatar: user.avatar,
       },
     });
   } catch (error: any) {
@@ -130,59 +99,113 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/register", async (req: Request, res: Response) => {
+  try {
+    const parseResult = registerSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid input", 
+        details: parseResult.error.errors 
+      });
+    }
+
+    const data = parseResult.data;
+
+    // Check if username or email already exists
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.username, data.username), eq(users.email, data.email)))
+      .limit(1);
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Username or email already exists" });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(data.password, 10);
+
+    // Create user
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        username: data.username,
+        email: data.email,
+        passwordHash: passwordHash,
+        displayName: data.displayName,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        role: data.role,
+        isActive: true,
+      })
+      .returning();
+
+    const displayName =
+      [newUser.firstName, newUser.lastName].filter(Boolean).join(" ") ||
+      newUser.displayName ||
+      newUser.username;
+
+    const token = generateToken({
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role || "shipping",
+      displayName: displayName,
+    });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        displayName: displayName,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        phone: newUser.phone,
+        avatar: newUser.avatar,
+      },
+    });
+  } catch (error: any) {
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Internal server error", details: error.message });
+  }
+});
+
 router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const result = await db.execute<DesktopUser>(sql`
-      SELECT 
-        id, display_code, username, email, 
-        first_name, last_name, phone, image_url, role, status
-      FROM users 
-      WHERE id = ${req.user!.id}::uuid
-        AND deleted = false
-      LIMIT 1
-    `);
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, req.user!.id))
+      .limit(1);
 
-    const rows = Array.isArray(result) ? result : (result as any).rows || [];
-
-    if (!rows || rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const user = rows[0] as DesktopUser;
-    const mobileRole = mapDesktopRoleToMobile(user.role);
     const displayName =
-      [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+      [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+      user.displayName ||
       user.username;
 
     res.json({
       id: user.id,
       username: user.username,
       email: user.email,
-      role: mobileRole,
+      role: user.role,
       displayName: displayName,
-      firstName: user.first_name,
-      lastName: user.last_name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       phone: user.phone,
-      avatar: user.image_url,
+      avatar: user.avatar,
     });
   } catch (error) {
     console.error("Get me error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-// Map desktop roles to mobile roles
-function mapDesktopRoleToMobile(desktopRole: string): string {
-  switch (desktopRole) {
-    case "SUPERADMIN":
-      return "admin";
-    case "ORGANIZATION":
-      return "company";
-    case "DRIVER":
-      return "shipping";
-    default:
-      return "customer";
-  }
-}
 
 export default router;
