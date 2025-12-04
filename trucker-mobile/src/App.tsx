@@ -640,17 +640,8 @@ function App() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    
-    // Debug logging
-    console.log('handleSubmit called')
-    console.log('username state:', username)
-    console.log('password state:', password)
-    
     const trimmedUsername = username.trim().toLowerCase()
     const trimmedPassword = password.trim()
-    
-    console.log('trimmed username:', trimmedUsername)
-    console.log('trimmed password:', trimmedPassword)
 
     if (isLoggingIn) return
     setIsLoggingIn(true)
@@ -1276,7 +1267,6 @@ function App() {
           showForgotPassword={showForgotPassword}
           phoneNumber={phoneNumber}
           onUsernameChange={(value) => {
-            console.log('onUsernameChange called with:', value)
             setUsername(value)
             if (errorMessage) {
               setErrorMessage('')
