@@ -5,6 +5,7 @@ import './App.css'
 import { api, setAuthToken, getAuthToken } from './api'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { useHomeData, useDashboardData, useMyJobsData } from './hooks/useHomeData'
+import { setJobDetails as setGlobalJobDetails, getJobDetail as getGlobalJobDetail, hasJobDetail } from './stores/jobDetailsStore'
 import Chat from './components/chat/ChatNew'
 import PrivateChat from './components/chat/PrivateChat'
 import GroupChat from './components/chat/GroupChat'
@@ -484,8 +485,20 @@ function App() {
   useEffect(() => {
     if (activeUser && Object.keys(apiJobDetails).length > 0) {
       setDynamicJobDetails(apiJobDetails)
+      // Also update global store for child components
+      setGlobalJobDetails(apiJobDetails)
     }
   }, [activeUser, apiJobDetails])
+
+  // Helper function to get job details (checks dynamic data first, then falls back to mock)
+  const getJobDetail = useCallback((jobId: string) => {
+    // First check dynamic job details from API
+    if (dynamicJobDetails[jobId]) {
+      return dynamicJobDetails[jobId]
+    }
+    // Fall back to hardcoded mock data
+    return CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
+  }, [dynamicJobDetails])
 
   // Update bids from API data
   useEffect(() => {
@@ -728,7 +741,7 @@ function App() {
       return null
     }
 
-    const detail = CURRENT_JOB_DETAILS[selectedJobId] ?? CURRENT_JOB_DETAILS['job-1']
+    const detail = getJobDetail(selectedJobId)
     const stop = detail.stops.find((entry) => entry.id === podNotification.stopId)
     const isPaid = stop ? Boolean(paidStops[stop.id]) : false
     const stageLabel = isPaid ? 'POD' : 'SOP'
@@ -919,7 +932,7 @@ function App() {
           jobStarted={Boolean(startedJobs[selectedJobId])}
           nextTaskStopId={activeTaskByJob[selectedJobId] ?? null}
           canStartJob={(() => {
-            const detail = CURRENT_JOB_DETAILS[selectedJobId] ?? CURRENT_JOB_DETAILS['job-1']
+            const detail = getJobDetail(selectedJobId)
             const statusStops = detail.stops.filter((stop) =>
               stop.actions.some((action) => action.key === 'status'),
             )
@@ -929,7 +942,7 @@ function App() {
             return statusStops.every((stop) => Boolean(submittedSop[stop.id]))
           })()}
           onStartJob={() => {
-            const detail = CURRENT_JOB_DETAILS[selectedJobId] ?? CURRENT_JOB_DETAILS['job-1']
+            const detail = getJobDetail(selectedJobId)
             const statusStopIndex = detail.stops.findIndex((stop) =>
               stop.actions.some((action) => action.key === 'status'),
             )
@@ -980,7 +993,7 @@ function App() {
           }}
           onConfirmCheckIn={(stopId) => {
             setCheckedInStops((prev) => ({ ...prev, [stopId]: true }))
-            const detail = CURRENT_JOB_DETAILS[selectedJobId] ?? CURRENT_JOB_DETAILS['job-1']
+            const detail = getJobDetail(selectedJobId)
             const stop = detail.stops.find((entry) => entry.id === stopId)
             const currentIndex = detail.stops.findIndex((stop) => stop.id === stopId)
             const remainingStops = currentIndex >= 0 ? detail.stops.slice(currentIndex + 1) : []
@@ -6672,7 +6685,8 @@ function CurrentJobDetailScreen({
   notification,
   onDismissNotification,
 }: CurrentJobDetailScreenProps) {
-  const detail = CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
+  // Check global store for API data first, then fall back to mock data
+  const detail = getGlobalJobDetail(jobId) ?? CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
   const nextTaskStop = jobStarted && nextTaskStopId ? detail.stops.find((stop) => stop.id === nextTaskStopId) : null
   const footerLabel = jobStarted ? nextTaskStop?.checkInCta ?? 'Update status' : detail.footerCta
   const footerDisabled = jobStarted ? !nextTaskStopId : !canStartJob
@@ -7043,7 +7057,8 @@ function CurrentJobUpdateScreen({
   onAddExpense,
   onReportIssue,
 }: CurrentJobUpdateScreenProps) {
-  const detail = CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
+  // Check global store for API data first, then fall back to mock data
+  const detail = getGlobalJobDetail(jobId) ?? CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
   const stop = detail.stops.find((entry) => entry.id === stopId) ?? detail.stops[0]
   const [showCheckInDialog, setShowCheckInDialog] = useState(false)
   const [showReportIssueModal, setShowReportIssueModal] = useState(false)
@@ -7407,7 +7422,8 @@ type CurrentJobPaymentScreenProps = {
 }
 
 function CurrentJobPaymentScreen({ jobId, stopId, onBack, onClose, onConfirmPayment, initialMethod }: CurrentJobPaymentScreenProps) {
-  const detail = CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
+  // Check global store for API data first, then fall back to mock data
+  const detail = getGlobalJobDetail(jobId) ?? CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
   const stop = detail.stops.find((entry) => entry.id === stopId) ?? detail.stops[0]
   const paymentOptions: Array<{ key: string; title: string; description?: string; value: string; icon?: string | null }> = [
     { key: 'cash', title: 'Cash', description: 'Collect on delivery', value: 'Collect on delivery', icon: null },
@@ -7515,7 +7531,8 @@ function CurrentJobUploadScreen({
   onSubmitSop,
   onViewInfo,
 }: CurrentJobUploadScreenProps) {
-  const detail = CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
+  // Check global store for API data first, then fall back to mock data
+  const detail = getGlobalJobDetail(jobId) ?? CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
   const stop = detail.stops.find((entry) => entry.id === stopId) ?? detail.stops[0]
   const isCheckedIn = Boolean(checkedInStops[stopId])
   const [showPhotoPicker, setShowPhotoPicker] = useState(false)
@@ -7818,7 +7835,8 @@ function CurrentJobStopInfoScreen({
   onAddExpense,
   onReportIssue,
 }: CurrentJobStopInfoScreenProps) {
-  const detail = CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
+  // Check global store for API data first, then fall back to mock data
+  const detail = getGlobalJobDetail(jobId) ?? CURRENT_JOB_DETAILS[jobId] ?? CURRENT_JOB_DETAILS['job-1']
   const stop = detail.stops.find((entry) => entry.id === stopId) ?? detail.stops[0]
   const [showReportIssueModal, setShowReportIssueModal] = useState(false)
   const isCheckedIn = Boolean(checkedInStops[stop.id])
