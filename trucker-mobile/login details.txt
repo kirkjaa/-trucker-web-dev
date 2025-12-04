@@ -1,0 +1,8 @@
+all login password is 12345
+
+driver freelance username-admin
+shipping company username-shipping
+driver company-company
+
+forget password otp-908172
+new user registration-123456

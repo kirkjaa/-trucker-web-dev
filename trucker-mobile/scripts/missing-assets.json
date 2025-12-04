@@ -1,0 +1,194 @@
+[
+  {
+    "assetId": "2cf2f60d-d00d-4152-adff-d7ac97ae5f33",
+    "constName": "CITY_IMAGE",
+    "url": "https://www.figma.com/api/mcp/asset/2cf2f60d-d00d-4152-adff-d7ac97ae5f33",
+    "line": 5
+  },
+  {
+    "assetId": "b5239a0d-16e2-4701-842f-fa559594c084",
+    "constName": "TRUCK_IMAGE",
+    "url": "https://www.figma.com/api/mcp/asset/b5239a0d-16e2-4701-842f-fa559594c084",
+    "line": 6
+  },
+  {
+    "assetId": "1fce35bc-df13-4cc4-8c50-2a190b6eaa21",
+    "constName": "MAP_PIN_IMAGE",
+    "url": "https://www.figma.com/api/mcp/asset/1fce35bc-df13-4cc4-8c50-2a190b6eaa21",
+    "line": 7
+  },
+  {
+    "assetId": "f75d41e3-eb12-4b48-ad04-3324c2f76beb",
+    "constName": "CHECK_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/f75d41e3-eb12-4b48-ad04-3324c2f76beb",
+    "line": 8
+  },
+  {
+    "assetId": "82876103-f0f3-4dde-af45-198e0c168755",
+    "constName": "TERMS_CLOSE_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/82876103-f0f3-4dde-af45-198e0c168755",
+    "line": 10
+  },
+  {
+    "assetId": "29d08d13-882e-488b-b216-5403231439f3",
+    "constName": "TERMS_SIGNAL_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/29d08d13-882e-488b-b216-5403231439f3",
+    "line": 11
+  },
+  {
+    "assetId": "79ec302e-79c2-4e70-b981-eba5ea655c9f",
+    "constName": "TERMS_WIFI_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/79ec302e-79c2-4e70-b981-eba5ea655c9f",
+    "line": 12
+  },
+  {
+    "assetId": "dc32a603-ddb0-4921-9dfe-2ea71151f9d8",
+    "constName": "TERMS_BATTERY_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/dc32a603-ddb0-4921-9dfe-2ea71151f9d8",
+    "line": 13
+  },
+  {
+    "assetId": "cbce3cd7-87ca-4c26-842e-50ec32936040",
+    "constName": "POLICY_SIGNAL_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/cbce3cd7-87ca-4c26-842e-50ec32936040",
+    "line": 15
+  },
+  {
+    "assetId": "f0e7c079-01de-457f-ba21-c176c4918ffd",
+    "constName": "POLICY_WIFI_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/f0e7c079-01de-457f-ba21-c176c4918ffd",
+    "line": 16
+  },
+  {
+    "assetId": "40a43f59-61fc-4e78-8014-4136371d8161",
+    "constName": "POLICY_BATTERY_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/40a43f59-61fc-4e78-8014-4136371d8161",
+    "line": 17
+  },
+  {
+    "assetId": "7713e784-19c8-4e2b-a64f-65dbce0db966",
+    "constName": "POLICY_CLOSE_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/7713e784-19c8-4e2b-a64f-65dbce0db966",
+    "line": 18
+  },
+  {
+    "assetId": "8b346984-2039-491c-a9f7-062556f14acd",
+    "constName": "HOME_SHORTCUT_CURRENT_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/8b346984-2039-491c-a9f7-062556f14acd",
+    "line": 20
+  },
+  {
+    "assetId": "0562a504-935f-48a2-be75-73df57c6b04a",
+    "constName": "HOME_SHORTCUT_BID_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/0562a504-935f-48a2-be75-73df57c6b04a",
+    "line": 21
+  },
+  {
+    "assetId": "ccd02ee9-de64-4e63-ae1b-f465ea7a924e",
+    "constName": "HOME_SHORTCUT_REVENUE_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/ccd02ee9-de64-4e63-ae1b-f465ea7a924e",
+    "line": 22
+  },
+  {
+    "assetId": "0fb0bfc5-7fcd-4940-92f8-2848dc25712f",
+    "constName": "HOME_SHORTCUT_HISTORY_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/0fb0bfc5-7fcd-4940-92f8-2848dc25712f",
+    "line": 23
+  },
+  {
+    "assetId": "3ec529c7-bd38-418f-9631-14876af1286f",
+    "constName": "HOME_SEARCH_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/3ec529c7-bd38-418f-9631-14876af1286f",
+    "line": 24
+  },
+  {
+    "assetId": "0a6b0846-f9c6-4499-a416-364395381992",
+    "constName": "HOME_CLOCK_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/0a6b0846-f9c6-4499-a416-364395381992",
+    "line": 25
+  },
+  {
+    "assetId": "a1b71ec0-5eca-47ed-9e61-b2545fa999a4",
+    "constName": "HOME_ROUTE_START_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/a1b71ec0-5eca-47ed-9e61-b2545fa999a4",
+    "line": 26
+  },
+  {
+    "assetId": "7b36cda2-8cc5-4e7f-9e4f-e0a439ebb7ad",
+    "constName": "HOME_ROUTE_STOPS_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/7b36cda2-8cc5-4e7f-9e4f-e0a439ebb7ad",
+    "line": 27
+  },
+  {
+    "assetId": "c3bc2d9c-a88e-4d2f-91f6-0b44353267ab",
+    "constName": "HOME_ROUTE_DEST_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/c3bc2d9c-a88e-4d2f-91f6-0b44353267ab",
+    "line": 28
+  },
+  {
+    "assetId": "cbe49b46-8559-4750-b4c2-fbb6d3fb8d9d",
+    "constName": "HOME_PRICE_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/cbe49b46-8559-4750-b4c2-fbb6d3fb8d9d",
+    "line": 29
+  },
+  {
+    "assetId": "25ac085f-fc0e-4a8a-99da-83bec1c9c5e8",
+    "constName": "HOME_NAV_HOME_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/25ac085f-fc0e-4a8a-99da-83bec1c9c5e8",
+    "line": 30
+  },
+  {
+    "assetId": "2940a263-2a86-42ba-a033-9524728aa3b0",
+    "constName": "HOME_NAV_CHAT_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/2940a263-2a86-42ba-a033-9524728aa3b0",
+    "line": 33
+  },
+  {
+    "assetId": "62f3531c-d4c2-429a-b9d0-ac3daae777a9",
+    "constName": "HOME_NAV_SETTINGS_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/62f3531c-d4c2-429a-b9d0-ac3daae777a9",
+    "line": 34
+  },
+  {
+    "assetId": "131e47a4-8d53-445c-8092-0dd120ec4b44",
+    "constName": "CURRENT_JOBS_BACK_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/131e47a4-8d53-445c-8092-0dd120ec4b44",
+    "line": 35
+  },
+  {
+    "assetId": "6cd8f830-0a27-412a-912e-2cc92e82c18b",
+    "constName": "CURRENT_JOBS_SEARCH_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/6cd8f830-0a27-412a-912e-2cc92e82c18b",
+    "line": 36
+  },
+  {
+    "assetId": "4b681578-c474-489d-9bf6-cdd7811cfa84",
+    "constName": "CURRENT_JOBS_FILTER_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/4b681578-c474-489d-9bf6-cdd7811cfa84",
+    "line": 37
+  },
+  {
+    "assetId": "0cf562f0-624b-48f1-a416-e0dee7deb609",
+    "constName": "CURRENT_JOBS_CLOCK_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/0cf562f0-624b-48f1-a416-e0dee7deb609",
+    "line": 38
+  },
+  {
+    "assetId": "0eeb1871-d32f-4d72-96f5-98ba3d576954",
+    "constName": "CURRENT_JOBS_PRICE_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/0eeb1871-d32f-4d72-96f5-98ba3d576954",
+    "line": 39
+  },
+  {
+    "assetId": "b91c04f5-f22a-4273-a34c-63bbed21b2a8",
+    "constName": "SETTINGS_STATUS_WIFI",
+    "url": "https://www.figma.com/api/mcp/asset/b91c04f5-f22a-4273-a34c-63bbed21b2a8",
+    "line": 68
+  },
+  {
+    "assetId": "4693c784-2fe7-4ad2-bd21-7ea2ee935466",
+    "constName": "PROFILE_CAMERA_ICON",
+    "url": "https://www.figma.com/api/mcp/asset/4693c784-2fe7-4ad2-bd21-7ea2ee935466",
+    "line": 92
+  }
+]

@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Camera">
+<path id="Stroke 1" fill-rule="evenodd" clip-rule="evenodd" d="M11.2413 1.25129C12.083 1.58629 12.3405 2.75296 12.6847 3.12796C13.0288 3.50296 13.5213 3.63046 13.7938 3.63046C15.2422 3.63046 16.4163 4.80462 16.4163 6.25212V11.0813C16.4163 13.023 14.8413 14.598 12.8997 14.598H4.51634C2.57384 14.598 0.999674 13.023 0.999674 11.0813V6.25212C0.999674 4.80462 2.17384 3.63046 3.62217 3.63046C3.89384 3.63046 4.38634 3.50296 4.73134 3.12796C5.07551 2.75296 5.33217 1.58629 6.17384 1.25129C7.01634 0.916291 10.3997 0.916291 11.2413 1.25129Z" stroke="var(--stroke-0, #454545)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Stroke 13" d="M13.2876 5.79191H13.2951" stroke="var(--stroke-0, #454545)" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Stroke 5" fill-rule="evenodd" clip-rule="evenodd" d="M11.3566 8.81522C11.3566 7.35189 10.1708 6.16606 8.70743 6.16606C7.2441 6.16606 6.05827 7.35189 6.05827 8.81522C6.05827 10.2786 7.2441 11.4644 8.70743 11.4644C10.1708 11.4644 11.3566 10.2786 11.3566 8.81522Z" stroke="var(--stroke-0, #454545)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

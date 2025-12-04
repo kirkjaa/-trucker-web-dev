@@ -14,6 +14,10 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
       - ./database/demo_seed.sql:/docker-entrypoint-initdb.d/10_demo_seed.sql:ro
       - ./database/full_demo_seed.sql:/docker-entrypoint-initdb.d/20_full_demo_seed.sql:ro
+      # Mobile app schema and seed data (optional - only needed for standalone mode)
+      # Uncomment these lines if running mobile in standalone mode (API_MODE=standalone)
+      # - ./database/mobile_schema.sql:/docker-entrypoint-initdb.d/30_mobile_schema.sql:ro
+      # - ./database/mobile_demo_seed.sql:/docker-entrypoint-initdb.d/40_mobile_demo_seed.sql:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
@@ -129,6 +133,44 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - trucker-network
+
+  # ============================================================================
+  # TRUCKER MOBILE - Mobile Web Application
+  # Accessible via subdomain: m.trw.q9.quest
+  # ============================================================================
+  trucker-mobile:
+    build:
+      context: ./trucker-mobile
+      dockerfile: Dockerfile
+    container_name: trucker-mobile
+    ports:
+      - "0.0.0.0:5003:5003"
+    expose:
+      - "5003"
+    environment:
+      NODE_ENV: production
+      PORT: 5003
+      # Desktop API URL - mobile backend proxies requests here
+      DESKTOP_API_URL: ${DESKTOP_API_URL:-https://api.trw.q9.quest}
+      # API mode: 'proxy' to use desktop API, 'standalone' for local DB
+      API_MODE: proxy
+      # Database connection (fallback for standalone mode)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-trucker_user}:${POSTGRES_PASSWORD:-change_this_password}@postgres:5432/${POSTGRES_DB:-trucker_web}
+      # JWT secret (must match desktop for token validation)
+      JWT_SECRET: ${JWT_SECRET}
+      TZ: Asia/Bangkok
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5003/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - trucker-network
 

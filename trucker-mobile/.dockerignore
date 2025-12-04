@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+
+# Build output (will be created during build)
+dist
+
+# Development files
+.git
+.gitignore
+*.md
+!README.md
+
+# Environment files
+.env
+.env.*
+!env.example
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Scripts (not needed in production)
+scripts/
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+.eslintcache
+.prettierignore
+replit.md
+chat-assets-urls.txt
+login details.txt
+

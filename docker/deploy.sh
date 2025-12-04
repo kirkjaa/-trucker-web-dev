@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║     🚀 Trucker Web - Complete Docker Deployment           ║${NC}"
+echo -e "${GREEN}║   🚀 Trucker Web + Mobile - Complete Docker Deployment    ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -239,7 +239,8 @@ check_port() {
 
 # Check ports
 echo -e "${BLUE}🔍 Checking ports...${NC}"
-check_port 5002 "Next.js application"
+check_port 5002 "Desktop Web application"
+check_port 5003 "Mobile Web application"
 check_port 5300 "Backend API"
 check_port 5432 "PostgreSQL database"
 echo -e "${GREEN}✅ Ports available${NC}"
@@ -321,20 +322,38 @@ for i in {1..60}; do
     fi
 done
 
-# Wait for Next.js application
-echo -n "Waiting for Next.js application"
+# Wait for Desktop Web application
+echo -n "Waiting for Desktop Web application"
 for i in {1..60}; do
     if curl -f http://localhost:5002/health-check >/dev/null 2>&1 || \
        docker exec trucker-web node -e "require('http').get('http://localhost:5002/health-check', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" >/dev/null 2>&1; then
         echo ""
-        echo -e "${GREEN}✅ Next.js application is ready${NC}"
+        echo -e "${GREEN}✅ Desktop Web application is ready${NC}"
         break
     fi
     echo -n "."
     sleep 1
     if [ $i -eq 60 ]; then
         echo ""
-        echo -e "${YELLOW}⚠️  Application may still be starting...${NC}"
+        echo -e "${YELLOW}⚠️  Desktop application may still be starting...${NC}"
+        echo "   This is normal for first startup. Check logs if issues persist."
+    fi
+done
+
+# Wait for Mobile Web application
+echo -n "Waiting for Mobile Web application"
+for i in {1..60}; do
+    if curl -f http://localhost:5003/api/health >/dev/null 2>&1 || \
+       docker exec trucker-mobile node -e "require('http').get('http://localhost:5003/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" >/dev/null 2>&1; then
+        echo ""
+        echo -e "${GREEN}✅ Mobile Web application is ready${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 1
+    if [ $i -eq 60 ]; then
+        echo ""
+        echo -e "${YELLOW}⚠️  Mobile application may still be starting...${NC}"
         echo "   This is normal for first startup. Check logs if issues persist."
     fi
 done
@@ -380,15 +399,20 @@ SERVER_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || hostname -i 2>/dev/nul
 echo ""
 echo -e "${BLUE}🌐 Access Information:${NC}"
 echo -e "   Local Access:"
-echo -e "     Frontend:     ${GREEN}http://localhost:5002${NC}"
+echo -e "     Desktop Web:  ${GREEN}http://localhost:5002${NC}"
+echo -e "     Mobile Web:   ${GREEN}http://localhost:5003${NC}"
 echo -e "     Backend API:  ${GREEN}http://localhost:5300${NC}"
 echo -e "     Health Check: ${GREEN}http://localhost:5002/health-check${NC}"
 if [ "$SERVER_IP" != "localhost" ]; then
     echo -e "   Network Access:"
-    echo -e "     Frontend:     ${GREEN}http://${SERVER_IP}:5002${NC}"
+    echo -e "     Desktop Web:  ${GREEN}http://${SERVER_IP}:5002${NC}"
+    echo -e "     Mobile Web:   ${GREEN}http://${SERVER_IP}:5003${NC}"
     echo -e "     Backend API:  ${GREEN}http://${SERVER_IP}:5300${NC}"
-    echo -e "     Health Check: ${GREEN}http://${SERVER_IP}:5002/health-check${NC}"
 fi
+echo -e "   Production URLs (after Nginx Proxy Manager setup):"
+echo -e "     Desktop:      ${GREEN}https://trw.q9.quest${NC}"
+echo -e "     Mobile:       ${GREEN}https://m.trw.q9.quest${NC}"
+echo -e "     API:          ${GREEN}https://api.trw.q9.quest${NC}"
 echo -e "   Database:"
 echo -e "     Host:         ${GREEN}localhost${NC}"
 echo -e "     Port:         ${GREEN}${POSTGRES_PORT:-5432}${NC}"
@@ -397,12 +421,14 @@ echo -e "     Username:     ${GREEN}${POSTGRES_USER:-trucker_user}${NC}"
 
 echo ""
 echo -e "${BLUE}📋 Useful Commands:${NC}"
-echo -e "   View logs:        ${GREEN}$DOCKER_COMPOSE_CMD logs -f${NC}"
-echo -e "   View app logs:    ${GREEN}$DOCKER_COMPOSE_CMD logs -f trucker-web${NC}"
-echo -e "   View DB logs:     ${GREEN}$DOCKER_COMPOSE_CMD logs -f postgres${NC}"
-echo -e "   Stop services:    ${GREEN}$DOCKER_COMPOSE_CMD down${NC}"
-echo -e "   Restart services:  ${GREEN}$DOCKER_COMPOSE_CMD restart${NC}"
-echo -e "   Service status:   ${GREEN}$DOCKER_COMPOSE_CMD ps${NC}"
+echo -e "   View all logs:      ${GREEN}$DOCKER_COMPOSE_CMD logs -f${NC}"
+echo -e "   View desktop logs:  ${GREEN}$DOCKER_COMPOSE_CMD logs -f trucker-web${NC}"
+echo -e "   View mobile logs:   ${GREEN}$DOCKER_COMPOSE_CMD logs -f trucker-mobile${NC}"
+echo -e "   View API logs:      ${GREEN}$DOCKER_COMPOSE_CMD logs -f trucker-api${NC}"
+echo -e "   View DB logs:       ${GREEN}$DOCKER_COMPOSE_CMD logs -f postgres${NC}"
+echo -e "   Stop services:      ${GREEN}$DOCKER_COMPOSE_CMD down${NC}"
+echo -e "   Restart services:   ${GREEN}$DOCKER_COMPOSE_CMD restart${NC}"
+echo -e "   Service status:     ${GREEN}$DOCKER_COMPOSE_CMD ps${NC}"
 
 echo ""
 echo -e "${BLUE}🗄️  Database Commands:${NC}"
@@ -413,11 +439,20 @@ echo -e "   Restore database:  ${GREEN}./docker/restore.sh <backup-file>${NC}"
 
 echo ""
 echo -e "${YELLOW}⚠️  Important Notes:${NC}"
-echo -e "   1. For production, configure Nginx reverse proxy (see NGINX_SETUP.md)"
-echo -e "   2. Change all default passwords in .env file"
-echo -e "   3. Set up automated database backups"
-echo -e "   4. Configure SSL/TLS certificates"
-echo -e "   5. Update NEXTAUTH_URL to your production domain"
+echo -e "   1. Configure Nginx Proxy Manager (see nginx/NGINX_PROXY_MANAGER.md)"
+echo -e "   2. Add proxy host for m.trw.q9.quest → port 5003"
+echo -e "   3. Change all default passwords in .env file"
+echo -e "   4. Set up automated database backups"
+echo -e "   5. Configure SSL/TLS certificates for all domains"
+echo -e "   6. Update NEXTAUTH_URL to your production domain"
+
+echo ""
+echo -e "${BLUE}📱 Mobile App Login Credentials:${NC}"
+echo -e "   All passwords: ${GREEN}12345${NC}"
+echo -e "   Driver login:  ${GREEN}shipping${NC} (main mobile use case)"
+echo -e "   Admin login:   ${GREEN}admin${NC}"
+echo -e "   Company login: ${GREEN}company${NC}"
+echo -e "   Customer:      ${GREEN}customer${NC}"
 
 echo ""
 echo -e "${GREEN}✨ Deployment completed successfully!${NC}"
