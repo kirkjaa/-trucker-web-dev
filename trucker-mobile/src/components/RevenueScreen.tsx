@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { JobHistoryRouteScreen } from './JobHistoryRouteScreen'
+import { useRevenue } from '../hooks/useFinance'
 
 const BACK_ICON = '/assets/icons/back.svg'
 const CHECK_ICON = '/assets/icons/revenue-check.svg'
@@ -19,6 +20,7 @@ type RevenueEntry = {
   month: string
 }
 
+// Fallback mock data
 const MOCK_REVENUE_DATA: RevenueEntry[] = [
   { id: '1', companyName: 'Thai PM Charter Co., Ltd.', amount: 3000, status: 'paid', month: 'January' },
   { id: '2', companyName: 'CP All Public Company Limited', amount: 2000, status: 'paid', month: 'January' },
@@ -31,7 +33,13 @@ export function RevenueScreen({ onBack }: RevenueScreenProps) {
   const [selectedTab, setSelectedTab] = useState<'all' | 'paid' | 'unpaid'>('all')
   const [selectedPeriod] = useState('Every month')
 
-  const filteredData = MOCK_REVENUE_DATA.filter((entry) => {
+  // Fetch real revenue data from API
+  const { revenues: apiRevenues, loading } = useRevenue()
+
+  // Use API data if available, otherwise fall back to mock data
+  const revenueData = apiRevenues.length > 0 ? apiRevenues : MOCK_REVENUE_DATA
+
+  const filteredData = revenueData.filter((entry) => {
     if (selectedTab === 'paid') return entry.status === 'paid'
     if (selectedTab === 'unpaid') return entry.status === 'pending'
     return true

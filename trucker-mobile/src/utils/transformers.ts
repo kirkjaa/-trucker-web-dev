@@ -44,15 +44,16 @@ export type CurrentJobItem = {
 export type BidOrder = {
   id: string;
   orderCode: string;
-  date: string;
-  time: string;
   employer: string;
+  serviceType: string;
+  origin: string;
   destination: string;
-  price: string;
-  distance: string;
-  cargo: string;
-  weight: string;
-  minimumBid: number | null;
+  dateLabel: string;
+  timeLabel: string;
+  priceLabel: string;
+  equipment: string;
+  safetyEquipment: string;
+  minimumBid: number;
   status: "open" | "history";
   submittedAmount?: number;
 };
@@ -144,18 +145,27 @@ export function transformJobToCurrentJob(
 export function transformBidToBidOrder(bid: Bid): BidOrder {
   const pickupDate = bid.pickupDate ? new Date(bid.pickupDate) : new Date();
 
+  const isInternational =
+    bid.origin?.toLowerCase().includes("laos") ||
+    bid.origin?.toLowerCase().includes("cambodia") ||
+    bid.destination?.toLowerCase().includes("laos") ||
+    bid.destination?.toLowerCase().includes("cambodia");
+
   return {
     id: bid.id,
     orderCode: bid.bidNumber,
-    date: pickupDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }),
-    time: pickupDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
     employer: bid.customer?.name || "Open Bid",
-    destination: `${bid.origin} → ${bid.destination}`,
-    price: bid.requestedPrice ? `฿ ${Number(bid.requestedPrice).toLocaleString()}` : "Open",
-    distance: "-",
-    cargo: bid.cargo || "General",
-    weight: bid.cargoWeight ? `${bid.cargoWeight} kg` : "-",
-    minimumBid: bid.minimumBid ? Number(bid.minimumBid) : null,
+    serviceType: isInternational
+      ? "International shipment"
+      : "Domestic shipment",
+    origin: bid.origin,
+    destination: bid.destination,
+    dateLabel: pickupDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }),
+    timeLabel: pickupDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    priceLabel: bid.requestedPrice ? `฿ ${Number(bid.requestedPrice).toLocaleString()}` : "Open",
+    equipment: bid.cargo ? `Cargo: ${bid.cargo}` : "Standard equipment",
+    safetyEquipment: bid.cargoWeight ? `Weight: ${bid.cargoWeight} kg` : "-",
+    minimumBid: bid.minimumBid ? Number(bid.minimumBid) : 0,
     status: bid.status === "open" ? "open" : "history",
     submittedAmount: bid.submittedPrice ? Number(bid.submittedPrice) : undefined,
   };
