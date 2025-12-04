@@ -91,7 +91,9 @@ export async function listChatGroups(userId: string, userRole?: string) {
 
   // For SUPERADMIN, show all chat rooms with both participants' names
   if (isSuperAdmin) {
-    const rows = await query<ChatGroupRow & { participant1_name: string; participant2_name: string }>(
+    const rows = await query<
+      ChatGroupRow & { participant1_name: string; participant2_name: string }
+    >(
       `
         SELECT
           cr.id,
