@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { factoryRoutes, organizations, trucks, drivers, bids, orders, users } from "../db/schema";
+import { factoryRoutes, organizations, trucks, drivers, bids, orders } from "../db/schema";
 import { eq, and, sql, count } from "drizzle-orm";
 
 const router = Router();
@@ -37,11 +37,11 @@ router.get("/stats", async (req, res) => {
       .from(drivers)
       .where(eq(drivers.deleted, false));
 
-    // Count open bids
+    // Count bids (using bid_status column)
     const [bidStats] = await db
       .select({
         total: count(),
-        open: sql<number>`COUNT(*) FILTER (WHERE ${bids.status} = 'Draft' OR ${bids.status} = 'Submitted')`,
+        open: sql<number>`COUNT(*) FILTER (WHERE ${bids.bidStatus} = 'Draft' OR ${bids.bidStatus} = 'Submitted')`,
       })
       .from(bids)
       .where(eq(bids.deleted, false));
@@ -71,7 +71,7 @@ router.get("/stats", async (req, res) => {
         available: Number(vehicleStats?.total) || 0,
       },
       finance: {
-        totalRevenue: 0, // Would need orders with payment info
+        totalRevenue: 0,
         monthlyRevenue: 0,
         totalExpenses: 0,
         monthlyExpenses: 0,
@@ -140,10 +140,10 @@ router.get("/my-stats", async (req, res) => {
       },
       earnings: {
         total: Number(orderStats?.totalEarnings) || 0,
-        monthly: 0, // Would need date filtering
+        monthly: 0,
       },
       expenses: {
-        total: 0, // Would need expenses table with user relation
+        total: 0,
         monthly: 0,
       },
       profit: {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db";
 import { factoryRoutes, masterRoutes, organizations, orders, drivers, trucks } from "../db/schema";
-import { eq, and, desc, sql, or } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
   try {
     const { status, limit = 50, offset = 0 } = req.query;
 
-    let query = db
+    const jobs = await db
       .select({
         id: factoryRoutes.id,
         jobNumber: factoryRoutes.routeFactoryCode,
@@ -23,7 +23,6 @@ router.get("/", async (req, res) => {
         price: factoryRoutes.offerPrice,
         unit: factoryRoutes.unit,
         createdAt: factoryRoutes.createdAt,
-        // Join with master route for origin/destination
         masterRouteId: factoryRoutes.masterRouteId,
         factoryId: factoryRoutes.factoryId,
       })
@@ -33,23 +32,24 @@ router.get("/", async (req, res) => {
       .limit(Number(limit))
       .offset(Number(offset));
 
-    const jobs = await query;
-
     // Enrich with master route and factory info
     const enrichedJobs = await Promise.all(
       jobs.map(async (job) => {
-        // Get master route info
+        // Get master route info for origin/destination
         let origin = "Thailand";
         let destination = "Thailand";
         if (job.masterRouteId) {
           const [masterRoute] = await db
-            .select()
+            .select({
+              originProvince: masterRoutes.originProvince,
+              destinationProvince: masterRoutes.destinationProvince,
+            })
             .from(masterRoutes)
             .where(eq(masterRoutes.id, job.masterRouteId))
             .limit(1);
           if (masterRoute) {
-            origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
-            destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+            origin = masterRoute.originProvince || "Thailand";
+            destination = masterRoute.destinationProvince || "Thailand";
           }
         }
 
@@ -57,7 +57,10 @@ router.get("/", async (req, res) => {
         let customer = null;
         if (job.factoryId) {
           const [org] = await db
-            .select()
+            .select({
+              id: organizations.id,
+              businessName: organizations.businessName,
+            })
             .from(organizations)
             .where(eq(organizations.id, job.factoryId))
             .limit(1);
@@ -79,7 +82,6 @@ router.get("/", async (req, res) => {
           customer,
           cargo: job.type === "abroad" ? "International shipment" : "Domestic shipment",
           createdAt: job.createdAt,
-          // For UI compatibility
           pickupDate: job.createdAt,
           deliveryDate: null,
           stops: [],
@@ -135,10 +137,10 @@ router.get("/my-jobs", async (req, res) => {
     // Enrich with route details
     const enrichedOrders = await Promise.all(
       driverOrders.map(async (order) => {
-        let route = null;
         let origin = "Thailand";
         let destination = "Thailand";
         let customer = null;
+        let routePrice = null;
 
         if (order.factoryRouteId) {
           const [factoryRoute] = await db
@@ -148,25 +150,31 @@ router.get("/my-jobs", async (req, res) => {
             .limit(1);
 
           if (factoryRoute) {
-            route = factoryRoute;
+            routePrice = factoryRoute.offerPrice;
 
             // Get master route
             if (factoryRoute.masterRouteId) {
               const [masterRoute] = await db
-                .select()
+                .select({
+                  originProvince: masterRoutes.originProvince,
+                  destinationProvince: masterRoutes.destinationProvince,
+                })
                 .from(masterRoutes)
                 .where(eq(masterRoutes.id, factoryRoute.masterRouteId))
                 .limit(1);
               if (masterRoute) {
-                origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
-                destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+                origin = masterRoute.originProvince || "Thailand";
+                destination = masterRoute.destinationProvince || "Thailand";
               }
             }
 
             // Get customer
             if (factoryRoute.factoryId) {
               const [org] = await db
-                .select()
+                .select({
+                  id: organizations.id,
+                  businessName: organizations.businessName,
+                })
                 .from(organizations)
                 .where(eq(organizations.id, factoryRoute.factoryId))
                 .limit(1);
@@ -181,7 +189,10 @@ router.get("/my-jobs", async (req, res) => {
         let vehicle = null;
         if (order.truckId) {
           const [truck] = await db
-            .select()
+            .select({
+              id: trucks.id,
+              licensePlate: trucks.licensePlate,
+            })
             .from(trucks)
             .where(eq(trucks.id, order.truckId))
             .limit(1);
@@ -196,11 +207,10 @@ router.get("/my-jobs", async (req, res) => {
           status: mapOrderStatusToJobStatus(order.orderStatus),
           origin,
           destination,
-          distance: route?.distanceValue ? `${route.distanceValue} ${route.distanceUnit || "km"}` : null,
-          price: order.totalPrice || route?.offerPrice,
+          price: order.totalPrice || routePrice,
           customer,
           vehicle,
-          cargo: route?.type === "abroad" ? "International shipment" : "Domestic shipment",
+          cargo: "Domestic shipment",
           createdAt: order.createdAt,
           pickupDate: order.createdAt,
           stops: [],
@@ -235,13 +245,16 @@ router.get("/:id", async (req, res) => {
     let destination = "Thailand";
     if (job.masterRouteId) {
       const [masterRoute] = await db
-        .select()
+        .select({
+          originProvince: masterRoutes.originProvince,
+          destinationProvince: masterRoutes.destinationProvince,
+        })
         .from(masterRoutes)
         .where(eq(masterRoutes.id, job.masterRouteId))
         .limit(1);
       if (masterRoute) {
-        origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
-        destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+        origin = masterRoute.originProvince || "Thailand";
+        destination = masterRoute.destinationProvince || "Thailand";
       }
     }
 
@@ -249,7 +262,10 @@ router.get("/:id", async (req, res) => {
     let customer = null;
     if (job.factoryId) {
       const [org] = await db
-        .select()
+        .select({
+          id: organizations.id,
+          businessName: organizations.businessName,
+        })
         .from(organizations)
         .where(eq(organizations.id, job.factoryId))
         .limit(1);
@@ -283,11 +299,9 @@ router.get("/:id", async (req, res) => {
 function mapOrderStatusToJobStatus(orderStatus: string | null): string {
   switch (orderStatus) {
     case "Published":
-      return "pending";
     case "Matched":
       return "pending";
     case "StartShipping":
-      return "in_progress";
     case "Shipped":
       return "in_progress";
     case "Completed":

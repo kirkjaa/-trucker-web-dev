@@ -10,12 +10,14 @@ export const routeStatusEnum = pgEnum("route_status", ["pending", "confirmed", "
 export const routeTypeEnum = pgEnum("route_type", ["oneWay", "multiWay", "abroad"]);
 export const driverStatusEnum = pgEnum("driver_status", ["PENDING", "APPROVED", "BAN", "REJECTED", "CANCELLED", "DRAFT"]);
 export const organizationTypeEnum = pgEnum("organization_type", ["FACTORY", "COMPANY"]);
+export const bidStatusEnum = pgEnum("bid_status", ["Draft", "Submitted", "Approved", "Rejected", "Canceled"]);
+export const orderStatusEnum = pgEnum("order_status", ["Published", "Matched", "StartShipping", "Shipped", "Completed"]);
 
 // ============================================================================
-// TABLES (using desktop database schema)
+// TABLES (matching actual desktop database schema from init.sql)
 // ============================================================================
 
-// Users table - shared with desktop
+// Users table
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
@@ -58,19 +60,24 @@ export const organizations = pgTable("organizations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Master Routes
+// Master Routes (actual schema from init.sql)
 export const masterRoutes = pgTable("master_routes", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id"),
-  code: varchar("code", { length: 50 }).unique().notNull(),
-  nameTh: varchar("name_th", { length: 255 }),
-  nameEn: varchar("name_en", { length: 255 }),
+  displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
   originProvince: varchar("origin_province", { length: 100 }),
-  originCountry: varchar("origin_country", { length: 100 }),
+  originDistrict: varchar("origin_district", { length: 100 }),
+  originLatitude: decimal("origin_latitude", { precision: 10, scale: 8 }),
+  originLongitude: decimal("origin_longitude", { precision: 11, scale: 8 }),
   destinationProvince: varchar("destination_province", { length: 100 }),
-  destinationCountry: varchar("destination_country", { length: 100 }),
-  isActive: boolean("is_active").default(true),
-  deleted: boolean("deleted").default(false),
+  destinationDistrict: varchar("destination_district", { length: 100 }),
+  destinationLatitude: decimal("destination_latitude", { precision: 10, scale: 8 }),
+  destinationLongitude: decimal("destination_longitude", { precision: 11, scale: 8 }),
+  returnPointProvince: varchar("return_point_province", { length: 100 }),
+  returnPointDistrict: varchar("return_point_district", { length: 100 }),
+  returnPointLatitude: decimal("return_point_latitude", { precision: 10, scale: 8 }),
+  returnPointLongitude: decimal("return_point_longitude", { precision: 11, scale: 8 }),
+  distanceValue: decimal("distance_value", { precision: 10, scale: 2 }),
+  distanceUnit: varchar("distance_unit", { length: 10 }).default("km"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -126,7 +133,7 @@ export const drivers = pgTable("drivers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Chat Rooms (shared with desktop)
+// Chat Rooms
 export const chatRooms = pgTable("chat_rooms", {
   id: uuid("id").primaryKey().defaultRandom(),
   participant1Id: uuid("participant1_id"),
@@ -135,7 +142,7 @@ export const chatRooms = pgTable("chat_rooms", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Chat Messages (shared with desktop)
+// Chat Messages
 export const chatMessages = pgTable("chat_messages", {
   id: uuid("id").primaryKey().defaultRandom(),
   roomId: uuid("room_id"),
@@ -147,17 +154,21 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Bids
+// Bids (actual schema from init.sql)
 export const bids = pgTable("bids", {
   id: uuid("id").primaryKey().defaultRandom(),
-  factoryRouteId: uuid("factory_route_id"),
-  driverId: uuid("driver_id"),
-  bidPrice: decimal("bid_price", { precision: 12, scale: 2 }),
-  status: varchar("status", { length: 50 }).default("Draft"),
-  notes: text("notes"),
+  displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
+  rfqId: uuid("rfq_id"),
+  companyId: uuid("company_id"),
+  bidStatus: bidStatusEnum("bid_status").default("Draft"),
+  oilRange: integer("oil_range").default(2),
+  bidReason: text("bid_reason"),
+  signatureCompanyType: varchar("signature_company_type", { length: 50 }),
+  signatureCompanySign: text("signature_company_sign"),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: uuid("created_by"),
 });
 
 // Orders
@@ -168,7 +179,7 @@ export const orders = pgTable("orders", {
   bidId: uuid("bid_id"),
   driverId: uuid("driver_id"),
   truckId: uuid("truck_id"),
-  status: varchar("status", { length: 50 }).default("Published"),
+  status: orderStatusEnum("status").default("Published"),
   paymentStatus: varchar("payment_status", { length: 50 }).default("Unpaid"),
   totalPrice: decimal("total_price", { precision: 12, scale: 2 }),
   deleted: boolean("deleted").default(false),
@@ -176,7 +187,7 @@ export const orders = pgTable("orders", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Export all tables for use in routes
+// Export types
 export type User = typeof users.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type MasterRoute = typeof masterRoutes.$inferSelect;
