@@ -182,19 +182,20 @@ router.get("/my-jobs", async (req, res) => {
           }
         }
 
-        // Get truck info
+        // Get truck info (using correct column names)
         let vehicle = null;
         if (order.truckId) {
           const [truck] = await db
             .select({
               id: trucks.id,
-              licensePlate: trucks.licensePlate,
+              licensePlateValue: trucks.licensePlateValue,
+              truckCode: trucks.truckCode,
             })
             .from(trucks)
             .where(eq(trucks.id, order.truckId))
             .limit(1);
           if (truck) {
-            vehicle = { id: truck.id, registrationNumber: truck.licensePlate };
+            vehicle = { id: truck.id, registrationNumber: truck.licensePlateValue, truckCode: truck.truckCode };
           }
         }
 

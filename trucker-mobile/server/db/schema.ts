@@ -105,36 +105,55 @@ export const factoryRoutes = pgTable("factory_routes", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Trucks
+// Trucks (actual schema from init.sql)
 export const trucks = pgTable("trucks", {
   id: uuid("id").primaryKey().defaultRandom(),
-  displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
-  organizationId: uuid("organization_id"),
+  truckCode: varchar("truck_code", { length: 50 }).unique().notNull(), // NOT display_code!
+  licensePlateValue: varchar("license_plate_value", { length: 20 }),
+  licensePlateProvince: varchar("license_plate_province", { length: 50 }),
+  brand: varchar("brand", { length: 100 }),
+  year: varchar("year", { length: 4 }),
+  vin: varchar("vin", { length: 50 }).unique(),
+  color: varchar("color", { length: 50 }),
+  type: varchar("type", { length: 50 }).notNull(), // truck_type enum
+  fuelType: varchar("fuel_type", { length: 50 }), // truck_fuel_type enum
+  size: varchar("size", { length: 20 }), // vehicle_size enum
+  departmentType: varchar("department_type", { length: 20 }).notNull(), // truck_department_type enum
+  factoryId: uuid("factory_id"), // NOT organization_id
+  companyId: uuid("company_id"), // NOT organization_id
   driverId: uuid("driver_id"),
-  licensePlate: varchar("license_plate", { length: 50 }),
-  province: varchar("province", { length: 100 }),
-  brandModel: varchar("brand_model", { length: 100 }),
+  capacityWeight: decimal("capacity_weight", { precision: 10, scale: 2 }),
+  capacityWeightUnit: varchar("capacity_weight_unit", { length: 10 }),
+  currentLocation: text("current_location"),
+  currentLatitude: decimal("current_latitude", { precision: 10, scale: 8 }),
+  currentLongitude: decimal("current_longitude", { precision: 11, scale: 8 }),
+  frontImageUrl: text("front_image_url"),
+  isActive: boolean("is_active").default(true),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: uuid("created_by"),
+  updatedBy: uuid("updated_by"),
 });
 
-// Drivers
+// Drivers (actual schema from init.sql - note: personal info is in users table, NOT here!)
 export const drivers = pgTable("drivers", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id"),
   displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
-  firstName: varchar("first_name", { length: 100 }),
-  lastName: varchar("last_name", { length: 100 }),
-  phone: varchar("phone", { length: 20 }),
-  email: varchar("email", { length: 255 }),
-  idCard: varchar("id_card", { length: 50 }),
-  organizationId: uuid("organization_id"),
+  userId: uuid("user_id"), // Links to users table for personal info
+  type: varchar("type", { length: 20 }).notNull(), // driver_type enum: 'freelance', 'internal', 'freelance-review'
+  companyId: uuid("company_id"), // NOT organization_id
+  idCardImageUrl: text("id_card_image_url"),
+  vehicleRegistrationImageUrl: text("vehicle_registration_image_url"),
+  vehicleLicenseImageUrl: text("vehicle_license_image_url"),
+  rejectedReason: text("rejected_reason"),
   status: driverStatusEnum("status").default("PENDING"),
-  imageUrl: text("image_url"),
+  truckerId: varchar("trucker_id", { length: 100 }),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: uuid("created_by"),
+  updatedBy: uuid("updated_by"),
 });
 
 // Chat Rooms

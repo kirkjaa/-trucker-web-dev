@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { trucks, drivers } from "../db/schema";
+import { trucks, drivers, users } from "../db/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 const router = Router();
@@ -13,12 +13,19 @@ router.get("/", async (req, res) => {
     const vehicles = await db
       .select({
         id: trucks.id,
-        displayCode: trucks.displayCode,
-        licensePlate: trucks.licensePlate,
-        province: trucks.province,
-        brandModel: trucks.brandModel,
-        organizationId: trucks.organizationId,
+        truckCode: trucks.truckCode,
+        licensePlateValue: trucks.licensePlateValue,
+        licensePlateProvince: trucks.licensePlateProvince,
+        brand: trucks.brand,
+        year: trucks.year,
+        color: trucks.color,
+        type: trucks.type,
+        size: trucks.size,
+        departmentType: trucks.departmentType,
+        factoryId: trucks.factoryId,
+        companyId: trucks.companyId,
         driverId: trucks.driverId,
+        isActive: trucks.isActive,
         createdAt: trucks.createdAt,
       })
       .from(trucks)
@@ -27,37 +34,54 @@ router.get("/", async (req, res) => {
       .limit(Number(limit))
       .offset(Number(offset));
 
-    // Enrich with driver info
+    // Enrich with driver info (driver -> user for personal details)
     const enrichedVehicles = await Promise.all(
       vehicles.map(async (vehicle) => {
         let driver = null;
         if (vehicle.driverId) {
+          // Get driver record
           const [driverRecord] = await db
             .select({
               id: drivers.id,
-              name: drivers.firstName,
-              lastName: drivers.lastName,
-              phone: drivers.phone,
+              userId: drivers.userId,
             })
             .from(drivers)
             .where(eq(drivers.id, vehicle.driverId))
             .limit(1);
-          if (driverRecord) {
-            driver = {
-              id: driverRecord.id,
-              name: `${driverRecord.name || ""} ${driverRecord.lastName || ""}`.trim(),
-              phone: driverRecord.phone,
-            };
+
+          if (driverRecord?.userId) {
+            // Get user info for driver's personal details
+            const [userRecord] = await db
+              .select({
+                firstName: users.firstName,
+                lastName: users.lastName,
+                phone: users.phone,
+              })
+              .from(users)
+              .where(eq(users.id, driverRecord.userId))
+              .limit(1);
+
+            if (userRecord) {
+              driver = {
+                id: driverRecord.id,
+                name: `${userRecord.firstName || ""} ${userRecord.lastName || ""}`.trim(),
+                phone: userRecord.phone,
+              };
+            }
           }
         }
 
         return {
           id: vehicle.id,
-          registrationNumber: vehicle.licensePlate,
-          displayCode: vehicle.displayCode,
-          province: vehicle.province,
-          brandModel: vehicle.brandModel,
-          status: "available", // Could be derived from orders
+          registrationNumber: vehicle.licensePlateValue,
+          truckCode: vehicle.truckCode,
+          province: vehicle.licensePlateProvince,
+          brand: vehicle.brand,
+          year: vehicle.year,
+          color: vehicle.color,
+          type: vehicle.type,
+          size: vehicle.size,
+          status: vehicle.isActive ? "available" : "inactive",
           driver,
           createdAt: vehicle.createdAt,
         };
@@ -91,11 +115,15 @@ router.get("/:id", async (req, res) => {
 
     return res.json({
       id: vehicle.id,
-      registrationNumber: vehicle.licensePlate,
-      displayCode: vehicle.displayCode,
-      province: vehicle.province,
-      brandModel: vehicle.brandModel,
-      status: "available",
+      registrationNumber: vehicle.licensePlateValue,
+      truckCode: vehicle.truckCode,
+      province: vehicle.licensePlateProvince,
+      brand: vehicle.brand,
+      year: vehicle.year,
+      color: vehicle.color,
+      type: vehicle.type,
+      size: vehicle.size,
+      status: vehicle.isActive ? "available" : "inactive",
       createdAt: vehicle.createdAt,
     });
   } catch (error) {
