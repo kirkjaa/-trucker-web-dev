@@ -1,346 +1,270 @@
-# Trucker CMS Documentation
+# Trucker Mobile App Documentation
 
 ## Table of Contents
 1. [Overview](#overview)
-2. [Features](#features)
-3. [Demo Data](#demo-data)
-4. [Deployment Guide](#deployment-guide)
-5. [API Reference](#api-reference)
+2. [Architecture](#architecture)
+3. [Shared Database](#shared-database)
+4. [Login Credentials](#login-credentials)
+5. [Deployment](#deployment)
+6. [API Reference](#api-reference)
 
 ---
 
 ## Overview
 
-Trucker CMS is a comprehensive trucking and logistics management platform built with modern web technologies. It provides tools for managing jobs, customers, vehicles, finances, chat, and bidding operations.
+Trucker Mobile is the mobile web application companion to the Trucker Web desktop application. It provides a mobile-optimized interface for drivers and logistics personnel to manage jobs, view deliveries, track finances, and communicate with teams.
 
 ### Tech Stack
-- **Frontend**: React 19.1 with TypeScript
+- **Frontend**: React 19.1 with TypeScript + Vite
 - **Backend**: Express.js 5.x with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: PostgreSQL (shared with desktop app) via Drizzle ORM
 - **Authentication**: JWT (JSON Web Tokens)
 - **Styling**: TailwindCSS 4.1
 
----
-
-## Features
-
-### User Management & Authentication
-- Role-based access control (Admin, Company, Customer, Shipping)
-- Secure JWT authentication with token expiration
-- User profiles with customizable settings
-
-### Job Management
-- Create, assign, and track delivery jobs
-- Job status tracking (pending, assigned, in-progress, completed, cancelled)
-- Multi-stop job support with check-in/check-out
-- Job history and analytics
-
-### Customer Management
-- Full customer database with contact information
-- Order history tracking per customer
-- Revenue analytics by customer
-- Search and filter capabilities
-
-### Product Catalog
-- Product inventory management
-- Category-based organization
-- Pricing and stock tracking
-- Product search functionality
-
-### Fleet Management
-- Vehicle registration and tracking
-- Driver assignments
-- Vehicle status monitoring (available, in-use, maintenance)
-- Maintenance scheduling
-
-### Financial Management
-- Expense tracking by job and category
-- Revenue recording and invoicing
-- Monthly/yearly financial reports
-- Profit/loss analytics
-- 18 months of historical data
-
-### Bid Management
-- Create and manage job bids
-- Bid status tracking (open, submitted, won, lost, expired)
-- Price submissions and negotiations
-
-### Chat System
-- Private messaging between users
-- Group conversations
-- Real-time message history
-- Conversation management
-
-### Dashboard
-- Overview statistics
-- Recent job activity
-- Revenue charts
-- Quick action buttons
+### Key Features
+- 📱 Mobile-optimized UI
+- 🚚 Job tracking and status updates
+- 💬 Chat with customers and dispatch
+- 💰 Revenue and expense tracking
+- 🔔 Real-time notifications
+- 🌍 Multi-language support (Thai, English, Korean)
 
 ---
 
-## Demo Data
+## Architecture
 
-The application comes pre-seeded with comprehensive demo data for testing and demonstration purposes.
-
-### User Accounts
-
-All demo accounts use password: `12345`
-
-| Username | Role | Description |
-|----------|------|-------------|
-| `admin` | Admin | Full system access |
-| `admin2` | Admin | Full system access |
-| `admin3` | Admin | Full system access |
-| `company` | Company | Company operations |
-| `company2` | Company | Company operations |
-| `company3` | Company | Company operations |
-| `customer` | Customer | Customer workspace |
-| `customer2` | Customer | Customer workspace |
-| `customer3` | Customer | Customer workspace |
-| `shipping` | Shipping | Driver/shipping workspace |
-| `shipping2` | Shipping | Driver/shipping workspace |
-| `shipping3` | Shipping | Driver/shipping workspace |
-| `shipping4` | Shipping | Driver/shipping workspace |
-| `shipping5` | Shipping | Driver/shipping workspace |
-| `shipping6` | Shipping | Driver/shipping workspace |
-
-### Data Volume
-
-| Entity | Count | Description |
-|--------|-------|-------------|
-| Users | 15 | Across all roles |
-| Jobs | 65 | Various statuses with stops |
-| Customers | 150 | With contact and order history |
-| Products | 90 | Across multiple categories |
-| Vehicles | 45 | With driver assignments |
-| Expenses | 263 | Across multiple jobs |
-| Revenues | 42 | Payment records |
-| Bids | 40 | Various bid states |
-| Chat Conversations | 20 | With message history |
-| Financial Records | 18 months | Historical data |
-
-### Data Categories
-
-**Products are organized into categories:**
-- Electronics
-- Machinery
-- Textiles
-- Food & Beverages
-- Chemicals
-- Construction Materials
-- Automotive Parts
-- Agricultural Products
-- Medical Supplies
-
-**Expense categories include:**
-- Fuel
-- Maintenance
-- Tolls
-- Food
-- Accommodation
-- Repairs
-- Insurance
-- Permits
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Production URLs                          │
+│   Desktop:    https://trw.q9.quest                         │
+│   Mobile:     https://m.trw.q9.quest                       │
+│   API:        https://api.trw.q9.quest                     │
+└─────────────────────────────────────────────────────────────┘
+                          │
+         ┌────────────────┼────────────────┐
+         ▼                ▼                ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  trucker-web    │ │ trucker-mobile  │ │  trucker-api    │
+│  (Next.js)      │ │ (Vite+Express)  │ │  (Express)      │
+│  Port: 5002     │ │  Port: 5003     │ │  Port: 5300     │
+└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
+         │                   │                   │
+         └───────────────────┴───────────────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │  trucker-postgres   │
+                  │  (Shared Database)  │
+                  │  Port: 5432         │
+                  └─────────────────────┘
+```
 
 ---
 
-## Deployment Guide
+## Shared Database
 
-### Prerequisites
-- Node.js 18+ installed
-- PostgreSQL database (provided by Replit)
-- JWT_SECRET environment variable configured
+**Important**: The mobile app shares the **same PostgreSQL database** as the desktop app.
+
+### What This Means:
+- ✅ Same user accounts work on both platforms
+- ✅ Jobs, routes, orders are visible on both
+- ✅ Chat messages sync between desktop and mobile
+- ✅ Financial data (revenues, orders) shared
+- ✅ Organizations (factories, companies) shared
+
+### Database Tables Used:
+| Table | Purpose |
+|-------|---------|
+| `users` | User authentication and profiles |
+| `organizations` | Factories and companies (customers) |
+| `factory_routes` | Job/route definitions |
+| `master_routes` | Route templates with origin/destination |
+| `orders` | Active orders assigned to drivers |
+| `trucks` | Vehicle/fleet information |
+| `drivers` | Driver profiles and status |
+| `bids` | Job bidding system |
+| `chat_rooms` | Chat conversations |
+| `chat_messages` | Chat message history |
+
+---
+
+## Login Credentials
+
+**Both desktop and mobile use the SAME credentials.**
+
+### Quick Reference
+
+| Role | Email | Password | Best For |
+|------|-------|----------|----------|
+| **Admin** | `superadmin@demo.com` | `Demo@123` | Full system access |
+| **Factory** | `factory@demo.com` | `Demo@123` | Factory management |
+| **Company** | `company@demo.com` | `Demo@123` | Company operations |
+| **Driver** | `driver@demo.com` | `Demo@123` | **Main mobile use case** |
+
+### Role Mapping
+
+The mobile app maps desktop roles to mobile-friendly names:
+
+| Desktop Role | Mobile Role | Description |
+|--------------|-------------|-------------|
+| `SUPERADMIN` | `admin` | Full system access |
+| `ORGANIZATION` | `company` | Factory/Company users |
+| `DRIVER` | `shipping` | Driver workspace |
+
+See [LOGIN_CREDENTIALS.md](../LOGIN_CREDENTIALS.md) for the complete list of 130+ demo accounts.
+
+---
+
+## Deployment
+
+### With Docker (Recommended)
+
+The mobile app is deployed automatically as part of the main Docker deployment:
+
+```bash
+# From project root
+./docker/deploy.sh
+```
+
+This will:
+1. Build the mobile app Docker image
+2. Start the service on port 5003
+3. Connect to the shared PostgreSQL database
+4. Verify health checks
+
+### Standalone Development
+
+```bash
+cd trucker-mobile
+
+# Install dependencies
+npm install
+
+# Start development server (frontend + backend)
+npm run dev
+
+# Or run frontend only
+npm run dev:frontend
+
+# Or run backend only
+npm run dev:backend
+```
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | Secret key for JWT signing (32+ characters) |
-| `NODE_ENV` | Auto | Set to "production" in deployment |
-| `PORT` | No | Server port (defaults to 5003) |
+The mobile app uses these environment variables (set in docker-compose.yml):
 
-### Build Process
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Build the application:**
-   ```bash
-   npm run build
-   ```
-   This creates optimized production files in the `dist/` directory.
-
-3. **Start production server:**
-   ```bash
-   npm run start
-   ```
-
-### Deployment Configuration
-
-The application is configured for **Autoscale** deployment on Replit:
-
-- **Build Command**: `npm run build`
-- **Run Command**: `npm run start`
-- **Port**: 5003 (internal) mapped to port 80 (external)
-
-### Database Setup
-
-For a fresh deployment:
-
-1. **Push database schema:**
-   ```bash
-   npm run db:push
-   ```
-
-2. **Seed demo data (optional):**
-   ```bash
-   npm run db:seed
-   ```
-
-### Security Notes
-
-- JWT_SECRET must be set in production (app will fail without it)
-- Registration creates customer-role accounts only
-- Admin accounts must be created via database or seed script
-- All API endpoints (except login) require authentication
-
-### Publishing Steps
-
-1. Ensure `JWT_SECRET` is set in your Secrets
-2. Verify the build succeeds: `npm run build`
-3. Click the "Publish" button in Replit
-4. Select "Autoscale" deployment type
-5. Configure your custom domain (optional)
-6. Click "Publish" to deploy
-
-### Post-Deployment Verification
-
-1. Visit your deployed URL
-2. Login with demo credentials (e.g., admin/12345)
-3. Navigate through main features
-4. Check API health: `https://your-domain.com/api/health`
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | `5003` |
+| `NODE_ENV` | Environment | `production` |
+| `DATABASE_URL` | PostgreSQL connection string | (from .env) |
+| `JWT_SECRET` | JWT signing secret | (from .env) |
 
 ---
 
 ## API Reference
 
+The mobile app has its own Express backend that queries the shared database.
+
 ### Authentication
 
-#### Login
 ```
 POST /api/auth/login
-Body: { "username": string, "password": string }
-Response: { "token": string, "user": object }
+Body: { "username": "driver@demo.com", "password": "Demo@123" }
+Response: { "token": "...", "user": { ... } }
 ```
 
-#### Get Current User
-```
-GET /api/auth/me
-Headers: Authorization: Bearer <token>
-Response: User object
-```
-
-### Jobs
+### Jobs/Routes
 
 ```
-GET    /api/jobs              - List all jobs
-GET    /api/jobs/:id          - Get job details
-POST   /api/jobs              - Create job
-PATCH  /api/jobs/:id          - Update job
-DELETE /api/jobs/:id          - Delete job
-POST   /api/jobs/:id/stops    - Add stop to job
-PATCH  /api/jobs/:id/stops/:stopId - Update stop
-```
-
-### Customers
-
-```
-GET    /api/customers         - List customers (with pagination)
-GET    /api/customers/:id     - Get customer details
-POST   /api/customers         - Create customer
-PATCH  /api/customers/:id     - Update customer
-DELETE /api/customers/:id     - Delete customer
-```
-
-### Products
-
-```
-GET    /api/products          - List products (with filters)
-GET    /api/products/:id      - Get product details
-POST   /api/products          - Create product
-PATCH  /api/products/:id      - Update product
-DELETE /api/products/:id      - Delete product
-```
-
-### Vehicles
-
-```
-GET    /api/vehicles          - List vehicles
-GET    /api/vehicles/:id      - Get vehicle details
-POST   /api/vehicles          - Create vehicle
-PATCH  /api/vehicles/:id      - Update vehicle
-DELETE /api/vehicles/:id      - Delete vehicle
-```
-
-### Expenses
-
-```
-GET    /api/expenses          - List expenses (with filters)
-GET    /api/expenses/summary  - Get expense summary
-GET    /api/expenses/:id      - Get expense details
-POST   /api/expenses          - Create expense
-PATCH  /api/expenses/:id      - Update expense
-DELETE /api/expenses/:id      - Delete expense
-```
-
-### Revenues
-
-```
-GET    /api/revenues          - List revenues
-GET    /api/revenues/summary  - Get revenue summary
-GET    /api/revenues/:id      - Get revenue details
-POST   /api/revenues          - Create revenue
-PATCH  /api/revenues/:id      - Update revenue
-DELETE /api/revenues/:id      - Delete revenue
-```
-
-### Bids
-
-```
-GET    /api/bids              - List bids
-GET    /api/bids/:id          - Get bid details
-POST   /api/bids              - Create bid
-POST   /api/bids/:id/submit   - Submit bid price
-PATCH  /api/bids/:id          - Update bid
-DELETE /api/bids/:id          - Delete bid
-```
-
-### Chat
-
-```
-GET    /api/chat              - List conversations
-GET    /api/chat/:id          - Get conversation
-GET    /api/chat/:id/messages - Get messages
-POST   /api/chat              - Create conversation
-POST   /api/chat/:id/messages - Send message
-POST   /api/chat/:id/participants - Add participant
-DELETE /api/chat/:id          - Delete conversation
+GET /api/jobs              # List available jobs
+GET /api/jobs/my-jobs      # Jobs assigned to current driver
+GET /api/jobs/:id          # Get job details
 ```
 
 ### Dashboard
 
 ```
-GET    /api/dashboard/stats        - Get dashboard statistics
-GET    /api/dashboard/recent-jobs  - Get recent jobs
-GET    /api/dashboard/revenue-chart - Get revenue chart data
+GET /api/dashboard/stats      # Overall statistics
+GET /api/dashboard/my-stats   # Current user's statistics
+GET /api/dashboard/recent-jobs # Recent job activity
+```
+
+### Chat
+
+```
+GET /api/chat                  # List conversations
+GET /api/chat/:id              # Get conversation details
+GET /api/chat/:id/messages     # Get messages
+POST /api/chat/:id/messages    # Send message
+```
+
+### Bids
+
+```
+GET /api/bids                  # List all bids
+GET /api/bids/open             # Open bids for bidding
+POST /api/bids/:id/submit      # Submit a bid
+```
+
+### Customers
+
+```
+GET /api/customers             # List organizations
+GET /api/customers/:id         # Get organization details
+```
+
+### Vehicles
+
+```
+GET /api/vehicles              # List trucks
+GET /api/vehicles/:id          # Get truck details
+```
+
+### Health Check
+
+```
+GET /api/health                # Returns 200 OK if server is running
 ```
 
 ---
 
-## Support
+## Multi-Language Support
 
-For issues or questions, please contact the development team or refer to the codebase documentation in `replit.md`.
+The mobile app supports 3 languages:
+- 🇹🇭 **Thai** (ไทย) - Default
+- 🇺🇸 **English**
+- 🇰🇷 **Korean** (한국어)
+
+Language can be changed from:
+- Login screen (top right corner)
+- Settings screen
+
+Translation files are located in:
+- `src/i18n/locales/th.json`
+- `src/i18n/locales/en.json`
+- `src/i18n/locales/ko.json`
+
+---
+
+## Troubleshooting
+
+### "Invalid credentials" on login
+- Verify you're using the correct email format (e.g., `driver@demo.com`)
+- Password is `Demo@123` (case-sensitive)
+- User must have `ACTIVE` status
+
+### Data not showing
+- Ensure the PostgreSQL container is healthy
+- Check that seed data was loaded: `docker exec trucker-postgres psql -U trucker_user -d trucker_web -c "\dt"`
+- Verify the user has appropriate permissions
+
+### Container won't start
+- Check logs: `docker logs trucker-mobile`
+- Verify DATABASE_URL is correct
+- Ensure PostgreSQL is running first
+
+---
+
+*Last updated: December 2024*

@@ -61,17 +61,20 @@ The script will handle:
    docker-compose up -d --build
    ```
 
-3. Access the application:
-   - Frontend: `http://localhost:5002`
+3. Access the applications:
+   - **Desktop Web**: `http://localhost:5002`
+   - **Mobile Web**: `http://localhost:5003`
    - Backend API: `http://localhost:5300`
    - Health Check: `http://localhost:5002/health-check`
    - Database: `localhost:5432`
 
-4. Demo accounts (auto-seeded):
+4. Demo accounts (auto-seeded) - **Same for Desktop & Mobile**:
    - **Super Admin** – `superadmin@demo.com` / `Demo@123`
    - **Factory Admin** – `factory@demo.com` / `Demo@123`
    - **Company Admin** – `company@demo.com` / `Demo@123`
-   - **Driver** – `driver@demo.com` / `Demo@123`
+   - **Driver** – `driver@demo.com` / `Demo@123` (main mobile use case)
+   
+   See [LOGIN_CREDENTIALS.md](./LOGIN_CREDENTIALS.md) for full list of demo accounts.
 
 5. Backup & restore:
    - Create backup: `./docker/backup.sh`
@@ -80,10 +83,13 @@ The script will handle:
 ### What's Included
 
 The Docker setup includes:
-- **Next.js Frontend (`trucker-web`)** – Runs on port 5002
-- **Express Backend API (`trucker-api`)** – Exposes `/v1/**` endpoints on port 5300
-- **PostgreSQL Database** – Seeded automatically with demo data
+- **Desktop Web (`trucker-web`)** – Next.js frontend on port 5002
+- **Mobile Web (`trucker-mobile`)** – Vite/React frontend on port 5003
+- **Express Backend API (`trucker-api`)** – `/v1/**` endpoints on port 5300
+- **PostgreSQL Database** – Shared between desktop & mobile, seeded with demo data
 - **Automatic Initialization** – Seed + health checks handled by `deploy.sh`
+
+> **Note**: Desktop and Mobile apps share the same PostgreSQL database. User accounts, jobs, chat, etc. are accessible from both platforms.
 
 ### Documentation
 
