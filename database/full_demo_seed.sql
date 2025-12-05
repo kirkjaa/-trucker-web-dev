@@ -468,7 +468,7 @@ SELECT
     u2.id,
     NOW() - ((n * 30) || ' minutes')::interval
 FROM 
-    (SELECT id FROM users WHERE role = 'ADMIN' LIMIT 1) u1,
+    (SELECT id FROM users WHERE role = 'SUPERADMIN' LIMIT 1) u1,
     (SELECT id FROM users WHERE role = 'ORGANIZATION' ORDER BY id LIMIT 5) u2,
     generate_series(1, 1) n
 WHERE u1.id IS NOT NULL AND u2.id IS NOT NULL
