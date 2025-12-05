@@ -14,9 +14,7 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
       - ./database/demo_seed.sql:/docker-entrypoint-initdb.d/10_demo_seed.sql:ro
       - ./database/full_demo_seed.sql:/docker-entrypoint-initdb.d/20_full_demo_seed.sql:ro
-      # Mobile app schema and seed data
-      - ./database/mobile_schema.sql:/docker-entrypoint-initdb.d/30_mobile_schema.sql:ro
-      - ./database/mobile_demo_seed.sql:/docker-entrypoint-initdb.d/40_mobile_demo_seed.sql:ro
+      # Note: Mobile app uses the same database tables as desktop (no separate schema needed)
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped

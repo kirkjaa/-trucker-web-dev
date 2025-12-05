@@ -1,289 +1,185 @@
-import { Router, Response } from "express";
-import { db, jobs, customers, vehicles, revenues, expenses, bids, users } from "../db";
-import { eq, sql, and, gte, lte, desc } from "drizzle-orm";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
+import { Router } from "express";
+import { db } from "../db";
+import { factoryRoutes, organizations, trucks, drivers, bids, orders, users } from "../db/schema";
+import { eq, and, sql, count } from "drizzle-orm";
 
 const router = Router();
 
-router.use(authMiddleware);
-
-// Get dashboard stats
-router.get("/stats", async (req: AuthRequest, res: Response) => {
+// Get dashboard statistics
+router.get("/stats", async (req, res) => {
   try {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-    // Jobs stats
-    const [{ totalJobs }] = await db
-      .select({ totalJobs: sql<number>`COUNT(*)` })
-      .from(jobs);
-
-    const [{ activeJobs }] = await db
-      .select({ activeJobs: sql<number>`COUNT(*)` })
-      .from(jobs)
-      .where(eq(jobs.status, "in_progress"));
-
-    const [{ completedJobs }] = await db
-      .select({ completedJobs: sql<number>`COUNT(*)` })
-      .from(jobs)
-      .where(eq(jobs.status, "completed"));
-
-    const [{ pendingJobs }] = await db
-      .select({ pendingJobs: sql<number>`COUNT(*)` })
-      .from(jobs)
-      .where(eq(jobs.status, "pending"));
-
-    // Customers stats
-    const [{ totalCustomers }] = await db
-      .select({ totalCustomers: sql<number>`COUNT(*)` })
-      .from(customers);
-
-    // Vehicles stats
-    const [{ totalVehicles }] = await db
-      .select({ totalVehicles: sql<number>`COUNT(*)` })
-      .from(vehicles);
-
-    const [{ availableVehicles }] = await db
-      .select({ availableVehicles: sql<number>`COUNT(*)` })
-      .from(vehicles)
-      .where(eq(vehicles.status, "available"));
-
-    // Finance stats
-    const [{ totalRevenue }] = await db
+    // Count jobs (factory routes)
+    const [jobStats] = await db
       .select({
-        totalRevenue: sql<number>`COALESCE(SUM(${revenues.amount}), 0)`,
+        total: count(),
+        pending: sql<number>`COUNT(*) FILTER (WHERE ${factoryRoutes.status} = 'pending')`,
+        confirmed: sql<number>`COUNT(*) FILTER (WHERE ${factoryRoutes.status} = 'confirmed')`,
+        rejected: sql<number>`COUNT(*) FILTER (WHERE ${factoryRoutes.status} = 'rejected')`,
       })
-      .from(revenues);
+      .from(factoryRoutes)
+      .where(eq(factoryRoutes.deleted, false));
 
-    const [{ monthlyRevenue }] = await db
+    // Count organizations (customers)
+    const [customerStats] = await db
+      .select({ total: count() })
+      .from(organizations)
+      .where(eq(organizations.deleted, false));
+
+    // Count trucks (vehicles)
+    const [vehicleStats] = await db
+      .select({ total: count() })
+      .from(trucks)
+      .where(eq(trucks.deleted, false));
+
+    // Count drivers
+    const [driverStats] = await db
+      .select({ total: count() })
+      .from(drivers)
+      .where(eq(drivers.deleted, false));
+
+    // Count open bids
+    const [bidStats] = await db
       .select({
-        monthlyRevenue: sql<number>`COALESCE(SUM(${revenues.amount}), 0)`,
+        total: count(),
+        open: sql<number>`COUNT(*) FILTER (WHERE ${bids.status} = 'Draft' OR ${bids.status} = 'Submitted')`,
       })
-      .from(revenues)
-      .where(gte(revenues.createdAt, startOfMonth));
-
-    const [{ totalExpenses }] = await db
-      .select({
-        totalExpenses: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
-      })
-      .from(expenses);
-
-    const [{ monthlyExpenses }] = await db
-      .select({
-        monthlyExpenses: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
-      })
-      .from(expenses)
-      .where(gte(expenses.date, startOfMonth));
-
-    // Bids stats
-    const [{ openBids }] = await db
-      .select({ openBids: sql<number>`COUNT(*)` })
       .from(bids)
-      .where(eq(bids.status, "open"));
+      .where(eq(bids.deleted, false));
 
-    // Drivers stats
-    const [{ totalDrivers }] = await db
-      .select({ totalDrivers: sql<number>`COUNT(*)` })
-      .from(users)
-      .where(eq(users.role, "shipping"));
+    // Count orders
+    const [orderStats] = await db
+      .select({
+        total: count(),
+        active: sql<number>`COUNT(*) FILTER (WHERE ${orders.status} IN ('Published', 'Matched', 'StartShipping', 'Shipped'))`,
+        completed: sql<number>`COUNT(*) FILTER (WHERE ${orders.status} = 'Completed')`,
+      })
+      .from(orders)
+      .where(eq(orders.deleted, false));
 
-    res.json({
+    return res.json({
       jobs: {
-        total: Number(totalJobs),
-        active: Number(activeJobs),
-        completed: Number(completedJobs),
-        pending: Number(pendingJobs),
+        total: Number(jobStats?.total) || 0,
+        active: Number(jobStats?.confirmed) || 0,
+        completed: Number(orderStats?.completed) || 0,
+        pending: Number(jobStats?.pending) || 0,
       },
       customers: {
-        total: Number(totalCustomers),
+        total: Number(customerStats?.total) || 0,
       },
       vehicles: {
-        total: Number(totalVehicles),
-        available: Number(availableVehicles),
+        total: Number(vehicleStats?.total) || 0,
+        available: Number(vehicleStats?.total) || 0,
       },
       finance: {
-        totalRevenue: Number(totalRevenue),
-        monthlyRevenue: Number(monthlyRevenue),
-        totalExpenses: Number(totalExpenses),
-        monthlyExpenses: Number(monthlyExpenses),
-        profit: Number(totalRevenue) - Number(totalExpenses),
-        monthlyProfit: Number(monthlyRevenue) - Number(monthlyExpenses),
+        totalRevenue: 0, // Would need orders with payment info
+        monthlyRevenue: 0,
+        totalExpenses: 0,
+        monthlyExpenses: 0,
+        profit: 0,
+        monthlyProfit: 0,
       },
       bids: {
-        open: Number(openBids),
+        open: Number(bidStats?.open) || 0,
       },
       drivers: {
-        total: Number(totalDrivers),
+        total: Number(driverStats?.total) || 0,
       },
     });
   } catch (error) {
-    console.error("Get dashboard stats error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching dashboard stats:", error);
+    return res.status(500).json({ error: "Failed to fetch stats" });
+  }
+});
+
+// Get stats for current user (driver)
+router.get("/my-stats", async (req, res) => {
+  try {
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      return res.json({
+        jobs: { total: 0, active: 0, completed: 0 },
+        earnings: { total: 0, monthly: 0 },
+        expenses: { total: 0, monthly: 0 },
+        profit: { total: 0, monthly: 0 },
+      });
+    }
+
+    // Find driver record
+    const [driver] = await db
+      .select()
+      .from(drivers)
+      .where(eq(drivers.userId, userId))
+      .limit(1);
+
+    if (!driver) {
+      return res.json({
+        jobs: { total: 0, active: 0, completed: 0 },
+        earnings: { total: 0, monthly: 0 },
+        expenses: { total: 0, monthly: 0 },
+        profit: { total: 0, monthly: 0 },
+      });
+    }
+
+    // Count driver's orders
+    const [orderStats] = await db
+      .select({
+        total: count(),
+        active: sql<number>`COUNT(*) FILTER (WHERE ${orders.status} IN ('Published', 'Matched', 'StartShipping', 'Shipped'))`,
+        completed: sql<number>`COUNT(*) FILTER (WHERE ${orders.status} = 'Completed')`,
+        totalEarnings: sql<number>`COALESCE(SUM(${orders.totalPrice}) FILTER (WHERE ${orders.status} = 'Completed'), 0)`,
+      })
+      .from(orders)
+      .where(and(eq(orders.driverId, driver.id), eq(orders.deleted, false)));
+
+    return res.json({
+      jobs: {
+        total: Number(orderStats?.total) || 0,
+        active: Number(orderStats?.active) || 0,
+        completed: Number(orderStats?.completed) || 0,
+      },
+      earnings: {
+        total: Number(orderStats?.totalEarnings) || 0,
+        monthly: 0, // Would need date filtering
+      },
+      expenses: {
+        total: 0, // Would need expenses table with user relation
+        monthly: 0,
+      },
+      profit: {
+        total: Number(orderStats?.totalEarnings) || 0,
+        monthly: 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching my stats:", error);
+    return res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 
 // Get recent jobs
-router.get("/recent-jobs", async (req: AuthRequest, res: Response) => {
+router.get("/recent-jobs", async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
-    const recentJobs = await db
-      .select()
-      .from(jobs)
-      .orderBy(desc(jobs.createdAt))
+    const jobs = await db
+      .select({
+        id: factoryRoutes.id,
+        jobNumber: factoryRoutes.displayCode,
+        status: factoryRoutes.status,
+        type: factoryRoutes.type,
+        price: factoryRoutes.offerPrice,
+        createdAt: factoryRoutes.createdAt,
+      })
+      .from(factoryRoutes)
+      .where(eq(factoryRoutes.deleted, false))
+      .orderBy(sql`${factoryRoutes.createdAt} DESC`)
       .limit(Number(limit));
 
-    const jobsWithDetails = await Promise.all(
-      recentJobs.map(async (job) => {
-        const [customer] = job.customerId
-          ? await db
-              .select()
-              .from(customers)
-              .where(eq(customers.id, job.customerId))
-              .limit(1)
-          : [null];
-        return {
-          ...job,
-          customerName: customer?.name || "Unknown",
-        };
-      })
-    );
-
-    res.json(jobsWithDetails);
+    return res.json(jobs);
   } catch (error) {
-    console.error("Get recent jobs error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Get revenue chart data
-router.get("/revenue-chart", async (req: AuthRequest, res: Response) => {
-  try {
-    const { months = 12 } = req.query;
-    const now = new Date();
-
-    const chartData = [];
-
-    for (let i = Number(months) - 1; i >= 0; i--) {
-      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-
-      const [{ revenue }] = await db
-        .select({
-          revenue: sql<number>`COALESCE(SUM(${revenues.amount}), 0)`,
-        })
-        .from(revenues)
-        .where(
-          and(gte(revenues.createdAt, monthStart), lte(revenues.createdAt, monthEnd))
-        );
-
-      const [{ expense }] = await db
-        .select({
-          expense: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
-        })
-        .from(expenses)
-        .where(and(gte(expenses.date, monthStart), lte(expenses.date, monthEnd)));
-
-      chartData.push({
-        month: monthStart.toLocaleString("default", {
-          month: "short",
-          year: "numeric",
-        }),
-        revenue: Number(revenue),
-        expenses: Number(expense),
-        profit: Number(revenue) - Number(expense),
-      });
-    }
-
-    res.json(chartData);
-  } catch (error) {
-    console.error("Get revenue chart error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Get my stats (for driver)
-router.get("/my-stats", async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.id;
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // My jobs
-    const [{ myTotalJobs }] = await db
-      .select({ myTotalJobs: sql<number>`COUNT(*)` })
-      .from(jobs)
-      .where(eq(jobs.driverId, userId));
-
-    const [{ myActiveJobs }] = await db
-      .select({ myActiveJobs: sql<number>`COUNT(*)` })
-      .from(jobs)
-      .where(and(eq(jobs.driverId, userId), eq(jobs.status, "in_progress")));
-
-    const [{ myCompletedJobs }] = await db
-      .select({ myCompletedJobs: sql<number>`COUNT(*)` })
-      .from(jobs)
-      .where(and(eq(jobs.driverId, userId), eq(jobs.status, "completed")));
-
-    // My earnings (from completed jobs)
-    const [{ myTotalEarnings }] = await db
-      .select({
-        myTotalEarnings: sql<number>`COALESCE(SUM(${jobs.price}), 0)`,
-      })
-      .from(jobs)
-      .where(and(eq(jobs.driverId, userId), eq(jobs.status, "completed")));
-
-    const [{ myMonthlyEarnings }] = await db
-      .select({
-        myMonthlyEarnings: sql<number>`COALESCE(SUM(${jobs.price}), 0)`,
-      })
-      .from(jobs)
-      .where(
-        and(
-          eq(jobs.driverId, userId),
-          eq(jobs.status, "completed"),
-          gte(jobs.completedAt, startOfMonth)
-        )
-      );
-
-    // My expenses
-    const [{ myTotalExpenses }] = await db
-      .select({
-        myTotalExpenses: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
-      })
-      .from(expenses)
-      .where(eq(expenses.userId, userId));
-
-    const [{ myMonthlyExpenses }] = await db
-      .select({
-        myMonthlyExpenses: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
-      })
-      .from(expenses)
-      .where(and(eq(expenses.userId, userId), gte(expenses.date, startOfMonth)));
-
-    res.json({
-      jobs: {
-        total: Number(myTotalJobs),
-        active: Number(myActiveJobs),
-        completed: Number(myCompletedJobs),
-      },
-      earnings: {
-        total: Number(myTotalEarnings),
-        monthly: Number(myMonthlyEarnings),
-      },
-      expenses: {
-        total: Number(myTotalExpenses),
-        monthly: Number(myMonthlyExpenses),
-      },
-      profit: {
-        total: Number(myTotalEarnings) - Number(myTotalExpenses),
-        monthly: Number(myMonthlyEarnings) - Number(myMonthlyExpenses),
-      },
-    });
-  } catch (error) {
-    console.error("Get my stats error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching recent jobs:", error);
+    return res.status(500).json({ error: "Failed to fetch recent jobs" });
   }
 });
 

@@ -1,103 +1,81 @@
-import { Router, Response } from "express";
-import { db, conversations, conversationParticipants, messages, users } from "../db";
-import { eq, desc, and, lt, asc } from "drizzle-orm";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { z } from "zod";
+import { Router } from "express";
+import { db } from "../db";
+import { chatRooms, chatMessages, users } from "../db/schema";
+import { eq, and, or, desc, sql } from "drizzle-orm";
 
 const router = Router();
 
-router.use(authMiddleware);
-
 // Get all conversations for current user
-router.get("/", async (req: AuthRequest, res: Response) => {
+router.get("/", async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = (req as any).user?.userId;
 
-    // Get conversations where user is a participant
-    const participations = await db
-      .select()
-      .from(conversationParticipants)
-      .where(eq(conversationParticipants.userId, userId));
-
-    const conversationIds = participations.map((p) => p.conversationId);
-
-    if (conversationIds.length === 0) {
-      return res.json([]);
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
-    const userConversations = await Promise.all(
-      conversationIds.map(async (convId) => {
-        const [conv] = await db
-          .select()
-          .from(conversations)
-          .where(eq(conversations.id, convId))
-          .limit(1);
+    // Find all chat rooms where user is a participant
+    const rooms = await db
+      .select()
+      .from(chatRooms)
+      .where(
+        or(
+          eq(chatRooms.participant1Id, userId),
+          eq(chatRooms.participant2Id, userId)
+        )
+      )
+      .orderBy(desc(chatRooms.lastMessageAt));
 
-        if (!conv) return null;
+    // Enrich with participant info and last message
+    const enrichedRooms = await Promise.all(
+      rooms.map(async (room) => {
+        // Get the other participant
+        const otherParticipantId =
+          room.participant1Id === userId ? room.participant2Id : room.participant1Id;
+
+        let otherUser = null;
+        if (otherParticipantId) {
+          const [user] = await db
+            .select({
+              id: users.id,
+              displayName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.username})`,
+              avatar: users.imageUrl,
+            })
+            .from(users)
+            .where(eq(users.id, otherParticipantId))
+            .limit(1);
+          otherUser = user;
+        }
 
         // Get last message
         const [lastMessage] = await db
-          .select()
-          .from(messages)
-          .where(eq(messages.conversationId, convId))
-          .orderBy(desc(messages.createdAt))
+          .select({
+            content: chatMessages.content,
+            createdAt: chatMessages.createdAt,
+            senderId: chatMessages.senderId,
+          })
+          .from(chatMessages)
+          .where(eq(chatMessages.roomId, room.id))
+          .orderBy(desc(chatMessages.createdAt))
           .limit(1);
 
-        // Get participants
-        const participants = await db
-          .select()
-          .from(conversationParticipants)
-          .where(eq(conversationParticipants.conversationId, convId));
-
-        const participantUsers = await Promise.all(
-          participants.map(async (p) => {
-            const [user] = await db
-              .select()
-              .from(users)
-              .where(eq(users.id, p.userId))
-              .limit(1);
-            return user
-              ? {
-                  id: user.id,
-                  displayName: user.displayName,
-                  avatar: user.avatar,
-                }
-              : null;
-          })
-        );
-
-        // Get unread count
-        const unreadMessages = await db
-          .select()
-          .from(messages)
+        // Count unread messages
+        const [unreadCount] = await db
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(chatMessages)
           .where(
             and(
-              eq(messages.conversationId, convId),
-              eq(messages.isRead, false)
+              eq(chatMessages.roomId, room.id),
+              eq(chatMessages.isRead, false),
+              sql`${chatMessages.senderId} != ${userId}`
             )
           );
-        const unreadCount = unreadMessages.filter(
-          (m) => m.senderId !== userId
-        ).length;
-
-        // For private chats, get the other user's info
-        let displayName = conv.name;
-        let avatar = conv.avatar;
-        if (conv.type === "private") {
-          const otherParticipant = participantUsers.find(
-            (p) => p && p.id !== userId
-          );
-          if (otherParticipant) {
-            displayName = otherParticipant.displayName;
-            avatar = otherParticipant.avatar;
-          }
-        }
 
         return {
-          id: conv.id,
-          type: conv.type,
-          name: displayName,
-          avatar: avatar,
+          id: room.id,
+          type: "private" as const,
+          name: otherUser?.displayName || "Unknown User",
+          avatar: otherUser?.avatar,
           lastMessage: lastMessage
             ? {
                 content: lastMessage.content,
@@ -105,388 +83,290 @@ router.get("/", async (req: AuthRequest, res: Response) => {
                 senderId: lastMessage.senderId,
               }
             : null,
-          unreadCount,
-          participants: participantUsers.filter(Boolean),
-          updatedAt: conv.updatedAt,
+          unreadCount: Number(unreadCount?.count) || 0,
+          participants: otherUser
+            ? [
+                {
+                  id: otherUser.id,
+                  displayName: otherUser.displayName,
+                  avatar: otherUser.avatar,
+                },
+              ]
+            : [],
+          updatedAt: room.lastMessageAt || room.createdAt,
         };
       })
     );
 
-    const validConversations = userConversations
-      .filter(Boolean)
-      .sort((a, b) => {
-        const aTime = a!.lastMessage?.createdAt || a!.updatedAt;
-        const bTime = b!.lastMessage?.createdAt || b!.updatedAt;
-        return new Date(bTime!).getTime() - new Date(aTime!).getTime();
-      });
-
-    res.json(validConversations);
+    return res.json(enrichedRooms);
   } catch (error) {
-    console.error("Get conversations error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching conversations:", error);
+    return res.status(500).json({ error: "Failed to fetch conversations" });
   }
 });
 
-// Get conversation by ID with messages
-router.get("/:id", async (req: AuthRequest, res: Response) => {
+// Get single conversation
+router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = (req as any).user?.userId;
 
-    const [conv] = await db
+    const [room] = await db
       .select()
-      .from(conversations)
-      .where(eq(conversations.id, id))
+      .from(chatRooms)
+      .where(eq(chatRooms.id, id))
       .limit(1);
 
-    if (!conv) {
+    if (!room) {
       return res.status(404).json({ error: "Conversation not found" });
     }
 
     // Check if user is a participant
-    const [participation] = await db
-      .select()
-      .from(conversationParticipants)
-      .where(
-        and(
-          eq(conversationParticipants.conversationId, id),
-          eq(conversationParticipants.userId, userId)
-        )
-      )
-      .limit(1);
-
-    if (!participation) {
-      return res.status(403).json({ error: "Not a participant of this conversation" });
+    if (room.participant1Id !== userId && room.participant2Id !== userId) {
+      return res.status(403).json({ error: "Not authorized to view this conversation" });
     }
 
-    // Get participants
-    const participants = await db
-      .select()
-      .from(conversationParticipants)
-      .where(eq(conversationParticipants.conversationId, id));
+    // Get the other participant
+    const otherParticipantId =
+      room.participant1Id === userId ? room.participant2Id : room.participant1Id;
 
-    const participantUsers = await Promise.all(
-      participants.map(async (p) => {
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, p.userId))
-          .limit(1);
-        return user
-          ? {
-              id: user.id,
-              displayName: user.displayName,
-              avatar: user.avatar,
-              isAdmin: p.isAdmin,
-            }
-          : null;
-      })
-    );
+    let otherUser = null;
+    if (otherParticipantId) {
+      const [user] = await db
+        .select({
+          id: users.id,
+          displayName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.username})`,
+          avatar: users.imageUrl,
+        })
+        .from(users)
+        .where(eq(users.id, otherParticipantId))
+        .limit(1);
+      otherUser = user;
+    }
 
-    res.json({
-      ...conv,
-      participants: participantUsers.filter(Boolean),
+    return res.json({
+      id: room.id,
+      type: "private",
+      name: otherUser?.displayName || "Unknown User",
+      avatar: otherUser?.avatar,
+      participants: otherUser
+        ? [
+            {
+              id: otherUser.id,
+              displayName: otherUser.displayName,
+              avatar: otherUser.avatar,
+            },
+          ]
+        : [],
+      updatedAt: room.lastMessageAt || room.createdAt,
     });
   } catch (error) {
-    console.error("Get conversation error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching conversation:", error);
+    return res.status(500).json({ error: "Failed to fetch conversation" });
   }
 });
 
 // Get messages for a conversation
-router.get("/:id/messages", async (req: AuthRequest, res: Response) => {
+router.get("/:id/messages", async (req, res) => {
   try {
     const { id } = req.params;
     const { limit = 50, before } = req.query;
-    const userId = req.user!.id;
+    const userId = (req as any).user?.userId;
 
-    // Check if user is a participant
-    const [participation] = await db
+    // Verify user has access to this room
+    const [room] = await db
       .select()
-      .from(conversationParticipants)
-      .where(
-        and(
-          eq(conversationParticipants.conversationId, id),
-          eq(conversationParticipants.userId, userId)
-        )
-      )
+      .from(chatRooms)
+      .where(eq(chatRooms.id, id))
       .limit(1);
 
-    if (!participation) {
-      return res.status(403).json({ error: "Not a participant of this conversation" });
+    if (!room) {
+      return res.status(404).json({ error: "Conversation not found" });
     }
 
-    let conversationMessages;
-    if (before) {
-      conversationMessages = await db
-        .select()
-        .from(messages)
-        .where(
-          and(
-            eq(messages.conversationId, id),
-            lt(messages.createdAt, new Date(before as string))
-          )
-        )
-        .orderBy(desc(messages.createdAt))
-        .limit(Number(limit));
-    } else {
-      conversationMessages = await db
-        .select()
-        .from(messages)
-        .where(eq(messages.conversationId, id))
-        .orderBy(desc(messages.createdAt))
-        .limit(Number(limit));
+    if (room.participant1Id !== userId && room.participant2Id !== userId) {
+      return res.status(403).json({ error: "Not authorized" });
     }
 
-    // Get sender info for each message
-    const messagesWithSender = await Promise.all(
-      conversationMessages.map(async (msg) => {
-        const [sender] = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, msg.senderId))
-          .limit(1);
+    // Fetch messages
+    const messages = await db
+      .select({
+        id: chatMessages.id,
+        conversationId: chatMessages.roomId,
+        senderId: chatMessages.senderId,
+        content: chatMessages.content,
+        messageType: chatMessages.messageType,
+        attachmentUrl: chatMessages.fileUrl,
+        isRead: chatMessages.isRead,
+        createdAt: chatMessages.createdAt,
+      })
+      .from(chatMessages)
+      .where(eq(chatMessages.roomId, id))
+      .orderBy(desc(chatMessages.createdAt))
+      .limit(Number(limit));
+
+    // Enrich with sender info
+    const enrichedMessages = await Promise.all(
+      messages.map(async (msg) => {
+        let sender = null;
+        if (msg.senderId) {
+          const [user] = await db
+            .select({
+              id: users.id,
+              displayName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.username})`,
+              avatar: users.imageUrl,
+            })
+            .from(users)
+            .where(eq(users.id, msg.senderId))
+            .limit(1);
+          sender = user;
+        }
+
         return {
           ...msg,
-          sender: sender
-            ? {
-                id: sender.id,
-                displayName: sender.displayName,
-                avatar: sender.avatar,
-              }
-            : null,
+          sender,
         };
       })
     );
 
     // Mark messages as read
     await db
-      .update(messages)
+      .update(chatMessages)
       .set({ isRead: true })
       .where(
         and(
-          eq(messages.conversationId, id),
-          eq(messages.isRead, false)
+          eq(chatMessages.roomId, id),
+          sql`${chatMessages.senderId} != ${userId}`,
+          eq(chatMessages.isRead, false)
         )
       );
 
-    res.json(messagesWithSender.reverse());
+    // Return in chronological order
+    return res.json(enrichedMessages.reverse());
   } catch (error) {
-    console.error("Get messages error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching messages:", error);
+    return res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
 
-// Create conversation
-router.post("/", async (req: AuthRequest, res: Response) => {
-  try {
-    const { type = "private", name, participantIds } = req.body;
-    const userId = req.user!.id;
-
-    if (!participantIds || !Array.isArray(participantIds)) {
-      return res.status(400).json({ error: "participantIds is required" });
-    }
-
-    // For private chat, check if conversation already exists
-    if (type === "private" && participantIds.length === 1) {
-      const existingParticipations = await db
-        .select()
-        .from(conversationParticipants)
-        .where(eq(conversationParticipants.userId, userId));
-
-      for (const p of existingParticipations) {
-        const [otherParticipant] = await db
-          .select()
-          .from(conversationParticipants)
-          .where(
-            and(
-              eq(conversationParticipants.conversationId, p.conversationId),
-              eq(conversationParticipants.userId, participantIds[0])
-            )
-          )
-          .limit(1);
-
-        if (otherParticipant) {
-          const [existingConv] = await db
-            .select()
-            .from(conversations)
-            .where(
-              and(
-                eq(conversations.id, p.conversationId),
-                eq(conversations.type, "private")
-              )
-            )
-            .limit(1);
-
-          if (existingConv) {
-            return res.json(existingConv);
-          }
-        }
-      }
-    }
-
-    // Create new conversation
-    const [newConv] = await db
-      .insert(conversations)
-      .values({
-        type: type,
-        name: name,
-        createdById: userId,
-      })
-      .returning();
-
-    // Add participants
-    const allParticipantIds = [...new Set([userId, ...participantIds])];
-    await Promise.all(
-      allParticipantIds.map((pId) =>
-        db.insert(conversationParticipants).values({
-          conversationId: newConv.id,
-          userId: pId,
-          isAdmin: pId === userId,
-        })
-      )
-    );
-
-    res.status(201).json(newConv);
-  } catch (error) {
-    console.error("Create conversation error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Send message
-router.post("/:id/messages", async (req: AuthRequest, res: Response) => {
+// Send a message
+router.post("/:id/messages", async (req, res) => {
   try {
     const { id } = req.params;
-    const { content, messageType = "text", attachmentUrl } = req.body;
-    const userId = req.user!.id;
+    const { content, messageType = "txt" } = req.body;
+    const userId = (req as any).user?.userId;
 
-    // Check if user is a participant
-    const [participation] = await db
-      .select()
-      .from(conversationParticipants)
-      .where(
-        and(
-          eq(conversationParticipants.conversationId, id),
-          eq(conversationParticipants.userId, userId)
-        )
-      )
-      .limit(1);
-
-    if (!participation) {
-      return res.status(403).json({ error: "Not a participant of this conversation" });
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
+    if (!content) {
+      return res.status(400).json({ error: "Message content is required" });
+    }
+
+    // Verify user has access
+    const [room] = await db
+      .select()
+      .from(chatRooms)
+      .where(eq(chatRooms.id, id))
+      .limit(1);
+
+    if (!room) {
+      return res.status(404).json({ error: "Conversation not found" });
+    }
+
+    if (room.participant1Id !== userId && room.participant2Id !== userId) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    // Create message
     const [newMessage] = await db
-      .insert(messages)
+      .insert(chatMessages)
       .values({
-        conversationId: id,
+        roomId: id,
         senderId: userId,
         content,
         messageType,
-        attachmentUrl,
+        isRead: false,
       })
       .returning();
 
-    // Update conversation's updatedAt
+    // Update room's last message time
     await db
-      .update(conversations)
-      .set({ updatedAt: new Date() })
-      .where(eq(conversations.id, id));
+      .update(chatRooms)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(chatRooms.id, id));
 
     // Get sender info
     const [sender] = await db
-      .select()
+      .select({
+        id: users.id,
+        displayName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.username})`,
+        avatar: users.imageUrl,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
 
-    res.status(201).json({
-      ...newMessage,
-      sender: sender
-        ? {
-            id: sender.id,
-            displayName: sender.displayName,
-            avatar: sender.avatar,
-          }
-        : null,
+    return res.status(201).json({
+      id: newMessage.id,
+      conversationId: newMessage.roomId,
+      senderId: newMessage.senderId,
+      content: newMessage.content,
+      messageType: newMessage.messageType,
+      isRead: newMessage.isRead,
+      createdAt: newMessage.createdAt,
+      sender,
     });
   } catch (error) {
-    console.error("Send message error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error sending message:", error);
+    return res.status(500).json({ error: "Failed to send message" });
   }
 });
 
-// Add participant to conversation
-router.post("/:id/participants", async (req: AuthRequest, res: Response) => {
+// Create a new conversation
+router.post("/", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { userId: newUserId } = req.body;
-    const userId = req.user!.id;
+    const { participantId } = req.body;
+    const userId = (req as any).user?.userId;
 
-    // Check if requester is admin
-    const [participation] = await db
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    if (!participantId) {
+      return res.status(400).json({ error: "Participant ID is required" });
+    }
+
+    // Check if conversation already exists
+    const [existingRoom] = await db
       .select()
-      .from(conversationParticipants)
+      .from(chatRooms)
       .where(
-        and(
-          eq(conversationParticipants.conversationId, id),
-          eq(conversationParticipants.userId, userId)
+        or(
+          and(eq(chatRooms.participant1Id, userId), eq(chatRooms.participant2Id, participantId)),
+          and(eq(chatRooms.participant1Id, participantId), eq(chatRooms.participant2Id, userId))
         )
       )
       .limit(1);
 
-    if (!participation || !participation.isAdmin) {
-      return res.status(403).json({ error: "Only admins can add participants" });
+    if (existingRoom) {
+      return res.json({ id: existingRoom.id, exists: true });
     }
 
-    // Add new participant
-    await db.insert(conversationParticipants).values({
-      conversationId: id,
-      userId: newUserId,
-      isAdmin: false,
-    });
+    // Create new room
+    const [newRoom] = await db
+      .insert(chatRooms)
+      .values({
+        participant1Id: userId,
+        participant2Id: participantId,
+      })
+      .returning();
 
-    res.status(201).json({ message: "Participant added successfully" });
+    return res.status(201).json({ id: newRoom.id, exists: false });
   } catch (error) {
-    console.error("Add participant error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Delete conversation
-router.delete("/:id", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user!.id;
-
-    // Check if user is admin
-    const [participation] = await db
-      .select()
-      .from(conversationParticipants)
-      .where(
-        and(
-          eq(conversationParticipants.conversationId, id),
-          eq(conversationParticipants.userId, userId)
-        )
-      )
-      .limit(1);
-
-    if (!participation || !participation.isAdmin) {
-      return res.status(403).json({ error: "Only admins can delete conversations" });
-    }
-
-    // Delete messages, participants, then conversation
-    await db.delete(messages).where(eq(messages.conversationId, id));
-    await db
-      .delete(conversationParticipants)
-      .where(eq(conversationParticipants.conversationId, id));
-    await db.delete(conversations).where(eq(conversations.id, id));
-
-    res.json({ message: "Conversation deleted successfully" });
-  } catch (error) {
-    console.error("Delete conversation error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error creating conversation:", error);
+    return res.status(500).json({ error: "Failed to create conversation" });
   }
 });
 

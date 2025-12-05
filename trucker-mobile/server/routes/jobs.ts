@@ -1,410 +1,300 @@
-import { Router, Response } from "express";
-import { db, jobs, jobStops, customers, vehicles, users } from "../db";
-import { eq, desc, and, or, sql } from "drizzle-orm";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { z } from "zod";
+import { Router } from "express";
+import { db } from "../db";
+import { factoryRoutes, masterRoutes, organizations, orders, drivers, trucks } from "../db/schema";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 
 const router = Router();
 
-router.use(authMiddleware);
-
-const createJobSchema = z.object({
-  customerId: z.string().uuid(),
-  vehicleId: z.string().uuid().optional(),
-  driverId: z.string().uuid().optional(),
-  origin: z.string().min(1),
-  destination: z.string().min(1),
-  cargo: z.string().optional(),
-  cargoWeight: z.number().optional(),
-  temperature: z.string().optional(),
-  price: z.number().optional(),
-  distance: z.number().optional(),
-  pickupDate: z.string().optional(),
-  deliveryDate: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-// Get all jobs
-router.get("/", async (req: AuthRequest, res: Response) => {
+// Get all jobs (factory routes) - for browsing available jobs
+router.get("/", async (req, res) => {
   try {
     const { status, limit = 50, offset = 0 } = req.query;
 
-    let allJobs;
-    if (status) {
-      allJobs = await db
-        .select()
-        .from(jobs)
-        .where(eq(jobs.status, status as any))
-        .orderBy(desc(jobs.createdAt))
-        .limit(Number(limit))
-        .offset(Number(offset));
-    } else {
-      allJobs = await db
-        .select()
-        .from(jobs)
-        .orderBy(desc(jobs.createdAt))
-        .limit(Number(limit))
-        .offset(Number(offset));
-    }
+    let query = db
+      .select({
+        id: factoryRoutes.id,
+        jobNumber: factoryRoutes.routeFactoryCode,
+        displayCode: factoryRoutes.displayCode,
+        status: factoryRoutes.status,
+        type: factoryRoutes.type,
+        shippingType: factoryRoutes.shippingType,
+        distance: factoryRoutes.distanceValue,
+        distanceUnit: factoryRoutes.distanceUnit,
+        price: factoryRoutes.offerPrice,
+        unit: factoryRoutes.unit,
+        createdAt: factoryRoutes.createdAt,
+        // Join with master route for origin/destination
+        masterRouteId: factoryRoutes.masterRouteId,
+        factoryId: factoryRoutes.factoryId,
+      })
+      .from(factoryRoutes)
+      .where(eq(factoryRoutes.deleted, false))
+      .orderBy(desc(factoryRoutes.createdAt))
+      .limit(Number(limit))
+      .offset(Number(offset));
 
-    const jobsWithRelations = await Promise.all(
-      allJobs.map(async (job) => {
-        const [customer] = job.customerId
-          ? await db
-              .select()
-              .from(customers)
-              .where(eq(customers.id, job.customerId))
-              .limit(1)
-          : [null];
-        const [vehicle] = job.vehicleId
-          ? await db
-              .select()
-              .from(vehicles)
-              .where(eq(vehicles.id, job.vehicleId))
-              .limit(1)
-          : [null];
-        const [driver] = job.driverId
-          ? await db
-              .select()
-              .from(users)
-              .where(eq(users.id, job.driverId))
-              .limit(1)
-          : [null];
-        const stops = await db
-          .select()
-          .from(jobStops)
-          .where(eq(jobStops.jobId, job.id))
-          .orderBy(jobStops.sequence);
+    const jobs = await query;
+
+    // Enrich with master route and factory info
+    const enrichedJobs = await Promise.all(
+      jobs.map(async (job) => {
+        // Get master route info
+        let origin = "Thailand";
+        let destination = "Thailand";
+        if (job.masterRouteId) {
+          const [masterRoute] = await db
+            .select()
+            .from(masterRoutes)
+            .where(eq(masterRoutes.id, job.masterRouteId))
+            .limit(1);
+          if (masterRoute) {
+            origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
+            destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+          }
+        }
+
+        // Get factory/customer info
+        let customer = null;
+        if (job.factoryId) {
+          const [org] = await db
+            .select()
+            .from(organizations)
+            .where(eq(organizations.id, job.factoryId))
+            .limit(1);
+          if (org) {
+            customer = { id: org.id, name: org.businessName };
+          }
+        }
 
         return {
-          ...job,
-          customer: customer ? { id: customer.id, name: customer.name } : null,
-          vehicle: vehicle
-            ? { id: vehicle.id, registrationNumber: vehicle.registrationNumber }
-            : null,
-          driver: driver
-            ? { id: driver.id, displayName: driver.displayName }
-            : null,
-          stops,
+          id: job.id,
+          jobNumber: job.displayCode || job.jobNumber,
+          status: job.status,
+          type: job.type,
+          shippingType: job.shippingType,
+          origin,
+          destination,
+          distance: job.distance ? `${job.distance} ${job.distanceUnit || "km"}` : null,
+          price: job.price,
+          customer,
+          cargo: job.type === "abroad" ? "International shipment" : "Domestic shipment",
+          createdAt: job.createdAt,
+          // For UI compatibility
+          pickupDate: job.createdAt,
+          deliveryDate: null,
+          stops: [],
         };
       })
     );
 
-    res.json(jobsWithRelations);
+    return res.json(enrichedJobs);
   } catch (error) {
-    console.error("Get jobs error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching jobs:", error);
+    return res.status(500).json({ error: "Failed to fetch jobs" });
   }
 });
 
-// Get jobs for current driver
-router.get("/my-jobs", async (req: AuthRequest, res: Response) => {
+// Get jobs assigned to current user (driver)
+router.get("/my-jobs", async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const { status, limit = 50, offset = 0 } = req.query;
+    const userId = (req as any).user?.userId;
+    const { status, limit = 50 } = req.query;
 
-    let allJobs;
-    if (status) {
-      allJobs = await db
-        .select()
-        .from(jobs)
-        .where(and(eq(jobs.driverId, userId), eq(jobs.status, status as any)))
-        .orderBy(desc(jobs.createdAt))
-        .limit(Number(limit))
-        .offset(Number(offset));
-    } else {
-      allJobs = await db
-        .select()
-        .from(jobs)
-        .where(eq(jobs.driverId, userId))
-        .orderBy(desc(jobs.createdAt))
-        .limit(Number(limit))
-        .offset(Number(offset));
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
-    const jobsWithRelations = await Promise.all(
-      allJobs.map(async (job) => {
-        const [customer] = job.customerId
-          ? await db
-              .select()
-              .from(customers)
-              .where(eq(customers.id, job.customerId))
-              .limit(1)
-          : [null];
-        const [vehicle] = job.vehicleId
-          ? await db
-              .select()
-              .from(vehicles)
-              .where(eq(vehicles.id, job.vehicleId))
-              .limit(1)
-          : [null];
-        const stops = await db
-          .select()
-          .from(jobStops)
-          .where(eq(jobStops.jobId, job.id))
-          .orderBy(jobStops.sequence);
+    // Find driver record for this user
+    const [driver] = await db
+      .select()
+      .from(drivers)
+      .where(eq(drivers.userId, userId))
+      .limit(1);
+
+    if (!driver) {
+      // User is not a driver, return empty
+      return res.json([]);
+    }
+
+    // Find orders assigned to this driver
+    const driverOrders = await db
+      .select({
+        orderId: orders.id,
+        orderCode: orders.displayCode,
+        orderStatus: orders.status,
+        totalPrice: orders.totalPrice,
+        factoryRouteId: orders.factoryRouteId,
+        truckId: orders.truckId,
+        createdAt: orders.createdAt,
+      })
+      .from(orders)
+      .where(and(eq(orders.driverId, driver.id), eq(orders.deleted, false)))
+      .orderBy(desc(orders.createdAt))
+      .limit(Number(limit));
+
+    // Enrich with route details
+    const enrichedOrders = await Promise.all(
+      driverOrders.map(async (order) => {
+        let route = null;
+        let origin = "Thailand";
+        let destination = "Thailand";
+        let customer = null;
+
+        if (order.factoryRouteId) {
+          const [factoryRoute] = await db
+            .select()
+            .from(factoryRoutes)
+            .where(eq(factoryRoutes.id, order.factoryRouteId))
+            .limit(1);
+
+          if (factoryRoute) {
+            route = factoryRoute;
+
+            // Get master route
+            if (factoryRoute.masterRouteId) {
+              const [masterRoute] = await db
+                .select()
+                .from(masterRoutes)
+                .where(eq(masterRoutes.id, factoryRoute.masterRouteId))
+                .limit(1);
+              if (masterRoute) {
+                origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
+                destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+              }
+            }
+
+            // Get customer
+            if (factoryRoute.factoryId) {
+              const [org] = await db
+                .select()
+                .from(organizations)
+                .where(eq(organizations.id, factoryRoute.factoryId))
+                .limit(1);
+              if (org) {
+                customer = { id: org.id, name: org.businessName };
+              }
+            }
+          }
+        }
+
+        // Get truck info
+        let vehicle = null;
+        if (order.truckId) {
+          const [truck] = await db
+            .select()
+            .from(trucks)
+            .where(eq(trucks.id, order.truckId))
+            .limit(1);
+          if (truck) {
+            vehicle = { id: truck.id, registrationNumber: truck.licensePlate };
+          }
+        }
 
         return {
-          ...job,
-          customer: customer ? { id: customer.id, name: customer.name } : null,
-          vehicle: vehicle
-            ? { id: vehicle.id, registrationNumber: vehicle.registrationNumber }
-            : null,
-          stops,
+          id: order.orderId,
+          jobNumber: order.orderCode,
+          status: mapOrderStatusToJobStatus(order.orderStatus),
+          origin,
+          destination,
+          distance: route?.distanceValue ? `${route.distanceValue} ${route.distanceUnit || "km"}` : null,
+          price: order.totalPrice || route?.offerPrice,
+          customer,
+          vehicle,
+          cargo: route?.type === "abroad" ? "International shipment" : "Domestic shipment",
+          createdAt: order.createdAt,
+          pickupDate: order.createdAt,
+          stops: [],
         };
       })
     );
 
-    res.json(jobsWithRelations);
+    return res.json(enrichedOrders);
   } catch (error) {
-    console.error("Get my jobs error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching my jobs:", error);
+    return res.status(500).json({ error: "Failed to fetch jobs" });
   }
 });
 
-// Get job by ID
-router.get("/:id", async (req: AuthRequest, res: Response) => {
+// Get single job by ID
+router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [job] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+    const [job] = await db
+      .select()
+      .from(factoryRoutes)
+      .where(and(eq(factoryRoutes.id, id), eq(factoryRoutes.deleted, false)))
+      .limit(1);
 
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
 
-    const [customer] = job.customerId
-      ? await db
-          .select()
-          .from(customers)
-          .where(eq(customers.id, job.customerId))
-          .limit(1)
-      : [null];
-    const [vehicle] = job.vehicleId
-      ? await db
-          .select()
-          .from(vehicles)
-          .where(eq(vehicles.id, job.vehicleId))
-          .limit(1)
-      : [null];
-    const [driver] = job.driverId
-      ? await db.select().from(users).where(eq(users.id, job.driverId)).limit(1)
-      : [null];
-    const stops = await db
-      .select()
-      .from(jobStops)
-      .where(eq(jobStops.jobId, job.id))
-      .orderBy(jobStops.sequence);
+    // Get master route info
+    let origin = "Thailand";
+    let destination = "Thailand";
+    if (job.masterRouteId) {
+      const [masterRoute] = await db
+        .select()
+        .from(masterRoutes)
+        .where(eq(masterRoutes.id, job.masterRouteId))
+        .limit(1);
+      if (masterRoute) {
+        origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
+        destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+      }
+    }
 
-    res.json({
-      ...job,
+    // Get customer info
+    let customer = null;
+    if (job.factoryId) {
+      const [org] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, job.factoryId))
+        .limit(1);
+      if (org) {
+        customer = { id: org.id, name: org.businessName };
+      }
+    }
+
+    return res.json({
+      id: job.id,
+      jobNumber: job.displayCode || job.routeFactoryCode,
+      status: job.status,
+      type: job.type,
+      origin,
+      destination,
+      distance: job.distanceValue ? `${job.distanceValue} ${job.distanceUnit || "km"}` : null,
+      price: job.offerPrice,
       customer,
-      vehicle,
-      driver,
-      stops,
+      cargo: job.type === "abroad" ? "International shipment" : "Domestic shipment",
+      createdAt: job.createdAt,
+      pickupDate: job.createdAt,
+      stops: [],
     });
   } catch (error) {
-    console.error("Get job error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching job:", error);
+    return res.status(500).json({ error: "Failed to fetch job" });
   }
 });
 
-// Create job
-router.post("/", async (req: AuthRequest, res: Response) => {
-  try {
-    const data = createJobSchema.parse(req.body);
-
-    const jobNumber = `JOB-${Date.now().toString(36).toUpperCase()}`;
-
-    const [newJob] = await db
-      .insert(jobs)
-      .values({
-        jobNumber,
-        customerId: data.customerId,
-        vehicleId: data.vehicleId,
-        driverId: data.driverId,
-        origin: data.origin,
-        destination: data.destination,
-        cargo: data.cargo,
-        cargoWeight: data.cargoWeight?.toString(),
-        temperature: data.temperature,
-        price: data.price?.toString(),
-        distance: data.distance?.toString(),
-        pickupDate: data.pickupDate ? new Date(data.pickupDate) : undefined,
-        deliveryDate: data.deliveryDate
-          ? new Date(data.deliveryDate)
-          : undefined,
-        notes: data.notes,
-      })
-      .returning();
-
-    res.status(201).json(newJob);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ error: "Invalid input", details: error.errors });
-    }
-    console.error("Create job error:", error);
-    res.status(500).json({ error: "Internal server error" });
+// Helper function to map order status to job status
+function mapOrderStatusToJobStatus(orderStatus: string | null): string {
+  switch (orderStatus) {
+    case "Published":
+      return "pending";
+    case "Matched":
+      return "pending";
+    case "StartShipping":
+      return "in_progress";
+    case "Shipped":
+      return "in_progress";
+    case "Completed":
+      return "completed";
+    default:
+      return "pending";
   }
-});
-
-// Update job
-router.patch("/:id", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    const [updated] = await db
-      .update(jobs)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(jobs.id, id))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    res.json(updated);
-  } catch (error) {
-    console.error("Update job error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Update job status
-router.patch("/:id/status", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { status, progress } = req.body;
-
-    const updateData: any = { updatedAt: new Date() };
-    if (status) updateData.status = status;
-    if (progress !== undefined) updateData.progress = progress;
-    if (status === "completed") updateData.completedAt = new Date();
-
-    const [updated] = await db
-      .update(jobs)
-      .set(updateData)
-      .where(eq(jobs.id, id))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    res.json(updated);
-  } catch (error) {
-    console.error("Update job status error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Delete job
-router.delete("/:id", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    await db.delete(jobStops).where(eq(jobStops.jobId, id));
-    const [deleted] = await db.delete(jobs).where(eq(jobs.id, id)).returning();
-
-    if (!deleted) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    res.json({ message: "Job deleted successfully" });
-  } catch (error) {
-    console.error("Delete job error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Add stop to job
-router.post("/:id/stops", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { name, address, contact, phone, cargo, notes } = req.body;
-
-    const existingStops = await db
-      .select()
-      .from(jobStops)
-      .where(eq(jobStops.jobId, id));
-    const sequence = existingStops.length + 1;
-
-    const [newStop] = await db
-      .insert(jobStops)
-      .values({
-        jobId: id,
-        sequence,
-        name,
-        address,
-        contact,
-        phone,
-        cargo,
-        notes,
-      })
-      .returning();
-
-    res.status(201).json(newStop);
-  } catch (error) {
-    console.error("Create stop error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Update stop
-router.patch("/:jobId/stops/:stopId", async (req: AuthRequest, res: Response) => {
-  try {
-    const { stopId } = req.params;
-    const updates = req.body;
-
-    // Handle check-in
-    if (updates.checkedIn === true && !updates.checkedInAt) {
-      updates.checkedInAt = new Date();
-    }
-
-    const [updated] = await db
-      .update(jobStops)
-      .set(updates)
-      .where(eq(jobStops.id, stopId))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json({ error: "Stop not found" });
-    }
-
-    res.json(updated);
-  } catch (error) {
-    console.error("Update stop error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Check-in to stop
-router.post("/:jobId/stops/:stopId/checkin", async (req: AuthRequest, res: Response) => {
-  try {
-    const { stopId } = req.params;
-
-    const [updated] = await db
-      .update(jobStops)
-      .set({
-        checkedIn: true,
-        checkedInAt: new Date(),
-        status: "ready",
-      })
-      .where(eq(jobStops.id, stopId))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json({ error: "Stop not found" });
-    }
-
-    res.json(updated);
-  } catch (error) {
-    console.error("Check-in error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+}
 
 export default router;

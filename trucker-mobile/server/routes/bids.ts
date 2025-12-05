@@ -1,260 +1,229 @@
-import { Router, Response } from "express";
-import { db, bids, customers } from "../db";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { z } from "zod";
+import { Router } from "express";
+import { db } from "../db";
+import { bids, factoryRoutes, masterRoutes, organizations, drivers } from "../db/schema";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 
 const router = Router();
 
-router.use(authMiddleware);
-
-const createBidSchema = z.object({
-  customerId: z.string().uuid().optional(),
-  origin: z.string().min(1),
-  destination: z.string().min(1),
-  cargo: z.string().optional(),
-  cargoWeight: z.number().optional(),
-  requestedPrice: z.number().optional(),
-  minimumBid: z.number().optional(),
-  pickupDate: z.string().optional(),
-  expiresAt: z.string().optional(),
-  notes: z.string().optional(),
-});
-
 // Get all bids
-router.get("/", async (req: AuthRequest, res: Response) => {
+router.get("/", async (req, res) => {
   try {
     const { status, limit = 50, offset = 0 } = req.query;
 
-    let allBids;
-    if (status) {
-      allBids = await db
-        .select()
-        .from(bids)
-        .where(eq(bids.status, status as any))
-        .orderBy(desc(bids.createdAt))
-        .limit(Number(limit))
-        .offset(Number(offset));
-    } else {
-      allBids = await db
-        .select()
-        .from(bids)
-        .orderBy(desc(bids.createdAt))
-        .limit(Number(limit))
-        .offset(Number(offset));
-    }
-
-    const bidsWithRelations = await Promise.all(
-      allBids.map(async (bid) => {
-        const [customer] = bid.customerId
-          ? await db
-              .select()
-              .from(customers)
-              .where(eq(customers.id, bid.customerId))
-              .limit(1)
-          : [null];
-
-        return {
-          ...bid,
-          customer: customer ? { id: customer.id, name: customer.name } : null,
-        };
+    const allBids = await db
+      .select({
+        id: bids.id,
+        bidPrice: bids.bidPrice,
+        status: bids.status,
+        notes: bids.notes,
+        factoryRouteId: bids.factoryRouteId,
+        driverId: bids.driverId,
+        createdAt: bids.createdAt,
       })
-    );
-
-    res.json({ data: bidsWithRelations, total: bidsWithRelations.length });
-  } catch (error) {
-    console.error("Get bids error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Get open bids (for drivers to bid on)
-router.get("/open", async (req: AuthRequest, res: Response) => {
-  try {
-    const { limit = 50, offset = 0 } = req.query;
-
-    const openBids = await db
-      .select()
       .from(bids)
-      .where(eq(bids.status, "open"))
+      .where(eq(bids.deleted, false))
       .orderBy(desc(bids.createdAt))
       .limit(Number(limit))
       .offset(Number(offset));
 
-    const bidsWithRelations = await Promise.all(
-      openBids.map(async (bid) => {
-        const [customer] = bid.customerId
-          ? await db
-              .select()
-              .from(customers)
-              .where(eq(customers.id, bid.customerId))
-              .limit(1)
-          : [null];
+    // Enrich with route and customer info
+    const enrichedBids = await Promise.all(
+      allBids.map(async (bid) => {
+        let route = null;
+        let customer = null;
+        let origin = "Thailand";
+        let destination = "Thailand";
+
+        if (bid.factoryRouteId) {
+          const [factoryRoute] = await db
+            .select()
+            .from(factoryRoutes)
+            .where(eq(factoryRoutes.id, bid.factoryRouteId))
+            .limit(1);
+
+          if (factoryRoute) {
+            route = factoryRoute;
+
+            // Get master route for origin/destination
+            if (factoryRoute.masterRouteId) {
+              const [masterRoute] = await db
+                .select()
+                .from(masterRoutes)
+                .where(eq(masterRoutes.id, factoryRoute.masterRouteId))
+                .limit(1);
+              if (masterRoute) {
+                origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
+                destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+              }
+            }
+
+            // Get customer
+            if (factoryRoute.factoryId) {
+              const [org] = await db
+                .select()
+                .from(organizations)
+                .where(eq(organizations.id, factoryRoute.factoryId))
+                .limit(1);
+              if (org) {
+                customer = { id: org.id, name: org.businessName };
+              }
+            }
+          }
+        }
 
         return {
-          ...bid,
-          customer: customer ? { id: customer.id, name: customer.name } : null,
+          id: bid.id,
+          bidNumber: `BID-${bid.id.substring(0, 8).toUpperCase()}`,
+          bidPrice: bid.bidPrice,
+          status: bid.status,
+          origin,
+          destination,
+          requestedPrice: route?.offerPrice,
+          minimumBid: route?.offerPrice ? Number(route.offerPrice) * 0.8 : null,
+          customer,
+          cargo: route?.type === "abroad" ? "International shipment" : "Domestic shipment",
+          pickupDate: bid.createdAt,
+          notes: bid.notes,
+          createdAt: bid.createdAt,
         };
       })
     );
 
-    res.json({ data: bidsWithRelations, total: bidsWithRelations.length });
-  } catch (error) {
-    console.error("Get open bids error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Get bid by ID
-router.get("/:id", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const [bid] = await db.select().from(bids).where(eq(bids.id, id)).limit(1);
-
-    if (!bid) {
-      return res.status(404).json({ error: "Bid not found" });
-    }
-
-    const [customer] = bid.customerId
-      ? await db
-          .select()
-          .from(customers)
-          .where(eq(customers.id, bid.customerId))
-          .limit(1)
-      : [null];
-
-    res.json({
-      ...bid,
-      customer,
+    return res.json({
+      data: enrichedBids,
+      total: enrichedBids.length,
     });
   } catch (error) {
-    console.error("Get bid error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching bids:", error);
+    return res.status(500).json({ error: "Failed to fetch bids" });
   }
 });
 
-// Create bid
-router.post("/", async (req: AuthRequest, res: Response) => {
+// Get open bids (available for bidding)
+router.get("/open", async (req, res) => {
   try {
-    const data = createBidSchema.parse(req.body);
-
-    const bidNumber = `BID-${Date.now().toString(36).toUpperCase()}`;
-
-    const [newBid] = await db
-      .insert(bids)
-      .values({
-        bidNumber,
-        customerId: data.customerId,
-        origin: data.origin,
-        destination: data.destination,
-        cargo: data.cargo,
-        cargoWeight: data.cargoWeight?.toString(),
-        requestedPrice: data.requestedPrice?.toString(),
-        minimumBid: data.minimumBid?.toString(),
-        pickupDate: data.pickupDate ? new Date(data.pickupDate) : undefined,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
-        notes: data.notes,
+    // Find routes that are pending and don't have accepted bids
+    const openRoutes = await db
+      .select({
+        id: factoryRoutes.id,
+        routeCode: factoryRoutes.routeFactoryCode,
+        displayCode: factoryRoutes.displayCode,
+        status: factoryRoutes.status,
+        type: factoryRoutes.type,
+        offerPrice: factoryRoutes.offerPrice,
+        masterRouteId: factoryRoutes.masterRouteId,
+        factoryId: factoryRoutes.factoryId,
+        createdAt: factoryRoutes.createdAt,
       })
-      .returning();
+      .from(factoryRoutes)
+      .where(and(eq(factoryRoutes.status, "pending"), eq(factoryRoutes.deleted, false)))
+      .orderBy(desc(factoryRoutes.createdAt))
+      .limit(20);
 
-    res.status(201).json(newBid);
+    // Enrich with route and customer info
+    const enrichedBids = await Promise.all(
+      openRoutes.map(async (route) => {
+        let origin = "Thailand";
+        let destination = "Thailand";
+        let customer = null;
+
+        // Get master route
+        if (route.masterRouteId) {
+          const [masterRoute] = await db
+            .select()
+            .from(masterRoutes)
+            .where(eq(masterRoutes.id, route.masterRouteId))
+            .limit(1);
+          if (masterRoute) {
+            origin = masterRoute.originProvince || masterRoute.originCountry || "Thailand";
+            destination = masterRoute.destinationProvince || masterRoute.destinationCountry || "Thailand";
+          }
+        }
+
+        // Get customer
+        if (route.factoryId) {
+          const [org] = await db
+            .select()
+            .from(organizations)
+            .where(eq(organizations.id, route.factoryId))
+            .limit(1);
+          if (org) {
+            customer = { id: org.id, name: org.businessName };
+          }
+        }
+
+        return {
+          id: route.id,
+          bidNumber: route.displayCode || route.routeCode,
+          status: "open",
+          origin,
+          destination,
+          requestedPrice: route.offerPrice,
+          minimumBid: route.offerPrice ? Number(route.offerPrice) * 0.8 : null,
+          customer,
+          cargo: route.type === "abroad" ? "International shipment" : "Domestic shipment",
+          pickupDate: route.createdAt,
+          createdAt: route.createdAt,
+        };
+      })
+    );
+
+    return res.json({
+      data: enrichedBids,
+      total: enrichedBids.length,
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ error: "Invalid input", details: error.errors });
-    }
-    console.error("Create bid error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching open bids:", error);
+    return res.status(500).json({ error: "Failed to fetch open bids" });
   }
 });
 
-// Submit bid (driver submits their price)
-router.post("/:id/submit", async (req: AuthRequest, res: Response) => {
+// Submit a bid
+router.post("/:id/submit", async (req, res) => {
   try {
     const { id } = req.params;
     const { price } = req.body;
+    const userId = (req as any).user?.userId;
 
-    if (!price || typeof price !== "number") {
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    if (!price) {
       return res.status(400).json({ error: "Price is required" });
     }
 
-    const [bid] = await db.select().from(bids).where(eq(bids.id, id)).limit(1);
+    // Find driver for this user
+    const [driver] = await db
+      .select()
+      .from(drivers)
+      .where(eq(drivers.userId, userId))
+      .limit(1);
 
-    if (!bid) {
-      return res.status(404).json({ error: "Bid not found" });
+    if (!driver) {
+      return res.status(403).json({ error: "Only drivers can submit bids" });
     }
 
-    if (bid.status !== "open") {
-      return res.status(400).json({ error: "Bid is no longer open" });
-    }
-
-    // Check minimum bid
-    if (bid.minimumBid && price < Number(bid.minimumBid)) {
-      return res
-        .status(400)
-        .json({ error: `Price must be at least ${bid.minimumBid}` });
-    }
-
-    const [updated] = await db
-      .update(bids)
-      .set({
-        submittedPrice: price.toString(),
-        status: "submitted",
-        updatedAt: new Date(),
+    // Create bid
+    const [newBid] = await db
+      .insert(bids)
+      .values({
+        factoryRouteId: id,
+        driverId: driver.id,
+        bidPrice: price.toString(),
+        status: "Submitted",
       })
-      .where(eq(bids.id, id))
       .returning();
 
-    res.json(updated);
+    return res.status(201).json({
+      id: newBid.id,
+      bidPrice: newBid.bidPrice,
+      status: newBid.status,
+      message: "Bid submitted successfully",
+    });
   } catch (error) {
-    console.error("Submit bid error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Update bid
-router.patch("/:id", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    const [updated] = await db
-      .update(bids)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(bids.id, id))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).json({ error: "Bid not found" });
-    }
-
-    res.json(updated);
-  } catch (error) {
-    console.error("Update bid error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Delete bid
-router.delete("/:id", async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const [deleted] = await db
-      .delete(bids)
-      .where(eq(bids.id, id))
-      .returning();
-
-    if (!deleted) {
-      return res.status(404).json({ error: "Bid not found" });
-    }
-
-    res.json({ message: "Bid deleted successfully" });
-  } catch (error) {
-    console.error("Delete bid error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error submitting bid:", error);
+    return res.status(500).json({ error: "Failed to submit bid" });
   }
 });
 

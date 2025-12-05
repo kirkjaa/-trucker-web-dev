@@ -1,210 +1,243 @@
-import { Router, Request, Response } from "express";
-import bcrypt from "bcryptjs";
+import { Router } from "express";
 import { db } from "../db";
 import { users } from "../db/schema";
-import { eq, or } from "drizzle-orm";
-import {
-  generateToken,
-  authMiddleware,
-  AuthRequest,
-} from "../middleware/auth";
+import { eq, or, and, sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 const router = Router();
 
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+
+// Login schema
 const loginSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = z.object({
-  username: z.string().min(3),
-  email: z.string().email(),
-  password: z.string().min(6),
-  displayName: z.string().min(1),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  phone: z.string().optional(),
-  role: z.enum(["admin", "company", "customer", "shipping"]).default("shipping"),
-});
+// Map desktop roles to mobile-friendly names
+function mapRoleToMobile(role: string): string {
+  switch (role) {
+    case "SUPERADMIN":
+      return "admin";
+    case "ORGANIZATION":
+      return "company";
+    case "DRIVER":
+      return "shipping";
+    default:
+      return "shipping";
+  }
+}
 
-router.post("/login", async (req: Request, res: Response) => {
+// Login endpoint
+router.post("/login", async (req, res) => {
   try {
-    const parseResult = loginSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({ 
-        error: "Invalid input", 
-        details: parseResult.error.errors 
+    // Validate input
+    const validationResult = loginSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        error: "Invalid input",
+        details: validationResult.error.errors,
       });
     }
-    
-    const { username, password } = parseResult.data;
 
-    // Query mobile_user_profiles table - search by username or email
+    const { username, password } = validationResult.data;
+    const trimmedUsername = username.trim().toLowerCase();
+
+    // Find user by username or email in desktop users table
     const [user] = await db
       .select()
       .from(users)
-      .where(or(eq(users.username, username), eq(users.email, username)))
+      .where(
+        and(
+          or(
+            sql`LOWER(${users.username}) = ${trimmedUsername}`,
+            sql`LOWER(${users.email}) = ${trimmedUsername}`
+          ),
+          eq(users.deleted, false)
+        )
+      )
       .limit(1);
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({ error: "Account is not active. Please contact admin." });
-    }
-
-    // Verify password
+    // Check if user has a password hash
     if (!user.passwordHash) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Invalid credentials - no password set" });
     }
 
+    // Verify password using bcrypt
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const displayName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-      user.displayName ||
-      user.username;
+    // Check user status
+    if (user.status !== "ACTIVE") {
+      return res.status(403).json({ 
+        error: "Account not active",
+        status: user.status 
+      });
+    }
 
-    const token = generateToken({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role || "shipping",
-      displayName: displayName,
-    });
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        organizationId: user.organizationId,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.json({
+    // Build display name
+    const displayName = user.firstName && user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.username;
+
+    // Return success response
+    return res.json({
       token,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
         displayName: displayName,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-        avatar: user.avatar,
+        role: mapRoleToMobile(user.role),
+        originalRole: user.role,
+        organizationId: user.organizationId,
+        avatar: user.imageUrl,
+        status: user.status,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Internal server error", details: error.message });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.post("/register", async (req: Request, res: Response) => {
+// Get current user
+router.get("/me", async (req, res) => {
   try {
-    const parseResult = registerSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({ 
-        error: "Invalid input", 
-        details: parseResult.error.errors 
-      });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided" });
     }
 
-    const data = parseResult.data;
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
 
-    // Check if username or email already exists
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(or(eq(users.username, data.username), eq(users.email, data.email)))
-      .limit(1);
-
-    if (existingUser) {
-      return res.status(400).json({ error: "Username or email already exists" });
-    }
-
-    // Hash password
-    const passwordHash = await bcrypt.hash(data.password, 10);
-
-    // Create user
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        username: data.username,
-        email: data.email,
-        passwordHash: passwordHash,
-        displayName: data.displayName,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        role: data.role,
-        isActive: true,
-      })
-      .returning();
-
-    const displayName =
-      [newUser.firstName, newUser.lastName].filter(Boolean).join(" ") ||
-      newUser.displayName ||
-      newUser.username;
-
-    const token = generateToken({
-      id: newUser.id,
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role || "shipping",
-      displayName: displayName,
-    });
-
-    res.status(201).json({
-      token,
-      user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-        displayName: displayName,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        phone: newUser.phone,
-        avatar: newUser.avatar,
-      },
-    });
-  } catch (error: any) {
-    console.error("Register error:", error);
-    res.status(500).json({ error: "Internal server error", details: error.message });
-  }
-});
-
-router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
+    // Fetch fresh user data
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.id, req.user!.id))
+      .where(eq(users.id, decoded.userId))
       .limit(1);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const displayName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-      user.displayName ||
-      user.username;
+    const displayName = user.firstName && user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.username;
 
-    res.json({
+    return res.json({
       id: user.id,
       username: user.username,
       email: user.email,
-      role: user.role,
       displayName: displayName,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      phone: user.phone,
-      avatar: user.avatar,
+      role: mapRoleToMobile(user.role),
+      originalRole: user.role,
+      organizationId: user.organizationId,
+      avatar: user.imageUrl,
+      status: user.status,
     });
   } catch (error) {
-    console.error("Get me error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Get user error:", error);
+    return res.status(401).json({ error: "Invalid token" });
+  }
+});
+
+// Register endpoint (optional - for new driver sign-ups)
+router.post("/register", async (req, res) => {
+  try {
+    const { username, email, password, firstName, lastName, phone } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password are required" });
+    }
+
+    // Check if username or email already exists
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(
+        or(
+          sql`LOWER(${users.username}) = ${username.toLowerCase()}`,
+          email ? sql`LOWER(${users.email}) = ${email.toLowerCase()}` : sql`false`
+        )
+      )
+      .limit(1);
+
+    if (existingUser) {
+      return res.status(409).json({ error: "Username or email already exists" });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Generate display code
+    const displayCode = `DRV-${Date.now().toString(36).toUpperCase()}`;
+
+    // Create new user as DRIVER role with PENDING status
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        displayCode,
+        username: username.toLowerCase(),
+        email: email?.toLowerCase(),
+        passwordHash,
+        firstName,
+        lastName,
+        phone,
+        role: "DRIVER",
+        status: "PENDING",
+      })
+      .returning();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        displayName: firstName && lastName ? `${firstName} ${lastName}` : username,
+        role: mapRoleToMobile(newUser.role),
+        status: newUser.status,
+      },
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
