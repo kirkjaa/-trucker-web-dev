@@ -46,18 +46,22 @@ export const users = pgTable("users", {
 export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
   displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
+  name: varchar("name", { length: 255 }).notNull(), // actual column is 'name' not 'business_name'
   type: organizationTypeEnum("type").notNull(),
-  businessName: varchar("business_name", { length: 255 }).notNull(),
-  taxId: varchar("tax_id", { length: 50 }),
+  businessTypeId: integer("business_type_id"),
+  dialCode: varchar("dial_code", { length: 10 }),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 255 }),
-  address: text("address"),
-  latitude: decimal("latitude", { precision: 10, scale: 8 }),
-  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  taxId: varchar("tax_id", { length: 50 }),
   imageUrl: text("image_url"),
+  logoImageUrl: text("logo_image_url"),
+  truckerId: varchar("trucker_id", { length: 100 }),
+  status: varchar("status", { length: 50 }).default("ACTIVE"),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: uuid("created_by"),
+  updatedBy: uuid("updated_by"),
 });
 
 // Master Routes (actual schema from init.sql)
@@ -171,17 +175,27 @@ export const bids = pgTable("bids", {
   createdBy: uuid("created_by"),
 });
 
-// Orders
+// Orders (actual schema from init.sql)
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
   displayCode: varchar("display_code", { length: 50 }).unique().notNull(),
-  factoryRouteId: uuid("factory_route_id"),
-  bidId: uuid("bid_id"),
-  driverId: uuid("driver_id"),
-  truckId: uuid("truck_id"),
-  status: orderStatusEnum("status").default("Published"),
+  factoryId: uuid("factory_id"),
+  factoryName: varchar("factory_name", { length: 255 }),
+  orderType: varchar("order_type", { length: 20 }), // 'oneWay', 'multiWay', 'csvImport', 'abroad'
+  vehicleType: varchar("vehicle_type", { length: 50 }),
+  items: text("items"),
+  startDestination: text("start_destination"),
+  destination: text("destination"),
+  distance: decimal("distance", { precision: 10, scale: 2 }),
+  originProvince: varchar("origin_province", { length: 100 }),
+  masterRouteType: varchar("master_route_type", { length: 50 }),
+  orderStatus: orderStatusEnum("order_status").default("Published"), // actual column is 'order_status'
   paymentStatus: varchar("payment_status", { length: 50 }).default("Unpaid"),
-  totalPrice: decimal("total_price", { precision: 12, scale: 2 }),
+  paymentType: varchar("payment_type", { length: 50 }),
+  deliveryType: varchar("delivery_type", { length: 50 }).default("Standard"),
+  price: decimal("price", { precision: 12, scale: 2 }),
+  fuelCost: decimal("fuel_cost", { precision: 10, scale: 2 }),
+  fuelRate: varchar("fuel_rate", { length: 50 }),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

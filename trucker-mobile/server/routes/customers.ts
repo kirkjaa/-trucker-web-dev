@@ -13,13 +13,12 @@ router.get("/", async (req, res) => {
     let query = db
       .select({
         id: organizations.id,
-        name: organizations.businessName,
+        name: organizations.name,
         displayCode: organizations.displayCode,
         type: organizations.type,
         taxId: organizations.taxId,
         phone: organizations.phone,
         email: organizations.email,
-        address: organizations.address,
         imageUrl: organizations.imageUrl,
         createdAt: organizations.createdAt,
       })
@@ -49,15 +48,12 @@ router.get("/:id", async (req, res) => {
     const [customer] = await db
       .select({
         id: organizations.id,
-        name: organizations.businessName,
+        name: organizations.name,
         displayCode: organizations.displayCode,
         type: organizations.type,
         taxId: organizations.taxId,
         phone: organizations.phone,
         email: organizations.email,
-        address: organizations.address,
-        latitude: organizations.latitude,
-        longitude: organizations.longitude,
         imageUrl: organizations.imageUrl,
         createdAt: organizations.createdAt,
       })

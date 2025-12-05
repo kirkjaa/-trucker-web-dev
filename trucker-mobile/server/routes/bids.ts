@@ -34,13 +34,13 @@ router.get("/", async (req, res) => {
           const [org] = await db
             .select({
               id: organizations.id,
-              businessName: organizations.businessName,
+              name: organizations.name,
             })
             .from(organizations)
             .where(eq(organizations.id, bid.companyId))
             .limit(1);
           if (org) {
-            customer = { id: org.id, name: org.businessName };
+            customer = { id: org.id, name: org.name };
           }
         }
 
@@ -122,13 +122,13 @@ router.get("/open", async (req, res) => {
           const [org] = await db
             .select({
               id: organizations.id,
-              businessName: organizations.businessName,
+              name: organizations.name,
             })
             .from(organizations)
             .where(eq(organizations.id, route.factoryId))
             .limit(1);
           if (org) {
-            customer = { id: org.id, name: org.businessName };
+            customer = { id: org.id, name: org.name };
           }
         }
 
